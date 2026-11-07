@@ -105,7 +105,6 @@
           "screens": [
             "SC00",
             "SC01",
-            "SC24",
             "SC25",
             "SC28"
           ],
@@ -179,8 +178,7 @@
           "screens": [
             "SC00",
             "SC09",
-            "SC11",
-            "SC24"
+            "SC11"
           ],
           "notes": "The app shell and Discover read the org name from basics.legal_name here; there is no /v1/agencies/{id}/profile in the hackathon.",
           "default": "ok",
@@ -439,7 +437,8 @@
           "purpose": "Grant cards (?status=new|saved|passed&sort=fit&q=&limit=20&offset=0).",
           "screens": [
             "SC25",
-            "SC00"
+            "SC00",
+            "SC24"
           ],
           "notes": "The app-shell badge calls ?status=new&limit=1 and reads counts.new (limit must be 1-100).",
           "default": "new",
