@@ -2,77 +2,164 @@
 
 | | |
 |---|---|
-| Wave | Hackathon, runs alone first (about 3-4 h) |
-| Depends on | - |
-| Screens | app shell, `/` redirect |
+| Wave | Hackathon. Runs alone first (about 3-4 h) and merges before H1-H5 branch |
+| Depends on | - (the Hope frontend from PR #34 is already on `main`) |
+| Screens | [SC00](../screens/SC00-app-shell.md) app shell: adds the session guard and Sign out to the built shell; `/` already redirects |
 | Migrations | `0002_hackathon.sql` |
 | Status | Ready |
 
-> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
-> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
-> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
-> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
-> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
-> - **App shell (SC00):** built. It is `app/hope/layout.tsx` + `HopeNav` / `HopeFooter` in `components/hope/ui.tsx`, with the EN/ES toggle. `/` redirects to `/hope/discover`.
-> - **Still to build (H0):**
->   - auth backend (invite code, `/v1/auth/*`, `/v1/me`)
->   - `api/http.ts` (shared fetch with `credentials: "include"` and `ProblemError`) and `api/session/`
->   - a session guard in `app/hope/layout.tsx` that sends signed-out users to `/login` and un-onboarded users to `/onboarding`
->   - an empty `lib/hope/sync/` with one no-op adapter per name (`profile.ts` H1, `opportunities.ts` H2, `decisions.ts` H3), already called from `store.ts` / `opportunities.ts`
->   - the backend pieces below (OpenAI provider, jobs, web tools, `make demo`)
-> - **Dropped:** `nav.ts`, the `ComingSoon` pages, `/grants*` routes, `services/briefs` and `services/drafting`.
-
 ## Goal
 
-Put every shared piece in place so H1-H5 can run in parallel without editing the same file:
-auth, contracts, tables and their store functions, the web tools, the OpenAI provider, the job
-runner, one API router and one web folder per spec, and `make demo`. There is no product
-logic beyond auth.
+Put the shared backend pieces and the web seams in place so H1-H3 can plug their backends into the
+**existing** UI in parallel, without editing the same file:
+
+- invite-code auth, `GET /v1/me` and a session guard around `/hope/*`;
+- the shared contracts, tables and store functions H1-H3 read and write;
+- the web tools, the OpenAI provider and the job runner H2 uses;
+- one API router per spec, `services/discovery` (skeleton) and `make demo`;
+- in `apps/web`: `api/http.ts`, `api/session/` and `lib/hope/sync/` with one no-op adapter per backend.
+
+There is no product logic beyond auth. H0 builds no screen and restyles nothing.
+
+## What already exists (don't rebuild)
+
+- **The UI** is the Hope frontend under `/hope/*` (PR #34): `/hope/discover`, `/hope/saved`, `/hope/deadlines`,
+  `/hope/profile`, `/hope/applications/[oppId]`, plus SC11 `/onboarding` (PR #24). `/` and `/hope` redirect
+  to `/hope/discover` (`app/page.tsx`, `app/hope/page.tsx`).
+- **The shell** is `app/hope/layout.tsx` (`HopeNav` + page + `HopeFooter` from `components/hope/ui.tsx`), with the
+  EN/ES `LanguageToggle`. See SC00.
+- **Browser state:** `useHope()` (`lib/hope/store.ts`) over `localStorage` key `hope:state:v1`
+  (`{ version: 1, profile, decisions, history, applications }`), and `useOpportunities()` (`lib/hope/opportunities.ts`)
+  over the demo catalog (`lib/hope/demo.ts`). H4/H5 run entirely on this state plus `POST /api/hope/draft`.
+- **Layout:** `apps/web` has no `src/`. `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root
+  and `@/*` maps to `./*`.
+- **Design:** the liquid-glass `app/globals.css` and `components/ui/**`. H0 never changes them, and never changes
+  `features/onboarding/**`.
+- **Clients:** `api/profile` and `api/onboarding` already switch between an offline fixture and HTTP on
+  `NEXT_PUBLIC_HOPE_API_URL`; H1 points them at the real backend.
 
 ## Behaviour
 
-### 1. Single tenant and auth
+### 1. Single tenant and auth (backend)
 
-- `HopeSettings` gains `tenant_id: UUID` (`HOPE_TENANT_ID`), `agency_id: UUID` (`HOPE_AGENCY_ID`),
-  `session_secret` (`HOPE_SESSION_SECRET`), `openai_api_key`, `openai_model` (default `gpt-4o-mini`)
-  `openai_search_model` (default `gpt-4o-mini`),
-  `invite_code` (`HOPE_INVITE_CODE`) and `cookie_secure` (`HOPE_COOKIE_SECURE`, default `true`).
-- Table `users` (`user_id uuid pk`, `tenant_id`, `email citext unique`, `password_hash`, `display_name`,
-  `created_at`), with RLS like every other tenant table. Passwords are hashed with `argon2-cffi`.
-- `services/pillar/src/hope_pillar/api/auth.py`:
-  - `POST /v1/auth/signup` `{email, password, display_name, invite_code?}` returns 201 `{user}` and sets
-    the session cookie. Sign-up is closed by default, so a stranger who can reach the app can't join the
-    nonprofit. It succeeds only when `invite_code` matches `HOPE_INVITE_CODE` (at least 16 random
-    characters, compared with `hmac.compare_digest`). Otherwise it returns 403 `signup_closed`. There is
-    no email or domain allowlist: Hope doesn't verify that you own a mailbox, so an email address proves
-    nothing. Without `HOPE_INVITE_CODE`, sign-up is off and only seeded users (`make demo`) can sign in. Passwords must be at least 8
-    characters (422 `weak_password`); a taken email returns 409
-    `email_taken`.
-  - `POST /v1/auth/login` `{email, password}` returns 200 `{user}` and sets the cookie. A bad email or
-    password returns 401 `invalid_credentials`, with the same response for both.
+- `HopeSettings` (`hope_core/settings.py`) gains:
+  - `tenant_id: UUID` (`HOPE_TENANT_ID`), `agency_id: UUID` (`HOPE_AGENCY_ID`);
+  - `session_secret` (`HOPE_SESSION_SECRET`), `invite_code` (`HOPE_INVITE_CODE`, optional);
+  - `cookie_secure` (`HOPE_COOKIE_SECURE`, default `true`), `web_origin` (`HOPE_WEB_ORIGIN`, default `http://localhost:3000`);
+  - `openai_api_key` (`HOPE_OPENAI_API_KEY`, optional), `openai_model` (default `gpt-4o-mini`),
+    `openai_search_model` (default `gpt-4o-mini`), `openai_embed_model` (default `text-embedding-3-small`);
+  - `jobs_inline` (`HOPE_JOBS_INLINE`, default `false`).
+- The server always uses `settings.tenant_id`. No URL, header or body carries a tenant. There's no tenant picker.
+- Table `users` (`user_id uuid pk`, `tenant_id`, `email citext`, `password_hash`, `display_name`, `created_at`,
+  `unique (tenant_id, email)`), with RLS like every other tenant table. Passwords are hashed with `argon2-cffi`.
+- `services/pillar/src/hope_pillar/api/auth.py` (replaces today's header-based principal):
+  - `POST /v1/auth/signup` `{email, password, display_name, invite_code}` returns 201 `{user}` and sets the cookie.
+    - It succeeds only when `HOPE_INVITE_CODE` is set (at least 16 characters) and `invite_code` matches it
+      (`hmac.compare_digest`). Otherwise 403 `signup_closed`, whatever the email.
+    - There is no email or domain allowlist: Hope doesn't verify mailbox ownership, so an email proves nothing.
+    - Password shorter than 8 characters: 422 `weak_password` with `errors[{field: "password", code, message}]`.
+    - Email already registered: 409 `email_taken`.
+  - `POST /v1/auth/login` `{email, password}` returns 200 `{user}` and sets the cookie. A wrong email and a wrong
+    password both return the same 401 `invalid_credentials`.
   - `POST /v1/auth/logout` returns 204 and clears the cookie.
-  - The cookie is `hope_session`: signed (itsdangerous), `HttpOnly`, `SameSite=Lax`, `Secure`, 14 days.
-    Only `make demo` sets `HOPE_COOKIE_SECURE=false`, because it serves plain `http://localhost`.
-- `hope_core/auth.py`: `Principal(tenant_id, user_id, email, display_name)` and `get_principal`, which
-  reads the cookie and returns 401 `not_signed_in` when there is no valid session. `tenant_id` always
-  comes from settings. Replace the header-based principal in the pillar and profile services with it.
-  There are no roles in the hackathon: every signed-in user can do everything.
+  - `{user}` is `{user_id, email, display_name}`.
+  - The cookie is `hope_session`: `itsdangerous` `URLSafeTimedSerializer` over `{user_id}`, `HttpOnly`,
+    `SameSite=Lax`, `Secure` unless `HOPE_COOKIE_SECURE=false`, `Max-Age` 14 days. Only `make demo` turns `Secure` off.
+- `hope_core/auth.py`: `Principal(tenant_id, user_id, email, display_name)` and the FastAPI dependency
+  `get_principal`. It reads and verifies the cookie, loads the user, and returns 401 `not_signed_in` when there is no
+  valid session. `tenant_id` always comes from settings. The pillar and profile routers use it. There are no roles:
+  every signed-in user can do everything.
 - `GET /v1/me` (`api/me.py`) returns `{user_id, email, display_name, agency_id, onboarding_complete}`.
-  `onboarding_complete` is true when the profile has a mission statement and at least one program.
-- Web: `apps/web/api/session/` (`me()`, `login()`, `signup()`, `logout()`). All requests use
-  `credentials: "include"`. A `RequireSession` wrapper in the app layout sends a 401 to `/login`, and
-  sends a signed-in user with `onboarding_complete: false` to `/onboarding`. Next.js rewrites
-  `/v1/*` to the API, so the cookie is first-party.
+  `onboarding_complete` is computed by code: the current profile has a non-empty mission statement and at least one
+  program.
+- Errors are `application/problem+json` `{type, title, status, code}`; 422s add `errors[{field, code, message}]`.
+- CORS: `CORSMiddleware` allows only `settings.web_origin`, with credentials. Web (`:3000`) and API (`:8000`) on
+  `localhost` are the same site, so the `Lax` cookie is sent. A deployment keeps both on one registrable domain.
+- Response shapes match `contracts/mocks/w1/**` exactly (same keys and value types).
 
-### 2. Shared contracts (`hope_core/schemas/hackathon.py`, exported from `hope_core.schemas`)
+### 2. Session in the web app (`api/http.ts`, `api/session/`)
+
+- `api/http.ts`:
+  - `API_URL = process.env.NEXT_PUBLIC_HOPE_API_URL ?? ""` and `online = API_URL !== ""`.
+  - `class ProblemError extends Error { status; code; errors: FieldError[] }` and `type FieldError = {field, code, message}`.
+  - `apiFetch<T>(path, init?)`: `fetch(API_URL + path, { credentials: "include", ... })`, JSON in and out.
+    - A problem response throws `ProblemError(status, body.code ?? "http_<status>", body.detail ?? body.title, body.errors ?? [])`.
+    - A network failure throws `ProblemError(0, "network_error", ...)`. A 204 returns `undefined`.
+    - A 401 also dispatches the window event `hope:unauthorized` before throwing.
+  - `api/profile/types.ts` re-exports `ProblemError` / `FieldError` from here (one-line H0 edit, so there is one class).
+- `api/session/index.ts`:
+  - `me()`, `login({email, password})`, `signup({email, password, display_name, invite_code})`, `logout()`;
+    types `User` and `Me` mirror `contracts/mocks/w1`.
+  - `useSession()` returns `{ status: "offline" | "loading" | "signed_out" | "unreachable" | "ready", me?, retry }`.
+    It shares one cached `me()` across components, refetches on window focus, and moves to `signed_out` on `hope:unauthorized`.
+  - `invalidateSession()`, which SC01 and SC11 call after sign-in or onboarding.
+  - `safeNext(next)` returns `next` only when it starts with `/` and not `//`; otherwise `/hope/discover`. SC01 uses it.
+- `api/session/RequireSession.tsx` (client component), mounted by `app/hope/layout.tsx` around the page:
+  - **Offline** (`online` is false): it renders the children and makes no request. The demo works exactly as today.
+  - **Online:** it follows `useSession()`. The states, redirects and copy are in SC00 sections 6-7.
+  - It only wraps `/hope/*`. `/login` (H1) and `/onboarding` sit outside that layout, so neither ever redirects to itself.
+    SC01 itself sends a signed-in user from `/login` to `safeNext(next)` (or `/onboarding`).
+- Signing out never clears `hope:state:v1`: that browser state holds the H4/H5 work.
+
+### 3. The sync seam (`lib/hope/sync/`)
+
+Pages call only `useHope()` and `useOpportunities()`. A backend plugs in through its adapter and nothing else.
+H0 creates `apps/web/lib/hope/sync/` with one no-op adapter each for profile, opportunities and decisions, and wires
+every call into the hooks once. H0 runs before H1-H5 (H4 included), so the wiring in `store.ts` and `opportunities.ts`
+is H0's job. After H0, each adapter file belongs to its spec, which replaces only the function bodies. Keep the
+signatures exactly:
+
+```ts
+// lib/hope/sync/profile.ts (H1 after H0)
+export function loadRemoteProfile(): Promise<OrgProfile | null>;   // never rejects; null = nothing remote (or sync off)
+export function saveRemoteProfile(profile: OrgProfile): void;      // fire-and-forget, never throws, returns at once
+
+// lib/hope/sync/opportunities.ts (H2 after H0)
+export function fetchOpportunities(): Promise<Opportunity[] | null>; // never rejects; null = use the demo catalog
+
+// lib/hope/sync/decisions.ts (H3 after H0)
+export type DecisionStatus = "saved" | "passed" | "new";
+export function mirrorDecision(oppId: string, decision: DecisionStatus): void; // fire-and-forget, never throws
+export function flushDecisions(): Promise<void>;                               // never rejects
+
+// lib/hope/sync/index.ts (H0, stays H0's)
+export { online as syncEnabled } from "@/api/http"; // NEXT_PUBLIC_HOPE_API_URL set
+export function HopeSync(): null;           // mounted once in app/hope/layout.tsx
+```
+
+| Adapter | No-op body (H0) | Called from (wired by H0) |
+|---|---|---|
+| `loadRemoteProfile` | `Promise.resolve(null)` | `HopeSync`, once after `useSession()` is `ready`; a non-null result goes to `useHope().hydrateProfile(p)` |
+| `saveRemoteProfile` | returns | `useHope().saveProfile(p)`, after the local write |
+| `fetchOpportunities` | `Promise.resolve(null)` | `useOpportunities()`, once per mount in a `useEffect`; returns `remote ?? demoOpportunities(today)` |
+| `mirrorDecision` | returns | `useHope().decide(opp, d)` calls `mirrorDecision(opp.id, d)`; `useHope().undo()` calls `mirrorDecision(lastId, "new")` with `lastId = state.history.at(-1)`, only when there is one |
+| `flushDecisions` | `Promise.resolve()` | `HopeSync`, once after `useSession()` is `ready` |
+
+Rules (all code, no model):
+- **Off switch.** `syncEnabled` is `online` from `api/http.ts` (`NEXT_PUBLIC_HOPE_API_URL` set). It lives there, not in
+  `sync/index.ts`, so the adapters import it without a cycle. With sync off every adapter does nothing and resolves at once.
+- **Never break a page.** Call sites run after the local `setState`, outside the state updater (updaters stay pure).
+  The adapters catch everything and `console.warn`. They never throw, reject or roll back browser state. The browser
+  record stays the source of truth for the workspace (H4/H5).
+- **No echo.** `hydrateProfile(p)` (new in `useHope()`) writes the profile but does not call `saveRemoteProfile`.
+- **One-time H0 edits outside its own files** (merged before H1-H5 branch, so nothing conflicts):
+  `lib/hope/store.ts` (`hydrateProfile` and the `saveRemoteProfile` / `mirrorDecision` call sites),
+  `lib/hope/opportunities.ts` (the `fetchOpportunities` effect and the `remote ?? demo` line), `api/profile/types.ts`
+  (the re-export) and `lib/hope/i18n.ts` (new `session.*` keys in `en` and `es`; add, never rename).
+  No page file changes, and the `useHope()` / `useOpportunities()` signatures stay the same except for the added
+  `hydrateProfile`. After H0, H1-H3 edit only their own adapter file and never `store.ts`.
+- Money: the UI's `Opportunity.amountMin/amountMax` and `OrgProfile.annualBudget` are whole currency units. On the wire
+  money is `{amount_minor, currency}` (integer minor units). The adapters convert (`amount_minor / 100`), never the pages.
+
+### 4. Shared contracts (`hope_core/schemas/hackathon.py`, exported from `hope_core.schemas`)
 
 ```python
 class Citation(Contract):
-    citation_id: str  # "c1", "c2"... unique within its parent document
+    citation_id: str  # "c1", "c2"... unique within its parent
     kind: Literal["web", "profile"]
     url: str | None = None  # web
     title: str | None = None  # web page title
-    quote: str  # exact text supporting the claim (<= 500 chars)
+    quote: str  # exact supporting text, <= 500 chars
     profile_path: str | None = None  # profile, e.g. "mission.mission_statement"
     retrieved_at: datetime | None = None
 
@@ -82,7 +169,7 @@ class DiscoveryProgress(Contract):
     queries_done: int = 0
     pages_read: int = 0
     candidates_found: int = 0
-    current_step: str = ""  # human text: "Searching: youth mentoring grants Ohio"
+    current_step: str = ""  # "Searching: youth mentoring grants Washington"
 
 
 class DiscoveryJob(Contract):
@@ -100,235 +187,198 @@ class GrantCandidate(Contract):
     title: str
     funder: str
     url: str  # canonical grant page
-    summary: str  # 1-3 plain-English sentences
+    summary: str  # 1-3 plain-English sentences; may contain [cN] markers
     amount_text: str | None = None  # quoted, e.g. "up to $50,000"
-    amount_max: Money | None = None  # parsed by code from amount_text
+    amount_max: Money | None = None  # parsed by code from amount_text, integer minor units
     deadline_text: str | None = None
     deadline: date | None = None  # parsed by code; None for rolling or unknown
     eligibility_summary: str | None = None
     fit_score: int = Field(ge=0, le=100)
-    fit_reasons: list[str] = []  # each <= 140 chars
-    concerns: list[str] = []
+    fit_reasons: list[str] = []  # <= 140 chars each, then [cN] markers; no marker = "Unverified"
+    concerns: list[str] = []  # same marker rule
     citations: list[Citation] = []
     status: Literal["new", "saved", "passed"] = "new"
     found_by_job_id: UUID | None = None
     discovered_at: datetime
-
-
-class BriefItem(Contract):
-    item_id: str
-    text: str  # plain English
-    detail: str | None = None
-    citation_ids: list[str] = []
-
-
-class EligibilityCheck(Contract):
-    requirement: str
-    meets: Literal["yes", "no", "unknown"]
-    why: str
-    citation_ids: list[str] = []  # web and/or profile citations
-
-
-class GrantQuestion(Contract):
-    question_id: str
-    text: str
-    word_limit: int | None = None
-    citation_ids: list[str] = []
-
-
-class ApplicationBrief(Contract):
-    grant_id: UUID
-    overview: str  # "What this grant is, in two sentences"
-    how_to_apply: BriefItem  # the portal or method, with a link
-    steps: list[BriefItem]
-    required_documents: list[BriefItem]
-    questions: list[GrantQuestion]
-    deadlines: list[BriefItem]
-    eligibility: list[EligibilityCheck]
-    citations: list[Citation]
-    generated_at: datetime
-    content_hash: str
-
-
-class ProposalSection(Contract):
-    section_id: str  # equals question_id when it answers a question
-    title: str
-    body_md: str  # inline markers [c1], [c2] refer to citations
-    citation_ids: list[str] = []
-    unverified_claims: list[str] = []
-    edited_by_user: bool = False
-
-
-class ProposalDraft(Contract):
-    grant_id: UUID
-    status: Literal["drafting", "ready", "failed"]
-    sections: list[ProposalSection]
-    citations: list[Citation]
-    generated_at: datetime | None = None
-    content_hash: str
 ```
 
-Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.service_area: list[str] = []`
-(state or county names). Regenerate the JSON Schema and TS types.
+Also:
+- `Mission.values: list[str] = []`; `AgencyProfile.service_area: list[str] = []` if missing (state or county names);
+  `Legal.hq_city`, `Legal.hq_state`, `Legal.website` (all optional). H1 needs no extras table.
+- `MeView` and `UserView` for section 1.
+- Regenerate: `uv run hope-export-schemas && pnpm --filter @hope/schemas gen`, and commit the outputs.
+- The API views H3 returns (`domain`, `days_left`, `urgency`, `fit_band`, `counts`) are H3's, built by code from
+  `GrantCandidate`; they aren't stored contracts.
 
-### 3. Tables and store (`0002_hackathon.sql`, `hope_core/store.py`)
+There are no brief or proposal contracts: H4/H5 live in the browser (`lib/hope/types.ts`).
+
+### 5. Tables and store (`0002_hackathon.sql`, `hope_core/store.py`)
 
 - Tables (all with `tenant_id` + RLS):
-  - `jobs` (`job_id`, `kind`, `status`, `progress jsonb`, `result jsonb`, `error`, `created_by`, `started_at`, `finished_at`);
-  - `grant_candidates` (one row per `GrantCandidate`, `unique (tenant_id, url)`);
-  - `application_briefs` (`grant_id` pk, `brief jsonb`, `content_hash`, `generated_at`);
-  - `proposal_drafts` (`grant_id` pk, `draft jsonb`, `content_hash`, `updated_at`);
-  - `proposal_section_versions` (append-only history).
-- Typed store functions, each taking `tx`:
-  - jobs: `create_job`, `update_job_progress`, `finish_job`, `get_job`, `latest_job(kind)`;
-  - candidates: `upsert_candidate` (on URL conflict, update the fields but keep `status`), `list_candidates(status, sort, limit, offset)`, `get_candidate`, `set_candidate_status`;
-  - briefs: `save_brief`, `get_brief`;
-  - proposals: `save_draft`, `get_draft`, `save_section(grant_id, section, expected_hash)`, which raises `StaleArtifactError(current_hash)` when the hash doesn't match.
+  - `users` (section 1);
+  - `jobs` (`job_id`, `kind`, `subject_id text null`, `status`, `progress jsonb`, `result jsonb`, `error`,
+    `created_by`, `started_at`, `finished_at`);
+  - `grant_candidates`: one row per `GrantCandidate`, `unique (tenant_id, url)`, plus `status_changed_at`,
+    `status_changed_by`, `pass_reason`, `pass_reason_text`.
+- Typed store functions, each taking `tx` (from `hope_core.db.tenant_tx`):
+  - users: `create_user`, `get_user`, `get_user_by_email`;
+  - profile: `get_profile(tx) -> AgencyProfile | None` (current version);
+  - jobs: `create_job(tx, kind, subject_id=None, created_by=...)`, `update_job_progress`, `finish_job`, `get_job`,
+    `latest_job(tx, kind, subject_id=None)`, `list_jobs(tx, kind, limit)`;
+  - candidates: `upsert_candidate` (on a URL conflict, update the fields but keep `status`),
+    `list_candidates(tx, status, sort, limit, offset, job_id=None)`, `count_candidates(tx) -> {"new", "saved", "passed"}`,
+    `get_candidate`, `set_candidate_status(tx, grant_id, status, *, reason=None, reason_text=None, actor=None)`.
 
-### 4. Web tools (`hope_core/web.py`)
+### 6. Web tools (`hope_core/web.py`)
 
-- `search(query: str, max_results: int = 8) -> list[SearchResult(url, title, snippet)]` uses the OpenAI
-  Responses API with the `web_search` tool and returns the URLs it cites.
-- `fetch(url) -> Page(url, final_url, title, text, links: list[Link(url, text)], content_type)`:
-  - uses httpx with a 15 s timeout, a 5 MB cap and a Hope user agent;
-  - extracts HTML text with `trafilatura` and PDF text with `pypdf`;
-  - respects `robots.txt`;
-  - blocks requests to internal addresses: only `http`/`https` on ports 80 and 443; the host is
-    resolved first, and any address that isn't public (`ipaddress.ip_address(a).is_global` is false:
-    loopback, private, link-local including `169.254.169.254`, multicast, reserved) raises
-    `FetchError("blocked_address")`. Redirects are followed by hand (`follow_redirects=False`, at most
-    5), and every hop is checked the same way. The connection goes to the address that was checked, so a
-    DNS change between the check and the request can't bypass it;
-  - returns nothing that is persisted, and stores nothing.
-- `WebTools` protocol with `RealWebTools` and `RecordedWebTools(fixture_dir)`. The recorded tools
-  replay JSON fixtures from `packages/core/tests/fixtures/web/`. H0 records about 6 real grant pages
-  (with their "how to apply" pages) and 3 searches for the demo profile. Tests always use the recorded tools.
+- `fetch(url) -> Page(url, final_url, title, text, links: list[Link(url, text)], content_type)`. It is all code:
+  - httpx, 15 s timeout, 5 MB cap, a Hope user agent; HTML text via `trafilatura`, PDF text via `pypdf`; respects `robots.txt`;
+  - SSRF guard: only `http`/`https` on ports 80 and 443. The host is resolved first, and any address that isn't
+    public (`ipaddress.ip_address(a).is_global` is false: loopback, private, link-local including `169.254.169.254`,
+    multicast, reserved) raises `FetchError("blocked_address")`. Redirects are followed by hand
+    (`follow_redirects=False`, at most 5) and every hop is checked. The connection goes to the checked address, so
+    a DNS change between check and request can't bypass it;
+  - it stores nothing. Raw pages are never persisted.
+- `search(query, max_results=8) -> list[SearchResult(url, title, snippet)]` is model call **M2** (section 7).
+- `WebTools` protocol with `RealWebTools` and `RecordedWebTools(fixture_dir)`:
+  - it replays `search/<normalised query>.json` and `pages/<sha256(url)[:16]>.json`;
+  - query lookup ignores case and extra whitespace; an unknown query returns `[]`; an unknown URL raises `FetchError`;
+  - `Page.content_type` is always set.
+- H0 records `packages/core/tests/fixtures/web/` for H1's seeded demo profile (Riverbend Community Health Alliance,
+  Wenatchee WA, NTEE E32/F30): 3 searches and about 6 grant pages, 2 of them with a linked guideline page (one a PDF).
+  Specs may keep their own fixture dirs (H2 does).
 
-### 5. OpenAI provider and job runner
+### 7. Model calls: OpenAI provider and gateway
 
-- `OpenAIProvider` implements `Provider` (`complete_json` with a JSON-schema response format, and
-  `embed`). `default_gateway()` returns OpenAI when the key is set and `MockProvider` otherwise. Each
-  call logs its tokens and estimated cost.
-- `hope_core/jobs.py`:
-  - `start_job(kind, fn, *args, job_id=None) -> job_id` runs `fn` in a background thread pool inside
-    the API process, with `report(progress)` and `finish(result | error)` callbacks. It creates the job
-    record, unless `job_id` is given: then it adopts that record (already created with `create_job` in a
-    committed transaction, with the same `kind` and status `queued`) and returns the same id. One run
-    always has exactly one job id;
-  - on startup, jobs left `running` are marked `failed`, with the error "Interrupted by restart";
-  - a `HOPE_JOBS_INLINE=1` setting runs jobs synchronously for tests.
+**LLMs suggest, code decides.** H0's own features (auth, session, sync, jobs) make no model call. H0 provides the two
+calls below, which H1 and H2 use. Every call goes through code H0 owns, has a fixed structured output, and runs offline in tests.
 
-### 6. Routers, services, web folders
+**M1: structured completion** (`OpenAIProvider.complete_json`, reached only through `ModelGateway.structured`)
 
-- Pillar routers (empty and mounted unless noted):
-  - `auth.py`, `me.py` (H0, implemented);
-  - `discovery.py` (H2), `grants.py` (H3), `briefs.py` (H4), `proposals.py` (H5);
-  - mount `hope_profile.api.router` (H1).
-- Remove the pillar routes the hackathon doesn't use from the app; keep their code and tests.
-- New uv workspace members with an import test: `services/discovery` (`hope_discovery`, H2),
-  ~~`services/briefs` (H4) and `services/drafting` (H5)~~: no longer needed, H4/H5 run in `apps/web` (PR #34).
-- `AGENTS.md` migration ranges: discovery `0700-0709`, grants `0710-0719`, briefs `0720-0729`,
-  drafting `0800-0809`.
-- Per-router OpenAPI snapshots: `services/pillar/tests/snapshots/openapi/<router>.json`.
-- Web:
-  - `nav.ts` entries: Grants `/grants`, Discover `/discover`, Profile `/profile`, plus a user menu
-    with Sign out;
-  - `/` redirects to `/grants`;
-  - `ComingSoon` placeholder pages for `/login`, `/onboarding`, `/discover`, `/grants`,
-    `/grants/[grantId]` (the brief/proposal routes are replaced by `/hope/applications/[oppId]`, PR #34);
-  - empty `features/<f>/` and `api/<f>/` folders for `session`, `onboarding`, `profile`, `discover`,
-    `grants`, `brief` and `proposal`;
-  - restyle all of `components/ui` to the liquid-glass system (README "Design system"): replace the
-    liquid-glass CSS in `globals.css` with the `glass-*` tokens, including the reduced-transparency
-    and no-`backdrop-filter` fallbacks;
-  - shared primitives in `components/ui`: `Drawer`, `Toast`, `Tabs`, `Progress`, `MarkdownView`
-    (react-markdown), and `CitationChip` plus `CitationPopover`. A citation chip shows `[c1]`; the
-    popover shows the quote, the page title, the domain and an "Open source" link, or the profile field
-    for a profile citation. H4 and H5 both use these.
-  - remove the matrix, approvals and workflows routes from the nav (keep their code).
-- `lib/problem.ts` maps problem codes to messages.
+| | |
+|---|---|
+| Input | `tier: ModelTier`, `messages: list[Message]` (system + user; any ingested text wrapped with `untrusted()` by the caller), `response_model: type[BaseModel]`, optional `RunBudget` |
+| Request | OpenAI Chat Completions, `response_format = {type: "json_schema", json_schema: {name: <model title>, schema: response_model.model_json_schema()}}`, `temperature: 0`, 60 s timeout |
+| Structured output | One JSON object for `response_model`, plus `usage.total_tokens` |
+| Validated by | `ModelGateway.structured`: `json.loads`, then `response_model.model_validate`. On invalid JSON or a `ValidationError` it retries once, then raises `ModelOutputError(schema_title)`. The caller decides what that means (H1: `suggestions_unavailable`; H2: skip the page) |
+| Code decides | the provider (`default_gateway()`: `OpenAIProvider` when `HOPE_OPENAI_API_KEY` is set, otherwise `MockProvider`; never a silent fallback from OpenAI to the mock); the model per tier (`FRONTIER`/`MID`/`SMALL` -> `openai_model`); 2 retries with backoff on 429/5xx only; the `RunBudget` ceilings (`BudgetExceededError` stops the run); the log line (schema title, model, tokens, estimated cost; never prompt or page text) |
+| Never | money amounts or lifecycle/status changes in the output (callers' schemas have no such fields); tool use |
+| Offline | `MockProvider.register(Model, responder)` in callers' tests; `packages/core/tests/fixtures/openai/{chat_ok,chat_invalid,chat_429}.json` replayed through an httpx `MockTransport` for the provider itself |
 
-### 7. `make demo`
+**M2: web search** (`RealWebTools.search`)
 
-- Starts Postgres only (no Kafka, Temporal or MinIO), migrates, runs `uv run hope-demo-seed`, and
-  starts the API (`:8000`) and the web app (`:3000`).
-- The seed creates a demo user (`demo@hope.org` / `hope-demo`) and calls each package's
-  `demo.seed()`, in the order `hope_profile`, `hope_discovery`, `hope_briefs`, `hope_drafting`.
+| | |
+|---|---|
+| Input | `query: str` (stripped, 1-200 chars, else `ValueError`), `max_results` (1-10) |
+| Request | OpenAI Responses API, model `openai_search_model`, `tools: [{type: "web_search"}]`, input `"Find web pages for: {query}"` |
+| Structured output | Only the `url_citation` annotations on the output message (`url`, `title`, `start_index`, `end_index`). The model's prose is discarded |
+| Validated by | `hope_core.web.parse_search_response(raw, max_results) -> list[SearchResult]` |
+| Code decides | keeps only `http`/`https` URLs; drops the fragment; dedupes by URL in first-seen order; caps at `max_results`; `title` falls back to the domain; `snippet` is the cited span, at most 300 chars. Whether a page is a grant, and everything about it, is decided later by H2's code from fetched text |
+| Offline | `RecordedWebTools` for every caller; `packages/core/tests/fixtures/openai/web_search_response.json` through `MockTransport` for the parser |
+
+`OpenAIProvider.embed` (model `openai_embed_model`) exists to satisfy the `Provider` protocol. No H spec calls it.
+
+For orientation, the other model calls in the hackathon (each spec owns its call, prompt, schema, validation and mock):
+H1 `NteeSuggestionOut` (M1); H2 `QueryPlan`, `PageExtraction`, `FitAssessment` (M1) and `search` (M2);
+H5 the "Hope grant writer" agent in `app/api/hope/draft/route.ts` (OpenAI Agents SDK, Zod `outputType`, `OPENAI_API_KEY`, outside the gateway).
+
+### 8. Job runner (`hope_core/jobs.py`)
+
+- `start_job(kind, fn, *args, job_id=None) -> job_id` runs `fn` in a background thread pool inside the API process,
+  with `report(progress)` and `finish(result | error)` callbacks.
+  - It creates the job record, unless `job_id` is given: then it adopts that record (created by `create_job` in a
+    committed transaction, same `kind`, status `queued`) and returns the same id. One run has exactly one job id.
+  - An exception in `fn` marks the job `failed` with a one-line message and no traceback (the traceback goes to the log).
+- On startup, jobs left `running` are marked `failed` with "Interrupted by restart".
+- `HOPE_JOBS_INLINE=1` runs jobs synchronously (tests).
+- Kinds: `discovery` (H2). There are no brief or proposal jobs.
+
+### 9. Routers and services
+
+- Pillar routers, all mounted:
+  - `auth.py`, `me.py`: H0, implemented;
+  - `discovery.py` (H2) and `grants.py` (H3): empty;
+  - `hope_profile.api.router` (H1).
+- The pillar routes the hackathon doesn't use are unmounted; their code and tests stay.
+- New uv workspace member `services/discovery` (`hope_discovery`, H2) with an import test and an empty `demo.seed()`.
+  There is no `services/briefs` or `services/drafting`.
+- `AGENTS.md`: add `services/discovery` to the layout table and the migration ranges H1 `0310-0319`,
+  discovery `0700-0709`, grants `0710-0719`. `0720-0729` and `0800-0809` stay reserved (H4/H5 use none).
+- OpenAPI snapshots per router: `services/pillar/tests/snapshots/openapi/<router>.json`. The pillar test skips mounted
+  external routers; the profile snapshot lives in `services/profile/tests/snapshots/openapi.json` (H1).
+
+### 10. `make demo`
+
+- Starts Postgres only (`docker compose -f infra/docker-compose.yml up -d postgres`; no Kafka, Temporal or MinIO),
+  runs `uv run hope-migrate` and `uv run hope-demo-seed`, then starts the API (`:8000`) and the web app (`:3000`)
+  with `NEXT_PUBLIC_HOPE_API_URL=http://localhost:8000`.
+- The seed creates `demo@hope.org` / `hope-demo` and calls `hope_profile.demo.seed()`, then `hope_discovery.demo.seed()`.
   Each seed is idempotent.
-- With no `HOPE_OPENAI_API_KEY`, everything runs on the mock and the recorded web tools, so the demo
-  always works.
-- It sets `HOPE_COOKIE_SECURE=false` (plain `http://localhost`). If `.env` has no `HOPE_INVITE_CODE`, it
-  writes a random one (`secrets.token_urlsafe(16)`) to `.env` and prints it once, so teammates can sign
-  up and nobody else can.
+- With no `HOPE_OPENAI_API_KEY`, everything runs on `MockProvider` and `RecordedWebTools`, so the demo always works.
+  When it is set, `make demo` also passes it to the web process as `OPENAI_API_KEY` (H5's route), unless that is already set.
+- It sets `HOPE_COOKIE_SECURE=false` (plain `http://localhost`). If `.env` has no `HOPE_INVITE_CODE`, it writes one
+  (`secrets.token_urlsafe(16)`) to `.env` and prints it once.
+- `pnpm --filter @hope/web dev` alone (no API URL) is still the offline demo on browser state.
 
 ## Owns
 
-`packages/core/**`, `packages/schemas/**`, `db/migrations/0002_hackathon.sql`, `services/pillar/**`
-(app wiring, `auth.py`, `me.py`, empty routers, snapshots), `services/{discovery,briefs,drafting}/**`
-(skeletons), import-only edits in `services/profile`, `apps/web/{api/session,components,lib,nav.ts}`,
-`apps/web/app/**` (layout and placeholder pages only), `apps/web/next.config.*`, `apps/web/package.json`,
-`pnpm-lock.yaml`, `Makefile`, `pyproject.toml`, `uv.lock`, `infra/docker-compose.yml`, `AGENTS.md`,
-`docs/specs/README.md` (status row).
+```text
+packages/core/**                    (settings, auth, store, web, jobs, model_gateway, schemas, tests + fixtures)
+packages/schemas/**                 (generated)
+db/migrations/0002_hackathon.sql
+services/pillar/**                  (app wiring, CORS, auth.py, me.py, empty discovery.py/grants.py, snapshots, demo seed runner)
+services/discovery/**               (skeleton only)
+services/profile/**                 (import-only edits: get_principal, Principal)
+apps/web/api/http.ts, apps/web/api/session/**
+apps/web/app/hope/layout.tsx, apps/web/components/hope/ui.tsx (HopeNav user/Sign out only; SC00)
+apps/web/lib/hope/sync/**           (index.ts stays H0's; profile/opportunities/decisions pass to H1/H2/H3 after H0)
+apps/web/package.json, pnpm-lock.yaml, Makefile, pyproject.toml, uv.lock, infra/docker-compose.yml, AGENTS.md
+docs/specs/README.md                (H0 status row only)
+One-time, before H1-H5: lib/hope/store.ts, lib/hope/opportunities.ts, api/profile/types.ts, lib/hope/i18n.ts (section 3)
+```
+
+Never: `apps/web/app/globals.css`, `components/ui/**`, `features/onboarding/**`, any `app/**/page.tsx`.
 
 ## Acceptance criteria
 
-- [ ] AC1 Sign up, log in, `/v1/me` and log out work; a bad email or password both return 401 `invalid_credentials`; protected routes return 401 `not_signed_in` without the cookie; sign-up without the right invite code returns 403 `signup_closed`, whatever the email, and is always closed when `HOPE_INVITE_CODE` is unset; the cookie is `Secure` unless `HOPE_COOKIE_SECURE=false`.
-- [ ] AC2 Every contract in section 2 validates, exports to JSON Schema and TS, and the generated outputs are fresh.
-- [ ] AC3 The store functions round-trip every table; `save_section` with a stale hash raises `StaleArtifactError`; RLS blocks another tenant's rows.
-- [ ] AC4 `RecordedWebTools` replays the search and fetch fixtures; `fetch` extracts text and links from HTML and PDF fixtures; `fetch` rejects loopback, private, link-local and metadata addresses, other schemes and ports, and redirects to any of them, with `blocked_address`; no test touches the network.
-- [ ] AC5 `default_gateway()` is the mock without a key; `OpenAIProvider` structured and web-search calls work against an httpx `MockTransport`.
-- [ ] AC6 `start_job` runs inline in tests, reports progress and stores the result; with `job_id=` it adopts that record and creates no second row; restarted jobs are marked failed.
-- [ ] AC7 All routers are mounted and each has its own snapshot; existing tests still pass.
-- [ ] AC8 Web: unauthenticated users are sent to `/login`; users who haven't onboarded go to `/onboarding`; the nav and all placeholders render; the citation chip and popover render both web and profile citations.
-- [ ] AC10 Every primitive renders with `glass-*` classes; under `prefers-reduced-transparency` panels are solid; axe finds no contrast violations on the shell over the backdrop.
-- [ ] AC9 `make demo` on a clean checkout works twice in a row, with no key, and `demo@hope.org` can sign in.
+- [ ] AC1 Sign-up, login, `/v1/me` and logout work. A wrong email and a wrong password both return 401 `invalid_credentials`. Protected routes return 401 `not_signed_in` without the cookie. Sign-up without the right invite code returns 403 `signup_closed` whatever the email, and is always closed when `HOPE_INVITE_CODE` is unset. Short passwords return 422 `weak_password`; a taken email 409 `email_taken`. The cookie is `HttpOnly`, `SameSite=Lax` and `Secure` unless `HOPE_COOKIE_SECURE=false`.
+- [ ] AC2 `/v1/me` returns `onboarding_complete` false until the profile has a mission statement and a program. Every W1 response has the keys and value types of `contracts/mocks/w1/**`.
+- [ ] AC3 Every contract in section 4 validates and exports to JSON Schema and TS; the generated outputs are fresh. `amount_max` is integer minor units.
+- [ ] AC4 The store functions round-trip every table; `upsert_candidate` keeps `status` on a URL conflict; `count_candidates` matches the lists; RLS blocks another tenant's rows.
+- [ ] AC5 `fetch` extracts text and links from the HTML and PDF fixtures, and rejects loopback, private, link-local and metadata addresses, other schemes and ports, and redirects to any of them, with `blocked_address`. `RecordedWebTools` replays the fixtures with the lookup rules of section 6. No test touches the network.
+- [ ] AC6 (M2) `parse_search_response` keeps only `http(s)` URL citations, dedupes, caps at `max_results`, falls back to the domain for a missing title, and ignores the model's prose.
+- [ ] AC7 (M1) `default_gateway()` is the mock without a key and OpenAI with one. `structured` validates with the response model, retries once on invalid output, then raises `ModelOutputError`. 429/5xx retry twice, then fail; the mock is never used as a fallback. Log lines carry tokens and cost, and never message text.
+- [ ] AC8 `start_job` runs inline in tests, reports progress and stores the result. With `job_id=` it adopts that record and creates no second row. An exception marks the job `failed` with a one-line error. Jobs left `running` are marked failed on startup.
+- [ ] AC9 All routers are mounted, each with its own snapshot; the unused pillar routes are unmounted; existing tests still pass.
+- [ ] AC10 Offline (`NEXT_PUBLIC_HOPE_API_URL` unset): `/hope/*` renders exactly as before, with no `/v1` request and no Sign out.
+- [ ] AC11 Online: the guard and Sign out behave as SC00 AC1-AC6.
+- [ ] AC12 With the no-op adapters, `useHope()` / `useOpportunities()` behave exactly as before. `decide(opp, d)` calls `mirrorDecision(opp.id, d)` once, `undo()` calls `mirrorDecision(lastId, "new")` once (and not at all with an empty history), `saveProfile` calls `saveRemoteProfile` and `hydrateProfile` doesn't. `HopeSync` calls `loadRemoteProfile` and `flushDecisions` once after the session is `ready`, and never with sync off. `useOpportunities()` returns `remote ?? demo`. An adapter that throws or rejects never breaks a page or changes `hope:state:v1`.
+- [ ] AC13 `git diff main --stat` shows no change to `app/globals.css`, `components/ui/**`, `features/onboarding/**` or any `page.tsx`.
+- [ ] AC14 `make demo` on a clean checkout works twice in a row with no key, and `demo@hope.org` can sign in.
 
 ## Test plan
 
+All offline: `MockProvider`, `RecordedWebTools`, httpx `MockTransport`, `HOPE_JOBS_INLINE=1`. DB tests are `@pytest.mark.db`.
+
 | AC | Test |
 |---|---|
-| AC1 | `services/pillar/tests/test_auth.py` (signup, login, logout, invalid, not_signed_in, signup_closed, invite code, no code configured, cookie flags) |
-| AC2 | `packages/core/tests/test_hackathon_schemas.py` + schema freshness check |
-| AC3 | `packages/core/tests/test_store.py` (`@pytest.mark.db`) |
-| AC4 | `packages/core/tests/test_web_tools.py` (incl. `test_fetch_blocks_internal_addresses`, parametrized over addresses and a redirect, using a fake resolver) |
-| AC5 | `packages/core/tests/test_openai_provider.py` |
-| AC6 | `packages/core/tests/test_jobs.py` (incl. `test_adopts_existing_job_id`) |
-| AC7 | `services/pillar/tests/test_openapi.py::test_router_snapshots` + full suite |
-| AC8 | `apps/web/components/RequireSession.test.tsx`, `nav.test.ts`, `components/ui/Citation.test.tsx` |
-| AC9 | manual, recorded in the PR |
-| AC10 | `components/ui/glass.test.tsx` + `AppShell.a11y.test.tsx` (vitest-axe) |
+| AC1 | `services/pillar/tests/test_auth.py` (signup, login, logout, invalid_credentials, not_signed_in, signup_closed with and without a configured code, weak_password, email_taken, cookie flags) |
+| AC2 | `services/pillar/tests/test_me.py`; `services/pillar/tests/test_contract_shapes.py` (loads `contracts/mocks/w1/**`) |
+| AC3 | `packages/core/tests/test_hackathon_schemas.py` + the schema freshness check |
+| AC4 | `packages/core/tests/test_store.py` |
+| AC5 | `packages/core/tests/test_web_tools.py` (incl. `test_fetch_blocks_internal_addresses`, parametrized over addresses and a redirect, with a fake resolver; `test_recorded_lookup_rules`) |
+| AC6 | `packages/core/tests/test_web_search_parse.py` |
+| AC7 | `packages/core/tests/test_openai_provider.py` (`test_default_gateway_without_key`, `test_structured_validates`, `test_invalid_output_retries_then_raises`, `test_429_retries`, `test_no_mock_fallback`, `test_log_has_no_message_text`) |
+| AC8 | `packages/core/tests/test_jobs.py` (incl. `test_adopts_existing_job_id`, `test_exception_marks_failed`) |
+| AC9 | `services/pillar/tests/test_openapi.py::test_router_snapshots` + the full suite |
+| AC10, AC11 | `apps/web/api/session/RequireSession.test.tsx`, `apps/web/api/http.test.ts`, `apps/web/components/hope/ui.test.tsx` (see SC00) |
+| AC12 | `apps/web/lib/hope/sync/index.test.ts` (`HopeSync` calls, sync off), `apps/web/lib/hope/store.test.ts` (`decide`/`undo`/`saveProfile` call sites with `vi.mock("./sync/decisions")` and `vi.mock("./sync/profile")`), `apps/web/lib/hope/opportunities.test.ts` (`remote ?? demo`, a rejecting adapter) |
+| AC13 | CI diff check in the PR description |
+| AC14 | manual, recorded in the PR |
+
+Web checks: `pnpm --filter @hope/web typecheck && pnpm --filter @hope/web lint && pnpm --filter @hope/web test`.
 
 ## Out of scope
 
-Roles and approvals, multi-tenant, password reset, email verification, Temporal, Kafka.
-
-## Integration decisions (from the H1-H5 requests; these are part of H0)
-
-The H specs may rely on all of these:
-
-1. **Contracts:**
-   - `Legal.hq_city`, `Legal.hq_state` and `Legal.website` (all optional). H1 drops its extras table.
-   - `BriefItem.due_on: date | None = None`.
-   - Docstrings: an item in `GrantCandidate.fit_reasons`, `concerns` or `ApplicationBrief.overview` may contain `[cN]` markers that refer to the parent's `citations`; an item without one renders as "Unverified".
-2. **Jobs:**
-   - `jobs.subject_id text null` and `jobs.created_by`;
-   - `create_job(tx, kind, subject_id=None, created_by=...)`, `latest_job(tx, kind, subject_id=None)`, `list_jobs(tx, kind, limit)`;
-   - an exception in `fn` marks the job `failed`, with a one-line message and no traceback.
-   - Kinds: `discovery`, `brief` (subject `grant_id`), `proposal` (subject `grant_id`) and `proposal-section` (subject `"{grant_id}:{section_id}"`).
-3. **Store:**
-   - `get_profile(tx) -> AgencyProfile` (current version);
-   - `list_candidates(..., job_id=None)` and `count_candidates(tx) -> {"new", "saved", "passed"}`;
-   - `set_candidate_status(tx, grant_id, status, *, reason=None, reason_text=None, actor=None)`, with the columns `status_changed_at`, `status_changed_by`, `pass_reason` and `pass_reason_text`.
-   - `save_section`'s `expected_hash` is the `ProposalDraft.content_hash`; the store recomputes it and stores the new hash.
-4. **Web tools:**
-   - `RecordedWebTools`: an unknown query returns `[]`, an unknown URL raises `FetchError`, and query lookup ignores case and extra whitespace.
-   - Specs may keep their own fixture dirs.
-   - `Page.content_type` is always set.
-   - H0's recorded fixtures are for H1's demo profile (Riverbend, Wenatchee WA, NTEE E32/F30): 3 searches and about 6 grants, 2 of them with linked guideline pages (one a PDF).
-5. **Web:**
-   - `RequireSession` lets `/login` render without a session, never redirects `/onboarding` to itself, and sends signed-in users away from `/login` to `/grants` (or `/onboarding`).
-   - `Toast` survives client navigation.
-   - `lib/problem.ts` keeps `errors[]` (`field`, `code`, `message`) and includes the messages for `brief_missing`, `drafting_in_progress`, `unknown_citation`, `draft_not_ready`, `section_not_found` and `bad_format`.
-   - `MarkdownView` takes an optional `citations` prop and renders `[cN]` as `CitationChip`s.
-6. **Snapshots:** the profile router's OpenAPI snapshot lives in `services/profile/tests/snapshots/openapi.json` (owned by H1). The pillar's snapshot test skips mounted external routers.
-7. **Parsing:** `parse_amount`/`parse_deadline` stay in `hope_discovery.parse` for now. H4 computes its dates from quotes with its own helper.
+Roles and approvals, multi-tenant, password reset, email verification, Temporal, Kafka, MinIO, server-side
+applications/eligibility/drafts (the H4/H5 backend track), and new UI primitives or restyling.

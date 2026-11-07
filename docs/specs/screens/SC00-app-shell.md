@@ -2,133 +2,143 @@
 
 | | |
 |---|---|
-| Route | wraps every route; `/` redirects |
-| Feature folder | `apps/web/components/AppShell.tsx`, `components/RequireSession.tsx`, `nav.ts` |
-| Built by | H0 |
-| Primary users | everyone, on every screen |
-| Can act | any signed-in user |
-| Status | Ready |
-
-> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
-> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
-> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
-> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
-> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
-> - **Built:** `app/hope/layout.tsx` + `HopeNav` (Discover, Saved, Deadlines, Our profile, EN/ES) and `HopeFooter`. The one thing left for H0 is the session guard; the nav stays as is.
+| Route | wraps every `/hope/*` route (`app/hope/layout.tsx`); `/` and `/hope` redirect to `/hope/discover` |
+| Feature folder | `apps/web/app/hope/layout.tsx`, `components/hope/ui.tsx` (`HopeNav`, `HopeFooter`), `api/session/RequireSession.tsx` |
+| Built by | PR #34 (layout, nav, footer, EN/ES). H0 adds the session guard and Sign out |
+| Primary users | everyone, on every `/hope/*` screen |
+| Can act | anyone in offline mode; any signed-in user online |
+| Status | Built, except the session guard and Sign out (H0) |
 
 ## 1. Purpose and user goals
 
-The frame around every screen. It answers three questions: where am I, where can I go next, and
-am I signed in as the right person. It also guarantees that nobody sees an inner screen without a
-session, and that nobody skips onboarding: Hope can't find grants without a profile.
+The frame around every Hope screen. It answers: where am I, where can I go next, and (online) am I signed in.
+Online, it also makes sure nobody sees a `/hope/*` screen without a session, and nobody skips onboarding:
+Hope can't find grants without a profile. Offline (no API URL) it is exactly the PR #34 demo shell.
 
 ## 2. Information hierarchy
 
 1. The page content (the shell stays quiet).
-2. Primary nav: **Grants** (the shortlist workflow is home), **Discover**, **Profile**.
-3. The user menu (name, organization name, Sign out).
+2. Primary nav: **Discover** (home), **Saved** (with the saved count), **Deadlines**, **Our profile**.
+3. The EN/ES toggle, and online only the signed-in name with **Sign out**.
+4. The deadline reminder strip (applications due within 14 days), when there is one.
+5. The footer: "Demo data" and the browser-storage note.
 
-There's no tenant picker, no roles and no notification bell in the hackathon.
+There is no tenant picker, no roles, no notification bell and no new-grants badge in the hackathon.
 
 ## 3. Wireframe
 
 ```text
-Desktop (>= 1024 px)
-┌──────────────┬───────────────────────────────────────────────────────────┐
-│  ◉ Hope      │  <page title>                         (DS) Dana Smith ▾   │
-│              │                                       Bright Futures Org  │
-│  ▣ Grants  3 │───────────────────────────────────────────────────────────│
-│  ⌕ Discover  │                                                           │
-│  ☺ Profile   │                    page content                           │
-│              │                                                           │
-│              │                                                           │
-│  (raised     │                                                           │
-│   sidebar)   │                                                           │
-└──────────────┴───────────────────────────────────────────────────────────┘
-Mobile (<= 640 px): top bar with the logo and avatar; nav as a bottom tab bar (Grants, Discover, Profile).
+Any width (glass-chrome bar, max-w-6xl, wraps)
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ hope✳     Discover  [Saved (2)]  Deadlines  Our profile      [EN|ES]           │
+│                                                    online: Dana Okafor · Sign out │
+│ ● Due soon: Youth Mentoring Grants (6d) · …                    (only when due ≤14 d) │
+└───────────────────────────────────────────────────────────────────────────────┘
+  page content
+──────────────────────────────────────────────────────────────────────────────────
+  Demo data · Saved in this browser only — …                          <footer right>
+
+< 640 px: logo and toggle on the first row; the nav drops to its own full-width row and scrolls sideways.
 ```
 
 ## 4. Content inventory
 
 | Element | Source | Format | Rules |
 |---|---|---|---|
-| Logo | static | "Hope" wordmark | Links to `/grants` |
-| Nav items | `nav.ts` | icon + label | Active item uses `glass-active` and `aria-current="page"` |
-| Grants count badge | `GET /v1/grants?status=new&limit=1` -> `counts.new` | "3" | Hidden at 0; caps at "99+" |
-| User name + initials | `GET /v1/me` -> `display_name` | "Dana Smith", avatar "DS" | Truncated at 24 characters |
-| Organization name | `GET /v1/profile` -> `form.basics.legal_name` | secondary text | Hidden until onboarding is done |
+| Logo | static | "hope✳" | Links to `/hope/discover` |
+| Nav items | `NAV` in `components/hope/ui.tsx`, labels `h.nav.*` (`lib/hope/i18n.ts`) | text pill | Active item: `bg-navy text-white` + `aria-current="page"`; Saved is also active on `/hope/applications/*` |
+| Saved count | `useHope().state.decisions` (`decision === "saved"`) | "(2)" | Hidden at 0 |
+| Language toggle | `LanguageToggle` (locale cookie) | EN / ES | Unchanged |
+| Name | `useSession().me.display_name` (`GET /v1/me`) | "Dana Okafor" | Online and `ready` only; truncated at 24 characters |
+| Sign out | `h.session.signOut` | text button | Online and `ready` only |
+| Deadline reminder | `state.applications` (stage ≠ `ready`) × `useOpportunities()` | "Name (6d)" | Only deadlines within 14 days; links to `/hope/deadlines` |
+| Footer | `h.demo`, `h.storageNote`, `h.look.footerR` | small text | Unchanged |
 
 ## 5. Components
 
-The sidebar is a `Card` (`glass-panel`); nav items are `Button` variant `nav`; the user menu is a
-`Drawer` on mobile and a popover menu on desktop; signing out shows a `Toast`.
+Existing only: the `glass-chrome` bar and pills in `HopeNav`, `LanguageToggle`, and `Loading` / `ErrorNotice` from
+`components/ui` for the guard states. Sign out uses the existing `btnSecondary` style. No new primitives, and no change
+to `app/globals.css` or `components/ui/**`.
 
 ## 6. Interactions
 
-1. **Load any route.** Calls `GET /v1/me`.
-   - 401 `not_signed_in` goes to `/login?next=<current path>`.
-   - 200 with `onboarding_complete: false` goes to `/onboarding`. It never redirects away from `/login` or `/onboarding` themselves.
-   - 200 renders the page.
-2. **`/`** redirects to `/grants`.
-3. **Sign out.** `POST /v1/auth/logout` returns 204, then it goes to `/login` with the toast "Signed out".
-4. **Session expires mid-use.** Any API 401 triggers the same redirect, keeping `next`.
-5. **Keyboard:** "Skip to content" is the first tab stop; `g` then `g`/`d`/`p` jumps to Grants, Discover or Profile.
+1. **Load any `/hope/*` route, offline** (`NEXT_PUBLIC_HOPE_API_URL` unset): render the page. No request, no Sign out.
+2. **Load any `/hope/*` route, online:** `RequireSession` reads `useSession()` (one cached `GET /v1/me`).
+   - loading: the checking state (section 7), never a flash of page content;
+   - 401 `not_signed_in`: `router.replace("/login?next=" + encodeURIComponent(path + search))`;
+   - 200 with `onboarding_complete: false`: `router.replace("/onboarding")`;
+   - 200 with `onboarding_complete: true`: render the page;
+   - network error or 5xx: the unreachable state, with Retry.
+3. **`/` and `/hope`** redirect to `/hope/discover` (built).
+4. **Sign out (online):** `POST /v1/auth/logout` returns 204, then `invalidateSession()` and `router.replace("/login")`.
+   On an error, stay and show "Couldn't sign out. Try again." `hope:state:v1` is never cleared.
+5. **Session expires mid-use:** any `/v1` 401 dispatches `hope:unauthorized`; the guard redirects as in 2, keeping `next`.
+6. **Window focus:** `me()` is refetched, so a sign-out in another tab is picked up.
+7. `/login` and `/onboarding` are outside `app/hope/layout.tsx`, so the guard never redirects either to itself.
 
 ## 7. States and exact copy
 
-| State | What shows |
+Copy lives in `lib/hope/i18n.ts` (`en` and `es`, new keys under `session`).
+
+| State | What shows (EN / ES) |
 |---|---|
-| Checking session | Full-page soft skeleton (sidebar + header blocks), no flash of content |
-| API unreachable | Full-page "Hope can't reach the server. Check that `make demo` is running." + Retry |
-| Signed out | Redirect (no message); `/login` shows "Please sign in to continue" when `next` is set |
+| Checking session (online) | `Loading` with `h.loading`: "Loading your workspace…" / "Cargando tu espacio…" |
+| API unreachable | `ErrorNotice` title "Hope can't reach the server." / "Hope no puede conectarse al servidor."; body "Check that `make demo` is running, then try again." / "Revisa que `make demo` esté en marcha y vuelve a intentarlo."; Retry calls `retry()` |
+| Signed out | Redirect only (SC01 shows its own message) |
+| Not onboarded | Redirect only (SC11) |
+| Sign-out failed | Inline under the button: "Couldn't sign out. Try again." / "No se pudo cerrar la sesión. Inténtalo de nuevo." |
+| Offline | The PR #34 shell, unchanged |
 
 ## 8. Data and endpoints
 
 | Trigger | Call | Fields | Cache |
 |---|---|---|---|
-| App load, window focus | `GET /v1/me` | `display_name`, `agency_id`, `onboarding_complete` | Session; refetch on focus |
-| After `me` | `GET /v1/profile` | `form.basics.legal_name` | Session |
-| After `me`, every 60 s | `GET /v1/grants?status=new&limit=1` | `counts.new` | 60 s |
-| Sign out | `POST /v1/auth/logout` | - | Clears all caches |
+| Mount (online), window focus | `GET /v1/me` | `display_name`, `onboarding_complete` | Module cache in `api/session`; `invalidateSession()` clears it |
+| Sign out | `POST /v1/auth/logout` | - | Clears the session cache |
+
+Mocks: `contracts/mocks/w1/me.get/{onboarded,not_onboarded,signed_out}.json`, `contracts/mocks/w1/auth.logout/ok.json`.
+The shell calls no other endpoint. Model calls: none (all code).
 
 ## 9. Responsive behaviour
 
-- >= 1024 px: fixed 240 px sidebar.
-- 641-1023 px: an icon-only 72 px rail, with tooltips.
-- <= 640 px: a top bar and a bottom tab bar.
+- ≥ 640 px (`sm`): logo, nav, toggle (and Sign out) on one wrapping row.
+- < 640 px: the nav takes its own full-width row (`order-3 w-full overflow-x-auto`), pills scroll sideways, and every
+  target stays at least 44 px tall.
 
 ## 10. Accessibility
 
-- Landmarks: `<nav aria-label="Primary">`, `<main id="content">`.
-- The badge reads "3 new grants".
-- Focus returns to the main heading after route changes.
-- `prefers-reduced-motion` disables transitions.
+- `<nav aria-label="Hope">` (`h.brand`); the active link has `aria-current="page"`; all links use the gold `focusRing`.
+- The checking state is `role="status"`; the unreachable state is `role="alert"`.
+- Sign out is a `<button>`, reachable by keyboard right after the language toggle.
+- The page stays in the root layout's `<main>`.
 
 ## 11. Fixture data
 
-Session fixtures: signed out; signed in but not onboarded; signed in and onboarded with 0 new grants; signed in and onboarded with 120 new grants (shows "99+").
+`me.get` scenarios `onboarded`, `not_onboarded`, `signed_out`; a fetch that rejects (unreachable); offline
+(`NEXT_PUBLIC_HOPE_API_URL` unset). Browser state: an empty `hope:state:v1` and one with 2 saved decisions.
 
 ## 12. Analytics and success measures
 
-Events: `session_started`, `signed_out`, `nav_clicked {to}`. Success: no route renders protected content without a session.
+None in the hackathon. Success: online, no `/hope/*` route renders page content without a session; offline, nothing changes.
 
 ## 13. Acceptance criteria
 
-- [ ] AC1 Without a session, every route except `/login` redirects to `/login?next=…`.
-- [ ] AC2 A signed-in user who hasn't onboarded is redirected to `/onboarding` from every other route.
-- [ ] AC3 `/` redirects to `/grants`; the active nav item has `aria-current`.
-- [ ] AC4 The badge shows the new-grant count, is hidden at 0, and shows "99+" above 99.
-- [ ] AC5 Sign out calls logout, clears caches, and lands on `/login` with the toast.
-- [ ] AC6 The mobile layout shows the bottom tab bar.
+- [ ] AC1 Offline, every `/hope/*` route renders with no `/v1` request and no Sign out.
+- [ ] AC2 Online without a session, every `/hope/*` route redirects to `/login?next=<path>`, and no page content renders first.
+- [ ] AC3 Online, a signed-in user who hasn't onboarded is redirected to `/onboarding`.
+- [ ] AC4 A `/v1` 401 after load redirects to `/login` with `next`; an unreachable API shows the exact copy and Retry refetches.
+- [ ] AC5 Sign out calls logout, clears the session cache, keeps `hope:state:v1` and lands on `/login`; a failure shows the exact copy.
+- [ ] AC6 The nav is unchanged: four items, the active item has `aria-current`, the Saved count is hidden at 0, and `/` lands on `/hope/discover`.
 
-## 14. Test plan
+## 14. Test plan (Vitest, offline)
 
 | AC | Test |
 |---|---|
-| AC1, AC2 | `components/RequireSession.test.tsx` |
-| AC3, AC4, AC6 | `components/AppShell.test.tsx` |
-| AC5 | `components/AppShell.test.tsx::sign out` |
+| AC1-AC4 | `api/session/RequireSession.test.tsx` (mocks `fetch` with the `contracts/mocks/w1` bodies; offline case stubs `NEXT_PUBLIC_HOPE_API_URL` empty) |
+| AC4 | `api/http.test.ts` (problem parsing, `network_error`, the `hope:unauthorized` event) |
+| AC5, AC6 | `components/hope/ui.test.tsx` (`HopeNav` offline/online, sign out ok and failed, active item, saved count) |
 
 ## 15. Open questions
 
-- None.
+- The footer note says "no real sign-in" even online. Recommended default: keep it for the hackathon, since all
+  application data is still browser-only.
