@@ -47,18 +47,22 @@ logic beyond auth.
 
 ```python
 class Citation(Contract):
-    citation_id: str                 # "c1", "c2"... unique within its parent document
+    citation_id: str  # "c1", "c2"... unique within its parent document
     kind: Literal["web", "profile"]
-    url: str | None = None           # web
-    title: str | None = None         # web page title
-    quote: str                       # exact text supporting the claim (<= 500 chars)
+    url: str | None = None  # web
+    title: str | None = None  # web page title
+    quote: str  # exact text supporting the claim (<= 500 chars)
     profile_path: str | None = None  # profile, e.g. "mission.mission_statement"
     retrieved_at: datetime | None = None
 
+
 class DiscoveryProgress(Contract):
-    queries_total: int = 0; queries_done: int = 0
-    pages_read: int = 0; candidates_found: int = 0
-    current_step: str = ""           # human text: "Searching: youth mentoring grants Ohio"
+    queries_total: int = 0
+    queries_done: int = 0
+    pages_read: int = 0
+    candidates_found: int = 0
+    current_step: str = ""  # human text: "Searching: youth mentoring grants Ohio"
+
 
 class DiscoveryJob(Contract):
     job_id: UUID
@@ -66,38 +70,43 @@ class DiscoveryJob(Contract):
     queries: list[str] = []
     progress: DiscoveryProgress
     error: str | None = None
-    started_at: datetime; finished_at: datetime | None = None
+    started_at: datetime
+    finished_at: datetime | None = None
+
 
 class GrantCandidate(Contract):
     grant_id: UUID
     title: str
     funder: str
-    url: str                         # canonical grant page
-    summary: str                     # 1-3 plain-English sentences
-    amount_text: str | None = None   # quoted, e.g. "up to $50,000"
+    url: str  # canonical grant page
+    summary: str  # 1-3 plain-English sentences
+    amount_text: str | None = None  # quoted, e.g. "up to $50,000"
     amount_max: Money | None = None  # parsed by code from amount_text
     deadline_text: str | None = None
-    deadline: date | None = None     # parsed by code; None for rolling or unknown
+    deadline: date | None = None  # parsed by code; None for rolling or unknown
     eligibility_summary: str | None = None
     fit_score: int = Field(ge=0, le=100)
-    fit_reasons: list[str] = []      # each <= 140 chars
+    fit_reasons: list[str] = []  # each <= 140 chars
     concerns: list[str] = []
     citations: list[Citation] = []
     status: Literal["new", "saved", "passed"] = "new"
     found_by_job_id: UUID | None = None
     discovered_at: datetime
 
+
 class BriefItem(Contract):
     item_id: str
-    text: str                        # plain English
+    text: str  # plain English
     detail: str | None = None
     citation_ids: list[str] = []
+
 
 class EligibilityCheck(Contract):
     requirement: str
     meets: Literal["yes", "no", "unknown"]
     why: str
-    citation_ids: list[str] = []     # web and/or profile citations
+    citation_ids: list[str] = []  # web and/or profile citations
+
 
 class GrantQuestion(Contract):
     question_id: str
@@ -105,10 +114,11 @@ class GrantQuestion(Contract):
     word_limit: int | None = None
     citation_ids: list[str] = []
 
+
 class ApplicationBrief(Contract):
     grant_id: UUID
-    overview: str                    # "What this grant is, in two sentences"
-    how_to_apply: BriefItem          # the portal or method, with a link
+    overview: str  # "What this grant is, in two sentences"
+    how_to_apply: BriefItem  # the portal or method, with a link
     steps: list[BriefItem]
     required_documents: list[BriefItem]
     questions: list[GrantQuestion]
@@ -118,13 +128,15 @@ class ApplicationBrief(Contract):
     generated_at: datetime
     content_hash: str
 
+
 class ProposalSection(Contract):
-    section_id: str                  # equals question_id when it answers a question
+    section_id: str  # equals question_id when it answers a question
     title: str
-    body_md: str                     # inline markers [c1], [c2] refer to citations
+    body_md: str  # inline markers [c1], [c2] refer to citations
     citation_ids: list[str] = []
     unverified_claims: list[str] = []
     edited_by_user: bool = False
+
 
 class ProposalDraft(Contract):
     grant_id: UUID

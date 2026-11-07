@@ -47,35 +47,49 @@ every save commits directly: there are no HITL-0 proposals and no roles.
 ```python
 class Basics(BaseModel):
     legal_name: str = Field(min_length=2, max_length=200)
-    ein: str = Field(pattern=r"^[0-9]{2}-[0-9]{7}$")            # validators.ein_errors also runs
+    ein: str = Field(pattern=r"^[0-9]{2}-[0-9]{7}$")  # validators.ein_errors also runs
     tax_status: TaxStatus = "501c3_public_charity"
     hq_city: str = Field(min_length=2, max_length=80)
-    hq_state: str = Field(pattern=r"^[A-Z]{2}$")                 # USPS code, checked against US_STATES (50 + DC + PR)
-    service_area: list[str] = Field(min_length=1, max_length=20) # "Chelan County, WA", "Washington", "Nationwide"; each 2-80 chars
+    hq_state: str = Field(
+        pattern=r"^[A-Z]{2}$"
+    )  # USPS code, checked against US_STATES (50 + DC + PR)
+    service_area: list[str] = Field(
+        min_length=1, max_length=20
+    )  # "Chelan County, WA", "Washington", "Nationwide"; each 2-80 chars
     website: HttpUrl | None = None
+
 
 class MissionForm(BaseModel):
     mission_statement: str = Field(min_length=20, max_length=2000)
     vision_statement: str | None = Field(None, max_length=2000)
-    values: list[str] = Field(default=[], max_length=10)         # each 2-60 chars, de-duplicated case-insensitively
+    values: list[str] = Field(
+        default=[], max_length=10
+    )  # each 2-60 chars, de-duplicated case-insensitively
+
 
 class BudgetForm(BaseModel):
-    budget_band: BudgetBand                                      # "<250k" | "250k-1m" | "1m-5m" | "5m-25m" | ">25m"
-    annual_operating_budget_usd: int | None = Field(None, ge=0, le=10_000_000_000)  # whole dollars, optional
+    budget_band: BudgetBand  # "<250k" | "250k-1m" | "1m-5m" | "5m-25m" | ">25m"
+    annual_operating_budget_usd: int | None = Field(
+        None, ge=0, le=10_000_000_000
+    )  # whole dollars, optional
     fiscal_year_end: str = Field("12-31", pattern=r"^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$")
 
+
 class ProgramForm(BaseModel):
-    program_id: str | None = None                                # server assigns "prg-<slug>" when missing
+    program_id: str | None = None  # server assigns "prg-<slug>" when missing
     name: str = Field(min_length=2, max_length=120)
     description: str = Field(min_length=20, max_length=1000)
-    people_served: str = Field(min_length=2, max_length=200)     # "Children and adults on Medicaid"
+    people_served: str = Field(min_length=2, max_length=200)  # "Children and adults on Medicaid"
     annual_served: int | None = Field(None, ge=0, le=100_000_000)
     age_range: str | None = Field(None, max_length=40)
+
 
 class ProfileForm(BaseModel):
     basics: Basics
     mission: MissionForm
-    ntee_codes: list[str] = Field(min_length=1, max_length=3)    # first = primary; must exist in NTEE_CODES
+    ntee_codes: list[str] = Field(
+        min_length=1, max_length=3
+    )  # first = primary; must exist in NTEE_CODES
     budget: BudgetForm
     programs: list[ProgramForm] = Field(min_length=1, max_length=10)
 ```
@@ -165,6 +179,7 @@ class NteeSuggestionItem(BaseModel):
     code: str = Field(pattern=r"^[A-Z][0-9]{0,2}[A-Z0-9]?$")
     reason: str = Field(max_length=140)
     quote: str = Field(max_length=300)
+
 
 class NteeSuggestionOut(BaseModel):
     suggestions: list[NteeSuggestionItem] = Field(max_length=3)

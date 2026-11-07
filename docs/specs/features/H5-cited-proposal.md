@@ -104,15 +104,24 @@ After H0 (assumed merged):
 
    ```python
    class Claim(BaseModel):
-       text: str = Field(max_length=600, description="One sentence. No citation markers, no markdown links.")
-       evidence_ids: list[str] = Field(default=[], max_length=4, description="Ids like 'e3' that directly support this sentence")
-       kind: Literal["fact", "plan", "connective"] = Field(description="fact = about the org/grant/need; plan = what we will do; connective = transition, no facts")
+       text: str = Field(
+           max_length=600, description="One sentence. No citation markers, no markdown links."
+       )
+       evidence_ids: list[str] = Field(
+           default=[], max_length=4, description="Ids like 'e3' that directly support this sentence"
+       )
+       kind: Literal["fact", "plan", "connective"] = Field(
+           description="fact = about the org/grant/need; plan = what we will do; connective = transition, no facts"
+       )
+
 
    class Paragraph(BaseModel):
        claims: list[Claim] = Field(min_length=1, max_length=12)
 
+
    class SectionAnswer(BaseModel):
        """Answer to one grant question, written only from the numbered evidence."""
+
        paragraphs: list[Paragraph] = Field(min_length=1, max_length=8)
    ```
 

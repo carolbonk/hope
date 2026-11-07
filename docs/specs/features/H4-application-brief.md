@@ -149,19 +149,28 @@ into a checklist the user can work through, and it is the input H5 drafts the pr
 class QuotedFact(BaseModel):
     text: str = Field(max_length=300, description="Plain-English statement, second person")
     detail: str | None = Field(None, max_length=300)
-    quote: str = Field(min_length=12, max_length=500, description="Exact sentence copied from the page")
+    quote: str = Field(
+        min_length=12, max_length=500, description="Exact sentence copied from the page"
+    )
+
 
 class ExtractedQuestion(BaseModel):
     text: str = Field(max_length=500, description="The question as the funder asks it")
     quote: str = Field(min_length=12, max_length=500)
-    limit_quote: str | None = Field(None, max_length=200, description="Exact text stating the word or character limit")
+    limit_quote: str | None = Field(
+        None, max_length=200, description="Exact text stating the word or character limit"
+    )
+
 
 class ExtractedDate(BaseModel):
     label: str = Field(max_length=120, description="What is due, e.g. 'Full application due'")
     quote: str = Field(min_length=12, max_length=500)
 
+
 class PageExtraction(BaseModel):
-    is_relevant: bool = Field(description="False if the page says nothing about this grant or applying")
+    is_relevant: bool = Field(
+        description="False if the page says nothing about this grant or applying"
+    )
     overview_facts: list[QuotedFact] = Field(default=[], max_length=3)
     how_to_apply: QuotedFact | None = None
     portal_url: str | None = None
@@ -171,6 +180,7 @@ class PageExtraction(BaseModel):
     dates: list[ExtractedDate] = Field(default=[], max_length=10)
     eligibility_requirements: list[QuotedFact] = Field(default=[], max_length=12)
 
+
 class EligibilityVerdict(BaseModel):
     requirement_id: str = Field(description="Id of the requirement, e.g. 'r3'")
     requirement: str = Field(max_length=200, description="Plain-English requirement")
@@ -178,13 +188,18 @@ class EligibilityVerdict(BaseModel):
     why: str = Field(max_length=300)
     profile_paths: list[str] = Field(default=[], max_length=4)
 
+
 class EligibilityAssessment(BaseModel):
     checks: list[EligibilityVerdict] = Field(max_length=12)
 
-class BriefOverview(BaseModel):
-    overview: str = Field(max_length=400, description="1-2 sentences; end each with its fact marker like [f1]")
 
-class BriefProgress(BaseModel):                       # stored in jobs.progress
+class BriefOverview(BaseModel):
+    overview: str = Field(
+        max_length=400, description="1-2 sentences; end each with its fact marker like [f1]"
+    )
+
+
+class BriefProgress(BaseModel):  # stored in jobs.progress
     step: Literal["queued", "fetching", "reading", "checking", "saving"]
     pages_total: int = 0
     pages_done: int = 0
