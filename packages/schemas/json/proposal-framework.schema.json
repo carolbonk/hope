@@ -1,0 +1,771 @@
+{
+  "$defs": {
+    "Activity": {
+      "additionalProperties": false,
+      "properties": {
+        "activity_id": {
+          "title": "Activity Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "end_month": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Month"
+        },
+        "responsible_role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Responsible Role"
+        },
+        "start_month": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Month"
+        }
+      },
+      "required": [
+        "activity_id",
+        "description"
+      ],
+      "title": "Activity",
+      "type": "object"
+    },
+    "Approval": {
+      "additionalProperties": false,
+      "properties": {
+        "approved_hash": {
+          "title": "Approved Hash",
+          "type": "string"
+        },
+        "approver_user_id": {
+          "title": "Approver User Id",
+          "type": "string"
+        },
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "esign_envelope_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Esign Envelope Id"
+        },
+        "gate": {
+          "$ref": "#/$defs/Gate"
+        }
+      },
+      "required": [
+        "gate",
+        "approver_user_id",
+        "approved_hash",
+        "at"
+      ],
+      "title": "Approval",
+      "type": "object"
+    },
+    "BudgetLedger": {
+      "additionalProperties": false,
+      "properties": {
+        "cap_checks": {
+          "items": {
+            "$ref": "#/$defs/CapCheck"
+          },
+          "title": "Cap Checks",
+          "type": "array"
+        },
+        "computed_by": {
+          "const": "budget-engine",
+          "default": "budget-engine",
+          "description": "ledgers from any other producer are rejected",
+          "title": "Computed By",
+          "type": "string"
+        },
+        "currency": {
+          "default": "USD",
+          "title": "Currency",
+          "type": "string"
+        },
+        "engine_version": {
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "ledger_id": {
+          "title": "Ledger Id",
+          "type": "string"
+        },
+        "line_items": {
+          "items": {
+            "$ref": "#/$defs/LineItem"
+          },
+          "title": "Line Items",
+          "type": "array"
+        },
+        "periods": {
+          "default": 1,
+          "title": "Periods",
+          "type": "integer"
+        },
+        "sf424a_mapping": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {},
+          "title": "Sf424A Mapping",
+          "type": "object"
+        },
+        "totals": {
+          "$ref": "#/$defs/Totals"
+        }
+      },
+      "required": [
+        "ledger_id",
+        "engine_version",
+        "line_items",
+        "totals",
+        "cap_checks"
+      ],
+      "title": "BudgetLedger",
+      "type": "object"
+    },
+    "CapCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_minor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actual Minor"
+        },
+        "adjustment_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Adjustment Note"
+        },
+        "limit_minor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limit Minor"
+        },
+        "rule": {
+          "enum": [
+            "award_ceiling",
+            "award_floor",
+            "indirect_cap",
+            "cost_share_ratio",
+            "category_cap",
+            "unallowable_cost",
+            "period_cap"
+          ],
+          "title": "Rule",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "adjusted"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "status"
+      ],
+      "title": "CapCheck",
+      "type": "object"
+    },
+    "Gate": {
+      "enum": [
+        "HITL-0",
+        "HITL-1",
+        "HITL-2",
+        "HITL-3",
+        "HITL-4",
+        "HITL-5",
+        "REVIEW-ELIGIBILITY",
+        "REVIEW-PARSE"
+      ],
+      "title": "Gate",
+      "type": "string"
+    },
+    "Goal": {
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "title": "Goal Id",
+          "type": "string"
+        },
+        "objectives": {
+          "items": {
+            "$ref": "#/$defs/Objective"
+          },
+          "minItems": 1,
+          "title": "Objectives",
+          "type": "array"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "goal_id",
+        "statement",
+        "objectives"
+      ],
+      "title": "Goal",
+      "type": "object"
+    },
+    "Kpi": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "profile metric_id; never a free number",
+          "title": "Baseline Ref"
+        },
+        "metric": {
+          "title": "Metric",
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "metric"
+      ],
+      "title": "Kpi",
+      "type": "object"
+    },
+    "LineItem": {
+      "additionalProperties": false,
+      "properties": {
+        "allowability": {
+          "default": "allowable",
+          "enum": [
+            "allowable",
+            "unallowable",
+            "needs_review"
+          ],
+          "title": "Allowability",
+          "type": "string"
+        },
+        "amount_minor": {
+          "title": "Amount Minor",
+          "type": "integer"
+        },
+        "basis": {
+          "$ref": "#/$defs/LineItemBasis"
+        },
+        "category": {
+          "enum": [
+            "personnel",
+            "fringe",
+            "travel",
+            "equipment",
+            "supplies",
+            "contractual",
+            "construction",
+            "other",
+            "indirect"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "funding_source": {
+          "default": "request",
+          "enum": [
+            "request",
+            "cost_share_cash",
+            "cost_share_in_kind"
+          ],
+          "title": "Funding Source",
+          "type": "string"
+        },
+        "justification": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Justification"
+        },
+        "line_id": {
+          "title": "Line Id",
+          "type": "string"
+        },
+        "period": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Period",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "line_id",
+        "category",
+        "basis",
+        "amount_minor"
+      ],
+      "title": "LineItem",
+      "type": "object"
+    },
+    "LineItemBasis": {
+      "additionalProperties": false,
+      "description": "What an LLM may propose. Amounts are never part of the basis.",
+      "properties": {
+        "cost_basis_ref": {
+          "description": "e.g. hris:position:PM-02 or erp:vendor-quote:Q-118",
+          "title": "Cost Basis Ref",
+          "type": "string"
+        },
+        "effort_pct_bps": {
+          "anyOf": [
+            {
+              "description": "basis points, e.g. 1500 = 15%",
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Effort Pct Bps"
+        },
+        "quantity": {
+          "default": "1",
+          "description": "decimal string",
+          "title": "Quantity",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "unit_rate_minor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "resolved by the engine from the ref",
+          "title": "Unit Rate Minor"
+        }
+      },
+      "required": [
+        "cost_basis_ref"
+      ],
+      "title": "LineItemBasis",
+      "type": "object"
+    },
+    "LogicModel": {
+      "additionalProperties": false,
+      "properties": {
+        "activities": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Activities",
+          "type": "array"
+        },
+        "inputs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Inputs",
+          "type": "array"
+        },
+        "outcomes_long": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Outcomes Long",
+          "type": "array"
+        },
+        "outcomes_short": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Outcomes Short",
+          "type": "array"
+        },
+        "outputs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Outputs",
+          "type": "array"
+        }
+      },
+      "title": "LogicModel",
+      "type": "object"
+    },
+    "Objective": {
+      "additionalProperties": false,
+      "properties": {
+        "activities": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Activity"
+          },
+          "title": "Activities",
+          "type": "array"
+        },
+        "kpis": {
+          "items": {
+            "$ref": "#/$defs/Kpi"
+          },
+          "minItems": 1,
+          "title": "Kpis",
+          "type": "array"
+        },
+        "objective_id": {
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "smart_statement": {
+          "title": "Smart Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "objective_id",
+        "smart_statement",
+        "kpis"
+      ],
+      "title": "Objective",
+      "type": "object"
+    },
+    "RequirementCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "covered_by": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covered By",
+          "type": "array"
+        },
+        "section_id": {
+          "title": "Section Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "covered",
+            "partial",
+            "missing"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "section_id",
+        "status"
+      ],
+      "title": "RequirementCoverage",
+      "type": "object"
+    },
+    "Scope": {
+      "additionalProperties": false,
+      "properties": {
+        "goals": {
+          "items": {
+            "$ref": "#/$defs/Goal"
+          },
+          "minItems": 1,
+          "title": "Goals",
+          "type": "array"
+        },
+        "logic_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LogicModel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "problem_statement_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Problem Statement Ref"
+        },
+        "program_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Program Ids",
+          "type": "array"
+        },
+        "project_title": {
+          "title": "Project Title",
+          "type": "string"
+        },
+        "requirement_coverage": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RequirementCoverage"
+          },
+          "title": "Requirement Coverage",
+          "type": "array"
+        }
+      },
+      "required": [
+        "project_title",
+        "goals"
+      ],
+      "title": "Scope",
+      "type": "object"
+    },
+    "Totals": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_share_minor": {
+          "title": "Cost Share Minor",
+          "type": "integer"
+        },
+        "direct_minor": {
+          "title": "Direct Minor",
+          "type": "integer"
+        },
+        "indirect_minor": {
+          "title": "Indirect Minor",
+          "type": "integer"
+        },
+        "mtdc_base_minor": {
+          "title": "Mtdc Base Minor",
+          "type": "integer"
+        },
+        "project_total_minor": {
+          "title": "Project Total Minor",
+          "type": "integer"
+        },
+        "request_minor": {
+          "title": "Request Minor",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "direct_minor",
+        "mtdc_base_minor",
+        "indirect_minor",
+        "request_minor",
+        "cost_share_minor",
+        "project_total_minor"
+      ],
+      "title": "Totals",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.hope.dev/proposal-framework/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "agency_id": {
+      "format": "uuid",
+      "title": "Agency Id",
+      "type": "string"
+    },
+    "approvals": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Approval"
+      },
+      "title": "Approvals",
+      "type": "array"
+    },
+    "budget": {
+      "$ref": "#/$defs/BudgetLedger"
+    },
+    "content_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "sha256 of canonical JSON",
+      "title": "Content Hash"
+    },
+    "extra": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Extra",
+      "type": "object"
+    },
+    "framework_id": {
+      "format": "uuid",
+      "title": "Framework Id",
+      "type": "string"
+    },
+    "opportunity_id": {
+      "format": "uuid",
+      "title": "Opportunity Id",
+      "type": "string"
+    },
+    "scope": {
+      "$ref": "#/$defs/Scope"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "verified",
+        "approved_locked",
+        "superseded"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "framework_id",
+    "opportunity_id",
+    "agency_id",
+    "version",
+    "status",
+    "scope",
+    "budget"
+  ],
+  "title": "ProposalFramework",
+  "type": "object"
+}

@@ -1,0 +1,19 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+      - id: schemas-fresh
+        name: exported JSON schemas are fresh
+        entry: uv run hope-export-schemas
+        language: system
+        pass_filenames: false
+        files: ^packages/core/src/hope_core/(schemas|envelope|money|topics)

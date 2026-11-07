@@ -1,0 +1,209 @@
+{
+  "$defs": {
+    "EventType": {
+      "enum": [
+        "opportunity.raw_ingested",
+        "opportunity.normalized",
+        "opportunity.parse_incomplete",
+        "opportunity.amended",
+        "opportunity.eligibility_evaluated",
+        "opportunity.alignment_scored",
+        "opportunity.state_changed",
+        "recommendation.updated",
+        "profile.updated",
+        "profile.change_proposed",
+        "profile.stale_field",
+        "framework.drafted",
+        "framework.locked",
+        "verification.reported",
+        "hitl.requested",
+        "hitl.decided",
+        "submission.authorized",
+        "application.submitted",
+        "notification.requested"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "Producer": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agent Id"
+        },
+        "model_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Model Ids",
+          "type": "array"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        },
+        "service": {
+          "title": "Service",
+          "type": "string"
+        },
+        "version": {
+          "default": "0.1.0",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "service"
+      ],
+      "title": "Producer",
+      "type": "object"
+    },
+    "Trace": {
+      "additionalProperties": false,
+      "properties": {
+        "causation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Causation Id"
+        },
+        "correlation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "workflow id",
+          "title": "Correlation Id"
+        },
+        "trace_id": {
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "title": "Trace",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.hope.dev/pillar-envelope/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "data_classification": {
+      "default": "internal",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ],
+      "title": "Data Classification",
+      "type": "string"
+    },
+    "event_id": {
+      "description": "idempotency key",
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "event_type": {
+      "$ref": "#/$defs/EventType"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "payload": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Payload"
+    },
+    "payload_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "S3 URI when payload > 256 KB",
+      "title": "Payload Ref"
+    },
+    "producer": {
+      "$ref": "#/$defs/Producer"
+    },
+    "schema_ref": {
+      "title": "Schema Ref",
+      "type": "string"
+    },
+    "subject_id": {
+      "description": "partition key, usually opportunity_id",
+      "title": "Subject Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "None only for public, cross-tenant data",
+      "title": "Tenant Id"
+    },
+    "trace": {
+      "$ref": "#/$defs/Trace"
+    }
+  },
+  "required": [
+    "event_type",
+    "schema_ref",
+    "subject_id",
+    "producer"
+  ],
+  "title": "PillarEnvelope",
+  "type": "object"
+}

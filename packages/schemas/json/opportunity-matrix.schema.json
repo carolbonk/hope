@@ -1,0 +1,277 @@
+{
+  "$defs": {
+    "DimensionScores": {
+      "additionalProperties": false,
+      "properties": {
+        "deadline_feasibility": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Deadline Feasibility",
+          "type": "number"
+        },
+        "effort_to_funding": {
+          "description": "normalized inverse of EFR",
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Effort To Funding",
+          "type": "number"
+        },
+        "funder_relationship": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Funder Relationship",
+          "type": "number"
+        },
+        "funding_fit": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Funding Fit",
+          "type": "number"
+        },
+        "mission_alignment": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Mission Alignment",
+          "type": "number"
+        },
+        "strategic_priority_boost": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Strategic Priority Boost",
+          "type": "number"
+        },
+        "win_probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Win Probability",
+          "type": "number"
+        }
+      },
+      "required": [
+        "mission_alignment",
+        "funding_fit",
+        "effort_to_funding",
+        "win_probability",
+        "deadline_feasibility"
+      ],
+      "title": "DimensionScores",
+      "type": "object"
+    },
+    "Estimates": {
+      "additionalProperties": false,
+      "properties": {
+        "days_to_internal_deadline": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Days To Internal Deadline"
+        },
+        "expected_hours": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Hours"
+        },
+        "expected_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "Estimates",
+      "type": "object"
+    },
+    "MatrixRow": {
+      "additionalProperties": false,
+      "properties": {
+        "capacity_fit": {
+          "anyOf": [
+            {
+              "enum": [
+                "fits",
+                "tight",
+                "conflicts"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacity Fit"
+        },
+        "composite_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Composite Score",
+          "type": "number"
+        },
+        "eligibility": {
+          "enum": [
+            "eligible",
+            "needs_review",
+            "ineligible"
+          ],
+          "title": "Eligibility",
+          "type": "string"
+        },
+        "estimates": {
+          "$ref": "#/$defs/Estimates",
+          "default": {
+            "days_to_internal_deadline": null,
+            "expected_hours": null,
+            "expected_value": null
+          }
+        },
+        "explanation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "generated only from the values above",
+          "title": "Explanation"
+        },
+        "opportunity_id": {
+          "format": "uuid",
+          "title": "Opportunity Id",
+          "type": "string"
+        },
+        "rank": {
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        },
+        "recommendation": {
+          "enum": [
+            "pursue",
+            "consider",
+            "watch",
+            "skip"
+          ],
+          "title": "Recommendation",
+          "type": "string"
+        },
+        "risks": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Risks",
+          "type": "array"
+        },
+        "scores": {
+          "$ref": "#/$defs/DimensionScores"
+        },
+        "top_matched_programs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Top Matched Programs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "opportunity_id",
+        "rank",
+        "composite_score",
+        "eligibility",
+        "scores",
+        "recommendation"
+      ],
+      "title": "MatrixRow",
+      "type": "object"
+    },
+    "Money": {
+      "properties": {
+        "amount_minor": {
+          "title": "Amount Minor",
+          "type": "integer"
+        },
+        "currency": {
+          "default": "USD",
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount_minor"
+      ],
+      "title": "Money",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.hope.dev/opportunity-matrix/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "agency_id": {
+      "format": "uuid",
+      "title": "Agency Id",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "model_version": {
+      "title": "Model Version",
+      "type": "string"
+    },
+    "rows": {
+      "items": {
+        "$ref": "#/$defs/MatrixRow"
+      },
+      "title": "Rows",
+      "type": "array"
+    },
+    "weights_profile": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Weights Profile"
+    }
+  },
+  "required": [
+    "agency_id",
+    "generated_at",
+    "model_version",
+    "rows"
+  ],
+  "title": "OpportunityMatrix",
+  "type": "object"
+}
