@@ -212,9 +212,7 @@ class EligibilityVerdict(BaseModel):
     requirement: str = Field(max_length=200, description="Plain-English requirement")
     check: Literal[
         "tax_status", "location_hq", "location_served", "location", "budget", "ntee", "other"
-    ] = Field(
-        description="Which profile fact this requirement is about"
-    )
+    ] = Field(description="Which profile fact this requirement is about")
     expected: list[str] = Field(
         default=[],
         max_length=10,
