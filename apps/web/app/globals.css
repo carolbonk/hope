@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+/* Liquid-glass design tokens. Surfaces, colours and focus ring are defined once here. */
+@theme {
+  --color-base: #eef1f8;
+  --color-base-dark: #c4cad3;
+  --color-base-light: #ffffff;
+  --color-ink: #141a26;
+  --color-ink-muted: #3f4757;
+  --color-accent: #2f4fc7;
+  --color-accent-strong: #233c9e;
+  --color-focus: #1d4ed8;
+
+  --color-good: #166534;
+  --color-info: #1e40af;
+  --color-warn: #8a4b00;
+  --color-bad: #a31919;
+  --color-neutral: #3f4756;
+
+  --glass-fill: rgb(255 255 255 / 0.62);
+  --glass-fill-strong: rgb(255 255 255 / 0.78);
+  --glass-fill-inset: rgb(255 255 255 / 0.4);
+  --glass-edge: rgb(255 255 255 / 0.75);
+  --glass-line: rgb(20 26 38 / 0.12);
+  --glass-blur: blur(18px) saturate(170%);
+  --shadow-glass: 0 8px 32px rgb(31 41 80 / 0.14), inset 0 1px 0 var(--glass-edge);
+  --shadow-glass-sm: 0 2px 10px rgb(31 41 80 / 0.12), inset 0 1px 0 var(--glass-edge);
+
+  --radius-glass: 1.25rem;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Fixed colourful scene behind every page; text never sits on it directly. */
+@utility glass-backdrop {
+  background-color: var(--color-base);
+  background-image:
+    radial-gradient(40rem 30rem at 8% 0%, rgb(125 211 252 / 0.55), transparent 70%),
+    radial-gradient(36rem 28rem at 95% 10%, rgb(196 181 253 / 0.55), transparent 70%),
+    radial-gradient(44rem 34rem at 70% 100%, rgb(253 186 116 / 0.45), transparent 70%),
+    radial-gradient(30rem 24rem at 0% 90%, rgb(134 239 172 / 0.4), transparent 70%);
+  background-attachment: fixed;
+}
+@utility glass-panel {
+  background-color: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+@utility glass-control {
+  background-color: var(--glass-fill-strong);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--shadow-glass-sm);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+@utility glass-chrome {
+  background-color: var(--glass-fill-strong);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass-sm);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+@utility glass-inset {
+  background-color: var(--glass-fill-inset);
+  border: 1px solid var(--glass-line);
+  box-shadow: inset 0 1px 3px rgb(31 41 80 / 0.1);
+}
+@utility glass-active {
+  background-color: rgb(47 79 199 / 0.14);
+  border: 1px solid rgb(47 79 199 / 0.45);
+  box-shadow: inset 0 1px 0 var(--glass-edge);
+}
+@utility glass-overlay {
+  background-color: rgb(20 26 38 / 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+@utility glass-focus {
+  &:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+}
+
+/* Solid fallbacks: no backdrop-filter support or the OS asks for less transparency. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-fill: #ffffff;
+    --glass-fill-strong: #ffffff;
+    --glass-fill-inset: #f3f5fa;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-fill: #ffffff;
+    --glass-fill-strong: #ffffff;
+    --glass-fill-inset: #f3f5fa;
+    --glass-blur: none;
+  }
+  .glass-overlay {
+    background-color: rgb(20 26 38 / 0.6);
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--color-base);
+    color: var(--color-ink);
+  }
+  body {
+    @apply glass-backdrop;
+  }
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Aliases for the zip's Hope class names (navy, teal, gold...), mapped onto the liquid-glass palette. */
+@theme inline {
+  --color-navy: var(--color-ink);
+  --color-navy-deep: var(--color-ink);
+  --color-teal: var(--color-accent);
+  --color-teal-dark: var(--color-accent-strong);
+  --color-teal-ink: var(--color-accent);
+  --color-gold: #b7862c;
+  --color-gold-light: #e2c47e;
+  --color-cream: var(--color-base);
+  --color-line: var(--glass-line);
+  --color-sage: rgb(22 101 52 / 0.1);
+  --color-sage-ink: var(--color-good);
+  --color-leaf: #4f9a2a;
+  --color-muted: var(--color-ink-muted);
+  --font-display: var(--font-sans);
+  --font-serif: var(--font-sans);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* One chevron for every single-line select, inset evenly from the right edge.
+   Unlayered so it wins over padding utilities such as px-3. */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%233f4757' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.75rem;
+}
