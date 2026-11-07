@@ -104,8 +104,10 @@ each, and finish by day 2 noon. Day 2 afternoon is integration and demo rehearsa
 | H1 | Sign-in/sign-up screens, onboarding wizard, simplified profile page | SC01 `/login`, SC11 `/onboarding`, SC09 `/profile` | H0 | 0310-0319 | Draft |
 | H2 | Discovery agent and job progress screen | SC24 `/discover` | H0 | 0700-0709 | Draft |
 | H3 | Curated list (cards + list), save/pass/undo, shortlist, grant overview | SC25 `/grants`, SC26 `/grants/[grantId]` | H0 | 0710-0719 | Draft |
-| H4 | Application brief agent and brief screen | SC27 `/grants/[grantId]/brief` | H0 | 0720-0729 | Draft |
-| H5 | Cited proposal drafting, review/edit, export | SC28 `/grants/[grantId]/proposal` | H0 | 0800-0809 | Draft |
+| [H4](features/H4-eligibility-and-approval.md) | Eligibility checklist, required documents, simulated Program/Director approval | SC27 `/hope/applications/[oppId]` | H0 | none | Built (PR #34) |
+| [H5](features/H5-application-draft.md) | 6-section draft (`POST /api/hope/draft`, AI or template), edit, copy/.md, mark ready | SC28 `/hope/applications/[oppId]` | H0 | none | Built (PR #34) |
+
+**Frontend (PR #34):** `apps/web` follows the Hope frontend zip: `app/`, `components/`, `lib/` at the package root, routes under `/hope/*` (`/hope/discover`, `/hope/saved`, `/hope/deadlines`, `/hope/profile`, `/hope/applications/[oppId]`), plus SC11 `/onboarding` and the liquid-glass CSS. H4/H5 follow the zip's application flow; their state lives in the browser (`hope:state:v1`) until the backend track lands.
 
 MVP rules on top of the rules above:
 
