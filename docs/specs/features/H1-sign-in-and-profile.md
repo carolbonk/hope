@@ -417,7 +417,7 @@ version history UI, grant history and capacity editing, password reset, team man
 
 ## Decisions needed
 
-- **D1 Open sign-up?** Recommended: yes for the hackathon (anyone who signs up joins the one organization).
+- **D1 Open sign-up?** Decided: no. Sign-up needs an allowed email or the team's invite code (H0 section 1); the seeded demo user can always sign in.
 - **D2 Where wizard progress lives.** Recommended: `localStorage` per step (`hope.onboarding.v1`), one `PUT` at the end; no partial profiles on the server.
 - **D3 NTEE suggestions.** Recommended: include them (one cheap LLM call, clearly labelled "Suggested"); the user must click to add.
 - **D4 After onboarding, go where?** Recommended: `/discover` with discovery auto-started by H2 if it supports `?start=1`; otherwise `/discover` idle.
