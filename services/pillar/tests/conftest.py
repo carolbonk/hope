@@ -10,6 +10,7 @@ import pytest
 from hope_core.migrate import apply_migrations
 from hope_core.settings import get_settings
 from hope_core.testing.factories import TENANT_A, TENANT_B
+from hope_core.topics import Topic
 from hope_pillar.dlq import InMemoryDeadLetterSink
 from hope_pillar.kafka import KafkaConfig
 from hope_pillar.outbox import OutboxRelay
@@ -56,6 +57,7 @@ def kafka_pillar(
 ) -> Iterator[tuple[KafkaPostgresPillar, InMemoryDeadLetterSink]]:
     """A pillar on isolated topics with a background relay that only sees this test's rows."""
     kafka = KafkaConfig(kafka_bootstrap, topic_prefix=f"test-{uuid4().hex[:8]}.")
+    kafka.ensure_topics([*Topic, *(t.dlq for t in Topic)])
     settings = get_settings()
     with psycopg.connect(migrated_db) as conn:
         row = conn.execute("SELECT coalesce(max(outbox_id), 0) FROM outbox").fetchone()
@@ -68,3 +70,4 @@ def kafka_pillar(
     yield pillar, sink
     stop.set()
     thread.join(5)
+    kafka.delete_prefixed_topics()
