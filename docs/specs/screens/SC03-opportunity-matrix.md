@@ -4,9 +4,9 @@
 |---|---|
 | Route | `/matrix` (query: `rec`, `elig`, `due`, `q`, `sort`, `selected`) |
 | Feature folder | `apps/web/src/features/matrix/` |
-| Built by | S05 (extends today's `MatrixScreen.tsx`, `OpportunityDrawer.tsx`, `filter.ts`) |
+| Built by | M2 (Watch/Skip, explanation) and M4 (Pursue); extends today's `MatrixScreen.tsx`, `OpportunityDrawer.tsx`, `filter.ts`) |
 | Primary users | Development director / grant writer (daily), executive director (weekly) |
-| Can act | Pursue: `program_director`, `executive_director`. Watch / Skip: any signed-in user |
+| Can act | Pursue: `development_director`, `executive_director`. Watch / Skip: any signed-in user |
 | Status | Ready |
 
 ## 1. Purpose and user goals

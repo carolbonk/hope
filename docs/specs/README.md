@@ -56,32 +56,42 @@ one PR that touches only the paths the spec owns.
 - Nothing is submitted to a funder without HITL-5 approval by the authorized representative.
 - Cost-share lines are excluded from every indirect-cost base.
 
-## Waves
+## Hackathon MVP (2 days, single tenant): build these first
 
-Specs in the same wave touch disjoint paths and can run in parallel. A wave starts when
-every spec it depends on is `Done`.
+Goal: one end-to-end demo for one organization: **profile -> real Grants.gov opportunities ->
+ranked matrix -> Pursue -> go/no-go approval -> budget -> AI-drafted narrative (OpenAI) ->
+downloadable application package.** It runs locally with `make demo`; nothing is deployed.
 
-```mermaid
-flowchart LR
-  S00[S00 contracts + scaffolding] --> W1
-  subgraph W1[Wave 1]
-    S01 & S02 & S03 & S04 & S05 & S06 & S07 & S09 & S10 & S11 & S12 & S13 & S16 & S28 & S29
-  end
-  W1 --> C2[C2 contracts] --> W2
-  subgraph W2[Wave 2]
-    S08 & S14 & S15 & S17 & S18 & S19 & S24 & S27 & S30 & S31
-  end
-  W2 --> C3[C3 contracts] --> W3
-  subgraph W3[Wave 3]
-    S20 & S21 & S23 & S25 & S26
-  end
-  W3 --> C4[C4 contracts] --> W4
-  subgraph W4[Wave 4]
-    S22
-  end
-```
+Schedule: **M0** runs alone on day 1 morning (about 3 h). **M1-M7** then run in parallel, one agent
+each, and finish by day 2 noon. Day 2 afternoon is integration and demo rehearsal (orchestrator).
 
-## Status
+| Spec | Delivers | Screens | Depends on | Migrations | Status |
+|---|---|---|---|---|---|
+| [M0](features/M0-mvp-scaffolding.md) | Single tenant from config, demo user + role switcher, OpenAI provider, router/client/nav split, service ports, `make demo` | shell | - | 0002 | Ready |
+| [M1](features/M1-opportunities.md) | Live Grants.gov pull + parse, opportunity list/search API, detail page | SC04 | M0 | 0210-0219 | Draft |
+| [M2](features/M2-matrix.md) | Score breakdown + evidence, Watch/Skip | SC03 | M0 | 0410-0419 | Draft |
+| [M3](features/M3-approvals.md) | Approval inbox + decision for HITL-1, HITL-2, HITL-4, HITL-5 | SC05, SC06 | M0 | 0110-0119 | Draft |
+| [M4](features/M4-workflow.md) | Pursue, real services wired into the lifecycle, workflow list + timeline | SC07, SC08 | M0 | 0610-0619 | Draft |
+| [M5](features/M5-budget.md) | Budget API, demo cost basis, budget review screen | SC13 | M0 | 0510-0519 | Draft |
+| [M6](features/M6-narrative.md) | OpenAI narrative drafting with budget placeholders, editable draft screen | SC19 | M0 | 0800-0809 | Draft |
+| [M7](features/M7-package-and-dashboard.md) | SF-424 + narrative PDFs as a zip, "Mark submitted" (manual), home dashboard | SC22, SC02 | M0 | 1100-1109 | Draft |
+
+The existing profile screen (SC09) stays as is. MVP rules on top of the rules above:
+
+- **Single tenant, one agency, no real login.** M0 provides a demo user and a role switcher.
+- **No real submission.** HITL-5 approval unlocks a download and a "Mark submitted" button only.
+- **The real LLM is OpenAI**, behind `ModelGateway`, and only when `HOPE_OPENAI_API_KEY` is set.
+  Tests and CI always use `MockProvider`.
+- **Cross-spec calls go through the ports M0 creates** (stub functions with final signatures in
+  `hope_drafting`, `hope_packaging`, and so on). M4 calls the ports; M5/M6/M7 fill them in.
+- **Seed data is per spec:** each spec owns `src/hope_<service>/demo.py:seed()`; M0's runner calls them all.
+- Nav lists every MVP route from M0; a spec replaces only its own `page.tsx` placeholder.
+
+## Later (after the hackathon)
+
+The S-specs below are the full roadmap. They stay Draft and are not built during the
+hackathon. WIP drafts are on the `specs/<area>` branches.
+
 
 Status values: `Draft` (the spec is being written), `Ready` (reviewed; can start once its
 dependencies are Done), `In progress` (there is a PR), `Done`.
