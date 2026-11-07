@@ -77,6 +77,17 @@ class KafkaConfig:
                 time.sleep(0.1)
         self._known_topics.update(missing)
 
+    def delete_prefixed_topics(self, timeout: float = 30.0) -> None:
+        """Drop every topic under this config's prefix (test teardown)."""
+        if not self.topic_prefix:
+            raise ValueError("refusing to delete topics without a prefix")
+        admin = AdminClient({"bootstrap.servers": self.bootstrap})
+        names = [t for t in admin.list_topics(timeout=5).topics if t.startswith(self.topic_prefix)]
+        if names:
+            for future in admin.delete_topics(names, operation_timeout=timeout).values():
+                future.result(timeout=timeout)
+        self._known_topics.clear()
+
     def group_id(self, group: str) -> str:
         return self.topic_prefix + group
 

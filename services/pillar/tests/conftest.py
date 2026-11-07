@@ -70,3 +70,4 @@ def kafka_pillar(
     yield pillar, sink
     stop.set()
     thread.join(5)
+    kafka.delete_prefixed_topics()
