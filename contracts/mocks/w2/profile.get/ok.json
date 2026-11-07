@@ -65,9 +65,11 @@
     "completeness": {
       "score": 92,
       "missing": [
+        "programs.0.age_range",
         "programs.1.age_range"
       ],
       "suggestions": [
+        "Add the age range for Mobile Dental Clinic",
         "Add the age range for Community Health Worker Network"
       ]
     }
