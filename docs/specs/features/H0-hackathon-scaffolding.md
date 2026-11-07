@@ -104,24 +104,50 @@ There is no product logic beyond auth. H0 builds no screen and restyles nothing.
 ### 3. The sync seam (`lib/hope/sync/`)
 
 Pages call only `useHope()` and `useOpportunities()`. A backend plugs in through its adapter and nothing else.
-H0 creates every adapter as a no-op with the exact signature below, and wires the calls once, before H1-H5 start.
-After H0, each adapter file belongs to its spec. Keep the signatures.
+H0 creates `apps/web/lib/hope/sync/` with one no-op adapter each for profile, opportunities and decisions, and wires
+every call into the hooks once. H0 runs before H1-H5 (H4 included), so the wiring in `store.ts` and `opportunities.ts`
+is H0's job. After H0, each adapter file belongs to its spec, which replaces only the function bodies. Keep the
+signatures exactly:
 
-| File (owner after H0) | Signature | No-op body | Called from |
-|---|---|---|---|
-| `sync/profile.ts` (H1) | `load(): Promise<OrgProfile \| null>`; `save(profile: OrgProfile): Promise<void>` | `null`; resolve | `load` from `HopeSync` once on mount; `save` from `useHope().saveProfile` after the local write |
-| `sync/opportunities.ts` (H2) | `useRemoteOpportunities(): Opportunity[] \| null` | `null` | `useOpportunities()` returns `remote ?? demoOpportunities(today)`; H2 may change that merge inside its own file |
-| `sync/decisions.ts` (H3) | `onDecide(opp: Opportunity, decision: "saved" \| "passed"): void`; `onUndo(oppId: string): void` | nothing | `useHope().decide` / `undo`, after the local update |
-| `sync/index.ts` (H0) | re-exports the three adapters and `online`; `HopeSync()` component (renders `null`) | - | mounted once in `app/hope/layout.tsx` |
+```ts
+// lib/hope/sync/profile.ts (H1 after H0)
+export function loadRemoteProfile(): Promise<OrgProfile | null>;   // never rejects; null = nothing remote (or sync off)
+export function saveRemoteProfile(profile: OrgProfile): void;      // fire-and-forget, never throws, returns at once
 
-- Adapters run only when `online`. They never throw into a page: they catch, `console.warn`, and leave the browser
-  state as it is. The browser record stays the source for the workspace (H4/H5).
-- `HopeSync` applies a loaded profile through a new `useHope().hydrateProfile(p)`, which writes the profile but does
-  not call `sync/profile.save` (so loading never echoes back).
-- One-time H0 edits outside its own files (merged before H1-H5 branch, so no conflict):
-  `lib/hope/store.ts` (`hydrateProfile` + the three call sites), `lib/hope/opportunities.ts` (the `remote ?? demo` line),
-  `api/profile/types.ts` (the re-export), `lib/hope/i18n.ts` (new `session.*` keys in `en` and `es`; add, never rename).
-  No page file changes. Hook signatures stay the same.
+// lib/hope/sync/opportunities.ts (H2 after H0)
+export function fetchOpportunities(): Promise<Opportunity[] | null>; // never rejects; null = use the demo catalog
+
+// lib/hope/sync/decisions.ts (H3 after H0)
+export type DecisionStatus = "saved" | "passed" | "new";
+export function mirrorDecision(oppId: string, decision: DecisionStatus): void; // fire-and-forget, never throws
+export function flushDecisions(): Promise<void>;                               // never rejects
+
+// lib/hope/sync/index.ts (H0, stays H0's)
+export { online as syncEnabled } from "@/api/http"; // NEXT_PUBLIC_HOPE_API_URL set
+export function HopeSync(): null;           // mounted once in app/hope/layout.tsx
+```
+
+| Adapter | No-op body (H0) | Called from (wired by H0) |
+|---|---|---|
+| `loadRemoteProfile` | `Promise.resolve(null)` | `HopeSync`, once after `useSession()` is `ready`; a non-null result goes to `useHope().hydrateProfile(p)` |
+| `saveRemoteProfile` | returns | `useHope().saveProfile(p)`, after the local write |
+| `fetchOpportunities` | `Promise.resolve(null)` | `useOpportunities()`, once per mount in a `useEffect`; returns `remote ?? demoOpportunities(today)` |
+| `mirrorDecision` | returns | `useHope().decide(opp, d)` calls `mirrorDecision(opp.id, d)`; `useHope().undo()` calls `mirrorDecision(lastId, "new")` with `lastId = state.history.at(-1)`, only when there is one |
+| `flushDecisions` | `Promise.resolve()` | `HopeSync`, once after `useSession()` is `ready` |
+
+Rules (all code, no model):
+- **Off switch.** `syncEnabled` is `online` from `api/http.ts` (`NEXT_PUBLIC_HOPE_API_URL` set). It lives there, not in
+  `sync/index.ts`, so the adapters import it without a cycle. With sync off every adapter does nothing and resolves at once.
+- **Never break a page.** Call sites run after the local `setState`, outside the state updater (updaters stay pure).
+  The adapters catch everything and `console.warn`. They never throw, reject or roll back browser state. The browser
+  record stays the source of truth for the workspace (H4/H5).
+- **No echo.** `hydrateProfile(p)` (new in `useHope()`) writes the profile but does not call `saveRemoteProfile`.
+- **One-time H0 edits outside its own files** (merged before H1-H5 branch, so nothing conflicts):
+  `lib/hope/store.ts` (`hydrateProfile` and the `saveRemoteProfile` / `mirrorDecision` call sites),
+  `lib/hope/opportunities.ts` (the `fetchOpportunities` effect and the `remote ?? demo` line), `api/profile/types.ts`
+  (the re-export) and `lib/hope/i18n.ts` (new `session.*` keys in `en` and `es`; add, never rename).
+  No page file changes, and the `useHope()` / `useOpportunities()` signatures stay the same except for the added
+  `hydrateProfile`. After H0, H1-H3 edit only their own adapter file and never `store.ts`.
 - Money: the UI's `Opportunity.amountMin/amountMax` and `OrgProfile.annualBudget` are whole currency units. On the wire
   money is `{amount_minor, currency}` (integer minor units). The adapters convert (`amount_minor / 100`), never the pages.
 
@@ -326,7 +352,7 @@ Never: `apps/web/app/globals.css`, `components/ui/**`, `features/onboarding/**`,
 - [ ] AC9 All routers are mounted, each with its own snapshot; the unused pillar routes are unmounted; existing tests still pass.
 - [ ] AC10 Offline (`NEXT_PUBLIC_HOPE_API_URL` unset): `/hope/*` renders exactly as before, with no `/v1` request and no Sign out.
 - [ ] AC11 Online: the guard and Sign out behave as SC00 AC1-AC6.
-- [ ] AC12 The no-op adapters leave `useHope()` / `useOpportunities()` behaviour unchanged. `decide`/`undo` call `onDecide`/`onUndo` once, `saveProfile` calls `profile.save`, `hydrateProfile` doesn't. An adapter that throws never breaks a page. The hook signatures are unchanged.
+- [ ] AC12 With the no-op adapters, `useHope()` / `useOpportunities()` behave exactly as before. `decide(opp, d)` calls `mirrorDecision(opp.id, d)` once, `undo()` calls `mirrorDecision(lastId, "new")` once (and not at all with an empty history), `saveProfile` calls `saveRemoteProfile` and `hydrateProfile` doesn't. `HopeSync` calls `loadRemoteProfile` and `flushDecisions` once after the session is `ready`, and never with sync off. `useOpportunities()` returns `remote ?? demo`. An adapter that throws or rejects never breaks a page or changes `hope:state:v1`.
 - [ ] AC13 `git diff main --stat` shows no change to `app/globals.css`, `components/ui/**`, `features/onboarding/**` or any `page.tsx`.
 - [ ] AC14 `make demo` on a clean checkout works twice in a row with no key, and `demo@hope.org` can sign in.
 
@@ -346,7 +372,7 @@ All offline: `MockProvider`, `RecordedWebTools`, httpx `MockTransport`, `HOPE_JO
 | AC8 | `packages/core/tests/test_jobs.py` (incl. `test_adopts_existing_job_id`, `test_exception_marks_failed`) |
 | AC9 | `services/pillar/tests/test_openapi.py::test_router_snapshots` + the full suite |
 | AC10, AC11 | `apps/web/api/session/RequireSession.test.tsx`, `apps/web/api/http.test.ts`, `apps/web/components/hope/ui.test.tsx` (see SC00) |
-| AC12 | `apps/web/lib/hope/sync/index.test.ts` |
+| AC12 | `apps/web/lib/hope/sync/index.test.ts` (`HopeSync` calls, sync off), `apps/web/lib/hope/store.test.ts` (`decide`/`undo`/`saveProfile` call sites with `vi.mock("./sync/decisions")` and `vi.mock("./sync/profile")`), `apps/web/lib/hope/opportunities.test.ts` (`remote ?? demo`, a rejecting adapter) |
 | AC13 | CI diff check in the PR description |
 | AC14 | manual, recorded in the PR |
 
