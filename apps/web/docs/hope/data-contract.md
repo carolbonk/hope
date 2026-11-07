@@ -109,15 +109,18 @@ Existing:
   - The template is returned only for `mode: "template"`, which the user must click explicitly.
   - Env vars: `OPENAI_API_KEY` (required for the agent), `OPENAI_MODEL` (optional).
 
-Proposed (not built, for the backend track):
+Backend (hackathon H0-H3, defined in `contracts/manifest.json`, served at `/v1`). Pages don't call these directly;
+each one goes through an adapter in `lib/hope/sync/`, and the hook signatures stay the same:
 
-| Method | Path | Replaces |
-| --- | --- | --- |
-| GET/PUT | `/api/orgs/:orgId/profile` | `saveProfile` |
-| GET | `/api/opportunities?geo&amount&type&focus&deadline&purpose` | `demoOpportunities` |
-| PUT | `/api/orgs/:orgId/decisions/:oppId` | `decide` / `undo` |
-| GET | `/api/orgs/:orgId/applications` | `state.applications` |
-| PATCH | `/api/applications/:appId` | `updateApplication` (send a section-level patch plus `updatedAt` for optimistic concurrency) |
-| POST | `/api/applications/:appId/approvals` | approval actions, enforced server-side by role |
+| Spec | Endpoints | Adapter | Replaces |
+| --- | --- | --- | --- |
+| H0 | `/v1/auth/*`, `/v1/me` | `api/session/` | (no sign-in today) |
+| H1 | `GET/PUT/PATCH /v1/profile`, NTEE search and suggest | `lib/hope/sync/profile.ts` | `saveProfile` |
+| H2 | `/v1/discovery/*`, `GET /v1/grants` | `lib/hope/sync/opportunities.ts` | `demoOpportunities` (kept as the offline fallback) |
+| H3 | `POST /v1/grants/{id}/save`, `/pass`, `/reset` | `lib/hope/sync/decisions.ts` (`mirrorDecision`) | mirrors `decide` / `undo` |
+
+On the wire, money is `amount_minor` (an integer) plus an ISO currency. The adapters convert it to the whole units used here.
+Applications and approvals (H4/H5) stay in the browser for the hackathon. A server version would need
+`/v1/applications/*`, with roles enforced by the server.
 
 Real approvals need sign-in and server-enforced roles. Until then the UI labels approvals as **simulated**.
