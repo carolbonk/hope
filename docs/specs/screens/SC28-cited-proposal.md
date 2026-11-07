@@ -54,7 +54,7 @@ Desktop (>= 1024 px):
 │ Community Youth Mentoring Fund                          [🖨 Print final brief] [Export ▾]      │  <- PageHeader
 │ Buckeye Community Foundation · Due Dec 15, 2026 (36 days) · Drafted Nov 9, 2:00 PM            │
 ├───────────────────────────────────────────────────────────────────────────────────────────────┤
-│ ✓ 5 answers  ·  ⚠ 1 unverified claim [Next ↓]  ·  ✕ 1 over word limit      [↻ Regenerate all]  │  <- status strip (Card raised)
+│ ✓ 5 answers  ·  ⚠ 1 unverified claim [Next ↓]  ·  ✕ 1 over word limit      [↻ Regenerate all]  │  <- status strip (glass-panel)
 ├────────────────────────────────────────────────────────────┬──────────────────────────────────┤
 │ ┌ 1. Describe the need your program addresses. ─────[⋯]─┐ │ Sources for answer 1        (3)  │
 │ │ 41 / 250 words                          [✎ Edit]       │ │ ┌ [c1] Profile · Mission ──────┐ │
@@ -77,7 +77,7 @@ Desktop (>= 1024 px):
 Edit mode (section 1):
 ┌ 1. Describe the need your program addresses. ───────────────────────────────┐
 │ ┌──────────────────────────────────────────────────────────────────────────┐ │
-│ │ Riverbend Youth Alliance mentors young people in Cleveland. [c1][c2]     │ │  <- TextArea (inset)
+│ │ Riverbend Youth Alliance mentors young people in Cleveland. [c1][c2]     │ │  <- TextArea (glass-inset)
 │ │ …                                                                         │ │
 │ └──────────────────────────────────────────────────────────────────────────┘ │
 │ 44 / 250 words ▇▇░░░░░░   Cite with [c1]-[c9]   [＋ Add source ▾]          │
@@ -103,7 +103,7 @@ Mobile (<= 640 px):
 - The status strip wraps to two lines.
 - The header actions collapse into an overflow menu (⋯): Export Markdown, Export DOCX,
   Copy all, Print final brief, Regenerate all.
-- Edit mode is full-width, with a sticky bottom bar (word count, Cancel, Save).
+- Edit mode is full-width, with a sticky bottom bar (`glass-chrome`: word count, Cancel, Save).
 
 Print view (`/grants/[grantId]/proposal/print`), US Letter / A4, black on white:
 
@@ -143,6 +143,10 @@ Buckeye Community Foundation · Due December 15, 2026 · https://buckeyefoundati
 
 ## 5. Components
 
+- **Surfaces:**
+  - The page sits on `glass-backdrop`. The app's top bar and sidebar are H0's `glass-chrome`.
+  - All text on this screen sits on `glass-panel` or stronger, never directly on the
+    backdrop. That includes the header: `PageHeader` renders inside a `glass-panel` strip.
 - **Page header:** `PageHeader` with a breadcrumb.
   - `Button` secondary "Print final brief" opens `/grants/{id}/proposal/print` in a new tab.
   - `Button` primary "Export ▾" opens a local `Menu` (`role="menu"`) with Markdown, Word
@@ -150,17 +154,19 @@ Buckeye Community Foundation · Due December 15, 2026 · https://buckeyefoundati
 - **Status strip:** `Card` (`glass-panel`) with `Badge`s (icon + text) and a link button
   "Next ↓". "Regenerate all" is a secondary `Button`. While a job runs, H0's `Progress` is
   shown in the strip.
-- **Section card:** `Card` (`glass-panel`); the focused section uses `glass-active`.
+- **Section card:** `Card` (`glass-panel`); the focused section adds `glass-active` (accent edge).
   - Header: number + title (`h2`), the word-count `Badge`, the "Edited by you" `Badge`, an
     "Edit" `Button`, and a `⋯` `Menu` (Regenerate this answer…, Copy answer).
 - **Answer text:** `MarkdownView`, with `CitationChip` injected for markers and a local
   `UnverifiedMark` span for highlights.
-- **Popovers:** `CitationPopover` (H0).
+- **Popovers:** `CitationPopover` (H0, `glass-overlay`).
 - **Edit mode:** `TextArea` (`glass-inset`, auto-grow to 60 vh), the live word meter, and
   "Add source ▾" (a `Menu` of `c` ids with a short label). Save/Cancel use `Button`.
-- **Sources pane:** H0's `Drawer` docked as a sticky right column (`variant="panel"`) on
-  desktop, and a bottom sheet on mobile.
-- **Modals:** `Modal` for Regenerate (guidance `TextArea`), the stale conflict, Remove
+- **Sources pane:**
+  - Desktop: H0's `Drawer`, docked as a sticky right column (`variant="panel"`, `glass-panel`).
+  - Mobile: a bottom sheet (`glass-overlay` with the dimmed backdrop).
+  - Each source card inside is a nested `glass-inset` well.
+- **Modals:** `Modal` (`glass-overlay`) for Regenerate (guidance `TextArea`), the stale conflict, Remove
   sentence, and the export warning.
 - **Notices:** H0's `Toast` for saves, copies, exports and job results.
 
@@ -299,8 +305,8 @@ The screen needs no other endpoint: the grant summary and the brief come in the 
 - 641-1023 px: one column. Sources becomes a right drawer opened from each section's
   "Sources (n)" button or a chip.
 - ≤ 640 px: the mobile layout in section 3 (bottom sheet, overflow menu, sticky edit bar).
-- Print: one column, 11 pt serif body, chips printed as `[n]`, links printed in full, no
-  shadows, and page breaks avoided inside answers (`break-inside: avoid` on short ones).
+- Print: one column, 11 pt serif body, chips printed as `[n]`, links printed in full. Glass
+  effects are removed (no blur, tint, shadows or backdrop: white page, black text), and page breaks avoided inside answers (`break-inside: avoid` on short ones).
 
 ## 10. Accessibility
 
@@ -324,8 +330,16 @@ The screen needs no other endpoint: the grant summary and the brief come in the 
 - **Edit and dialogs:** the edit textarea is labelled "Answer {n}: {question}". Modals trap
   focus and return it to their trigger.
 - **Contrast and motion:** the amber highlight keeps text at ≥ 4.5:1 contrast, and every
-  card and input has a 1 px border at ≥ 3:1. With `prefers-reduced-motion`, there is no
-  smooth scroll and no pulsing on "Next ↓", and spinners become static icons.
+  card and input has a 1 px border at ≥ 3:1. Contrast is checked against the worst-case
+  `glass-backdrop` colour behind each glass layer. Text never sits directly on the backdrop.
+- **Reduced transparency:** with `@media (prefers-reduced-transparency: reduce)`, or in
+  browsers without `backdrop-filter`, every `glass-*` surface becomes solid. That covers the
+  panels, the Sources pane, popovers, modals, the mobile sheet and the sticky edit bar. The
+  layout and borders stay the same, and the amber Unverified highlight stays at ≥ 4.5:1 on
+  the solid panel.
+- **Reduced motion:** with `prefers-reduced-motion`, the backdrop gradient and the glass
+  highlight shimmer stop. There is no smooth scroll and no pulsing on "Next ↓", and spinners
+  become static icons.
 - **Print view:** real headings, a `<table>` for deadlines, and checkboxes rendered as "☐"
   characters so screen readers and printers both get them.
 
@@ -391,7 +405,7 @@ Success:
 - [ ] AC11 The print view renders the summary, deadlines, eligibility, checklist, answers, sources and the check-before-you-submit list, hides the toolbar in print media, and calls `window.print()` once loaded.
 - [ ] AC12 The keyboard shortcuts work and are suppressed while typing (except ⌘S/Esc); focus returns after popovers and modals.
 - [ ] AC13 The mobile layout uses the Sources bottom sheet, the overflow menu and the sticky edit bar.
-- [ ] AC14 axe finds no violations in the ready, generating, edit, popover-open, mobile and print states.
+- [ ] AC14 axe finds no violations in the ready, generating, edit, popover-open, mobile and print states, and with reduced transparency emulated (solid surfaces, same contrast).
 
 ## 14. Test plan
 
@@ -410,7 +424,7 @@ Success:
 | AC11 | `features/proposal/PrintView.test.tsx::renders brief checklist answers and prints` (`window.print` spy) |
 | AC12 | `ProposalScreen.test.tsx::keyboard shortcuts` |
 | AC13 | `ProposalScreen.test.tsx::mobile layout` (matchMedia mock) |
-| AC14 | `features/proposal/ProposalScreen.a11y.test.tsx`, `PrintView.a11y.test.tsx` (vitest-axe) |
+| AC14 | `features/proposal/ProposalScreen.a11y.test.tsx` (vitest-axe; includes a `prefers-reduced-transparency: reduce` matchMedia case), `PrintView.a11y.test.tsx` |
 
 ## 15. Open questions
 
