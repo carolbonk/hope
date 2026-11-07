@@ -27,6 +27,7 @@ function UserChip() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const minimal = pathname?.startsWith("/onboarding") ?? false;
   return (
     <ApiProvider>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 glass-panel rounded-xl px-4 py-2">
@@ -40,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             <span className="text-lg font-bold tracking-tight">Hope</span>
           </Link>
-          <nav aria-label="Main" className="order-last w-full sm:order-none sm:w-auto">
+          {!minimal && <nav aria-label="Main" className="order-last w-full sm:order-none sm:w-auto">
             <ul className="glass-chrome flex flex-wrap gap-1 rounded-2xl p-1.5">
               {NAV.map((item) => {
                 const active = pathname?.startsWith(item.href);
@@ -60,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 );
               })}
             </ul>
-          </nav>
+          </nav>}
           <UserChip />
         </header>
         <main id="main" className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
