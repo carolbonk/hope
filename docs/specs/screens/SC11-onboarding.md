@@ -204,7 +204,8 @@ Step titles and "why" lines:
 - Required fields: visible "*" plus `aria-required`; errors via `aria-describedby`, summary on Review links to fields.
 - `NteePicker` follows the ARIA 1.2 combobox pattern; selected codes are a list with remove buttons labelled "Remove E32 Community Clinics"; reorder buttons labelled "Move up/down".
 - Budget `Segmented` is a radio group.
-- Contrast AA, 1 px borders on inputs and cards, `glass-focus` rings, `prefers-reduced-motion` disables the progress-bar transition.
+- Contrast AA, 1 px borders on inputs and cards, glass focus ring (2 px accent glow + outline), `prefers-reduced-motion` disables the progress-bar transition.
+- Liquid glass: text sits only on `glass-panel` / `glass-chrome` / `glass-overlay`, never on `glass-backdrop`; contrast is checked against the worst-case background. Under `prefers-reduced-transparency: reduce` (and without `backdrop-filter` support) panels, inputs and overlays render solid with the same layout; `prefers-reduced-motion` stops the backdrop motion and highlight shimmer.
 
 ## 11. Fixture data
 

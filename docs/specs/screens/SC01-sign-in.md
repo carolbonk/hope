@@ -41,7 +41,7 @@ Desktop (>= 1024 px): centred card, 440 px wide, on the base colour; no app nav.
 │                     │            (H)  Hope              │  <- logo mark (glass-inset) + wordmark
 │                     │ Find grants that fit, and get a   │
 │                     │ plain-English plan to apply.      │
-│                     │ ┌──────────────┬───────────────┐  │  <- Tabs (pressed = active)
+│                     │ ┌──────────────┬───────────────┐  │  <- Tabs (glass-active = active)
 │                     │ │ ● Sign in    │  Create account│  │
 │                     │ └──────────────┴───────────────┘  │
 │                     │ Email                             │
@@ -81,7 +81,7 @@ Mobile (<= 640 px): the card is full width with 16 px margins, no outer shadow f
 `Card` (`glass-panel`), H0 `Tabs` (active tab `glass-active`), `TextField` (`glass-inset`), `Button`
 (primary, full width; ghost for Show/Hide and the demo button), `ErrorNotice`, `SuccessNotice`.
 Feature files: `features/session/LoginScreen.tsx`, `SignInForm.tsx`, `SignUpForm.tsx`, `returnTo.ts`.
-`app/login/page.tsx` renders `LoginScreen` outside the app chrome.
+`app/login/page.tsx` renders `LoginScreen` outside the app chrome; the page sits on `glass-backdrop` and the card is `glass-panel`, so no text touches the backdrop.
 
 ## 6. Interactions
 
@@ -146,7 +146,8 @@ Feature files: `features/session/LoginScreen.tsx`, `SignInForm.tsx`, `SignUpForm
 - Tabs follow the ARIA tabs pattern (`role="tablist"`, arrow keys, `aria-selected`).
 - Inputs have visible labels, `autocomplete` (`email`, `current-password` / `new-password`, `name`).
 - Errors: field errors linked via `aria-describedby`; on submit failure focus moves to the first invalid field or the form error (`role="alert"`).
-- Contrast AA; 1 px borders on inputs; `glass-focus` rings; no motion except `motion-safe:` shadow transitions.
+- Contrast AA; 1 px borders on inputs; glass focus ring (2 px accent glow + outline); no motion except `motion-safe:` shadow transitions.
+- Liquid glass: text sits only on `glass-panel` / `glass-chrome` / `glass-overlay`, never on `glass-backdrop`; contrast is checked against the worst-case background. Under `prefers-reduced-transparency: reduce` (and without `backdrop-filter` support) panels, inputs and overlays render solid with the same layout; `prefers-reduced-motion` stops the backdrop motion and highlight shimmer.
 
 ## 11. Fixture data
 

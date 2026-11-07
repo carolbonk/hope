@@ -76,7 +76,7 @@ Desktop (>= 1024 px):
 ```
 
 Edit mode (one section at a time) replaces that card's body with the same fields as the
-matching SC11 step and a footer `[Cancel] [Save changes]`; the card becomes `glass-inset` to show it's being edited.
+matching SC11 step and a footer `[Cancel] [Save changes]`; the card gets a `glass-active` accent edge to show it's being edited.
 
 Mobile (<= 640 px): no anchor nav (a "Jump to" select at the top instead); cards full width;
 the Save/Cancel footer is sticky while a section is in edit mode.
@@ -100,7 +100,7 @@ All from `GET /v1/profile` (H1).
 
 ## 5. Components
 
-- H0 app shell; `PageHeader`; `Card` (`glass-panel`; edit mode `glass-inset`); H0 `Progress`; `Badge` for strength label (icon + text); `Button`.
+- H0 app shell (`glass-chrome` top bar); `PageHeader`; `Card` (`glass-panel`; edit mode adds a `glass-active` accent edge); H0 `Progress`; `Badge` for strength label (icon + text); `Button`.
 - Edit forms reuse SC11's step components and `TagInput`/`NteePicker` from `features/onboarding` (same spec, so importing is allowed) via a `mode="section"` prop.
 - Feature files: `features/profile/ProfileScreen.tsx`, `SectionCard.tsx`, `ProgramCard.tsx`, `useProfile.ts`.
 - H0 `Toast`; `ErrorNotice`, `Loading`, `EmptyState`.
@@ -166,7 +166,8 @@ All from `GET /v1/profile` (H1).
 - Edit mode: focus to the first field; on save/cancel focus returns to the section's Edit button; outcome announced in a polite live region.
 - Strength is text + bar (`role="progressbar"` with `aria-valuenow`, label "Profile strength").
 - Anchor nav is a `nav` with `aria-label="On this page"` and `aria-current` on the section in view.
-- Contrast AA; 1 px borders; `glass-focus` rings; `prefers-reduced-motion` disables scroll smoothing and the deep-link outline fade.
+- Contrast AA; 1 px borders; glass focus ring (2 px accent glow + outline); `prefers-reduced-motion` disables scroll smoothing and the deep-link outline fade.
+- Liquid glass: text sits only on `glass-panel` / `glass-chrome` / `glass-overlay`, never on `glass-backdrop`; contrast is checked against the worst-case background. Under `prefers-reduced-transparency: reduce` (and without `backdrop-filter` support) panels, inputs and overlays render solid with the same layout; `prefers-reduced-motion` stops the backdrop motion and highlight shimmer.
 
 ## 11. Fixture data
 

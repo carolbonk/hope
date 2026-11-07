@@ -197,7 +197,7 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
   - empty `features/<f>/` and `api/<f>/` folders for `session`, `onboarding`, `profile`, `discover`,
     `grants`, `brief` and `proposal`;
   - restyle all of `components/ui` to the liquid-glass system (README "Design system"): replace the
-    neumorphic CSS in `globals.css` with the `glass-*` tokens, including the reduced-transparency
+    liquid-glass CSS in `globals.css` with the `glass-*` tokens, including the reduced-transparency
     and no-`backdrop-filter` fallbacks;
   - shared primitives in `components/ui`: `Drawer`, `Toast`, `Tabs`, `Progress`, `MarkdownView`
     (react-markdown), and `CitationChip` plus `CitationPopover`. A citation chip shows `[c1]`; the

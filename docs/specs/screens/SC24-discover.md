@@ -158,20 +158,34 @@ Mobile (<= 640 px):
 
 ## 5. Components
 
-- Header: `PageHeader`. The status chip uses `Badge`.
-- Start card: `Card` (`glass-panel`).
-  - Keyword input: a chip input built inside the feature from `TextField` + `Badge` with
-    a remove `Button` (ghost). See open questions.
-  - Location: `TextField`.
-  - Primary `Button`.
-- Progress card: `Card` (`glass-panel`) with `Progress` (H0, `components/ui`) and the step
-  text in an `aria-live` region.
-- Candidate cards: `Card` (`glass-inset` while appearing, then `glass-panel`). The whole card is a link.
-- Query list and activity log: `Card` (`glass-inset`). The log uses `<details>` (or `Tabs`
-  from H0 when space is tight on mobile).
-- Done banner: `SuccessNotice` style, as a `Card` with two `Button`s.
-- Past runs: `Table` on desktop, a card list on mobile.
-- Errors: `ErrorNotice`. Toasts: `Toast` (H0).
+The surfaces use the liquid-glass tokens from README "Design system: liquid glass". The page
+sits on `glass-backdrop`, and **no text sits directly on it**. Every heading, line of copy and
+count below lives on a `glass-panel` or stronger.
+
+- **Page header:** `PageHeader` inside a `glass-panel` strip, so the title and subtitle never
+  sit on the backdrop. The status chip is a `Badge` (icon + text). The app's sidebar and top
+  bar are `glass-chrome` (H0).
+- **Start card:** `Card` as a `glass-panel`.
+  - Keyword chip input: built inside the feature from `TextField` (`glass-inset`) + `Badge`
+    chips, with a remove `Button` (ghost). See open questions.
+  - Location: `TextField` (`glass-inset`).
+  - Primary `Button`, which uses `glass-active` while pressed.
+  - The first-time hint ("You haven't searched yet…") is a line inside this panel.
+- **Progress card:** `Card` (`glass-panel`) with `Progress` (H0) and the step text in an
+  `aria-live` region.
+- **Candidate cards:** `Card` (`glass-panel`), each one a link. Hover or focus shows a brighter
+  tint; pressing uses `glass-active`. The empty line "Grants will appear here…" sits in a
+  `glass-inset` well inside the results panel.
+- **Query list and activity log:** a `glass-panel` containing a `glass-inset` well. The log uses
+  `<details>`, or H0's `Tabs` (active tab `glass-active`) on mobile.
+- **Done banner and error notice:** `SuccessNotice` / `ErrorNotice` as a `glass-panel` with a
+  1 px status border and an icon. The two buttons follow the same `Button` rules.
+- **Past runs:** `Table` inside a `glass-panel` on desktop, and a list of `glass-panel` cards
+  on mobile.
+- **Toasts:** `Toast` (H0) on `glass-overlay`.
+- **Mobile sticky elements:** the compact progress bar and the sticky "Review" bar use
+  `glass-chrome`.
+- No `neu-*` classes anywhere.
 
 ## 6. Interactions
 
@@ -275,7 +289,15 @@ screen makes no other calls.
   elsewhere).
 - With `prefers-reduced-motion`: cards appear without the slide or fade, the bar doesn't
   animate between values, and the elapsed timer updates every 5 s.
-- Contrast is AA, and every card and input has a 1 px border with at least 3:1 contrast.
+- Contrast is AA (4.5:1 for body text), checked against the **worst-case backdrop colour**
+  behind each `glass-panel`. Every card and input has a 1 px border at 3:1 or better. No
+  text, count or icon sits directly on `glass-backdrop`.
+- **Reduced transparency:** under `@media (prefers-reduced-transparency: reduce)`, and in
+  browsers without `backdrop-filter`, every `glass-*` surface becomes a solid panel with the
+  same layout, borders and contrast. The streaming cards, progress card and sticky bars stay
+  readable with no blur at all. A test checks that the screen renders in this mode.
+- With `prefers-reduced-motion`, the backdrop gradient and the highlight shimmer stop
+  moving (as well as the motion rules above).
 
 ## 11. Fixture data
 
@@ -341,6 +363,7 @@ Success:
 - [ ] AC10 Live-region announcements are throttled (at most once every 5 s plus milestones), and the progress bar exposes `aria-valuenow` and `aria-valuetext`.
 - [ ] AC11 The mobile layout (<= 640 px) shows the sticky compact progress, single-column cards, accordions and the sticky Review button.
 - [ ] AC12 axe finds no violations in the idle, running, done and failed states.
+- [ ] AC13 With `prefers-reduced-transparency: reduce` (and without `backdrop-filter` support), every surface renders solid with the same layout, and no text element is a direct child of the `glass-backdrop` layer.
 
 ## 14. Test plan
 
@@ -358,6 +381,7 @@ Success:
 | AC10 | `RunProgress.test.tsx::throttled announcements and progressbar aria` |
 | AC11 | `DiscoverScreen.test.tsx::mobile layout` (matchMedia mock) |
 | AC12 | `features/discover/Discover.a11y.test.tsx` (vitest-axe) |
+| AC13 | `Discover.a11y.test.tsx::reduced transparency renders solid panels and no text on backdrop` (matchMedia mock + DOM check) |
 | contract | `apps/web/src/api/discover/http.test.ts::matches openapi snapshot` |
 
 ## 15. Open questions
