@@ -32,7 +32,7 @@ Any width (glass-chrome bar, max-w-6xl, wraps)
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │ hope✳     Discover  [Saved (2)]  Deadlines  Our profile      [EN|ES]           │
 │                                                    online: Dana Okafor · Sign out │
-│ ● Due soon: Bayfront Youth Fund (6d) · …                    (only when due ≤14 d) │
+│ ● Due soon: Youth Mentoring Grants (6d) · …                    (only when due ≤14 d) │
 └───────────────────────────────────────────────────────────────────────────────┘
   page content
 ──────────────────────────────────────────────────────────────────────────────────
