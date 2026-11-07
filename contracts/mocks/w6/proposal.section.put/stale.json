@@ -1,0 +1,13 @@
+{
+  "status": 409,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Someone else changed this draft",
+    "status": 409,
+    "code": "stale_artifact",
+    "current_hash": "sha256:6f2b8c3d"
+  }
+}

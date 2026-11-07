@@ -1,0 +1,12 @@
+{
+  "status": 429,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Too many requests",
+    "status": 429,
+    "code": "rate_limited"
+  }
+}

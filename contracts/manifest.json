@@ -1,0 +1,796 @@
+{
+  "version": 1,
+  "base_url": "/v1",
+  "auth": "Cookie hope_session (HttpOnly). Every endpoint except auth.signup/login returns 401 not_signed_in without it.",
+  "errors": "application/problem+json with a machine-readable `code`; 422s carry errors[] {field, code, message}.",
+  "workflows": [
+    {
+      "id": "W1",
+      "name": "Access",
+      "spec": "H0",
+      "issue": 25,
+      "screens": [
+        {
+          "id": "SC01",
+          "route": "/login",
+          "issue": 14,
+          "built_by": "H1"
+        },
+        {
+          "id": "SC00",
+          "route": "app shell",
+          "issue": 13,
+          "built_by": "H0"
+        }
+      ],
+      "goal": "Sign up with the team invite code, sign in, and load who is signed in.",
+      "steps": [
+        {
+          "name": "Hash and check passwords (argon2)",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Check invite code (hmac.compare_digest)",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Signed session cookie and onboarding redirect",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "auth.signup",
+          "method": "POST",
+          "path": "/v1/auth/signup",
+          "purpose": "Create an account (invite code required).",
+          "screens": [
+            "SC01"
+          ],
+          "notes": null,
+          "default": "created",
+          "scenarios": {
+            "created": "mocks/w1/auth.signup/created.json",
+            "signup_closed": "mocks/w1/auth.signup/signup_closed.json",
+            "email_taken": "mocks/w1/auth.signup/email_taken.json",
+            "weak_password": "mocks/w1/auth.signup/weak_password.json"
+          },
+          "request_example": "mocks/w1/auth.signup/request.json"
+        },
+        {
+          "id": "auth.login",
+          "method": "POST",
+          "path": "/v1/auth/login",
+          "purpose": "Sign in.",
+          "screens": [
+            "SC01"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w1/auth.login/ok.json",
+            "invalid_credentials": "mocks/w1/auth.login/invalid_credentials.json"
+          },
+          "request_example": "mocks/w1/auth.login/request.json"
+        },
+        {
+          "id": "auth.logout",
+          "method": "POST",
+          "path": "/v1/auth/logout",
+          "purpose": "Sign out.",
+          "screens": [
+            "SC00"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w1/auth.logout/ok.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "me.get",
+          "method": "GET",
+          "path": "/v1/me",
+          "purpose": "Who is signed in; drives the onboarding redirect.",
+          "screens": [
+            "SC00",
+            "SC01",
+            "SC24",
+            "SC25",
+            "SC28"
+          ],
+          "notes": null,
+          "default": "onboarded",
+          "scenarios": {
+            "onboarded": "mocks/w1/me.get/onboarded.json",
+            "not_onboarded": "mocks/w1/me.get/not_onboarded.json",
+            "signed_out": "mocks/w1/me.get/signed_out.json"
+          },
+          "request_example": null
+        }
+      ]
+    },
+    {
+      "id": "W2",
+      "name": "Nonprofit profile",
+      "spec": "H1",
+      "issue": 26,
+      "screens": [
+        {
+          "id": "SC11",
+          "route": "/onboarding",
+          "issue": 15,
+          "built_by": "H1"
+        },
+        {
+          "id": "SC09",
+          "route": "/profile",
+          "issue": 16,
+          "built_by": "H1"
+        }
+      ],
+      "goal": "Tell Hope who the nonprofit is (6-step onboarding), then edit it later.",
+      "steps": [
+        {
+          "name": "Validate and save the profile (ETag / If-Match)",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Completeness score (12 fixed checks)",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "NTEE code search",
+          "kind": "code",
+          "detail": "Static code list, ranked by code.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Suggest NTEE codes from mission and programs",
+          "kind": "llm",
+          "detail": "1 structured call; code checks each code exists and each quote is in the profile.",
+          "calls_per_run": "1 per click (max 10/min/user)",
+          "model": "gpt-4o-mini"
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "profile.get",
+          "method": "GET",
+          "path": "/v1/profile",
+          "purpose": "Current profile (form shape) + completeness.",
+          "screens": [
+            "SC00",
+            "SC09",
+            "SC11",
+            "SC24"
+          ],
+          "notes": "The app shell and Discover read the org name from basics.legal_name here; there is no /v1/agencies/{id}/profile in the hackathon.",
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w2/profile.get/ok.json",
+            "not_found": "mocks/w2/profile.get/not_found.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "profile.put",
+          "method": "PUT",
+          "path": "/v1/profile",
+          "purpose": "Save the whole form (onboarding finish). If-Match once a profile exists.",
+          "screens": [
+            "SC11"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w2/profile.put/ok.json",
+            "created": "mocks/w2/profile.put/created.json",
+            "validation_error": "mocks/w2/profile.put/validation_error.json",
+            "version_conflict": "mocks/w2/profile.put/version_conflict.json",
+            "if_match_required": "mocks/w2/profile.put/if_match_required.json"
+          },
+          "request_example": "mocks/w2/profile.put/request.json"
+        },
+        {
+          "id": "profile.patch",
+          "method": "PATCH",
+          "path": "/v1/profile",
+          "purpose": "Save one section (profile page). If-Match required.",
+          "screens": [
+            "SC09"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w2/profile.patch/ok.json",
+            "version_conflict": "mocks/w2/profile.patch/version_conflict.json"
+          },
+          "request_example": "mocks/w2/profile.patch/request.json"
+        },
+        {
+          "id": "ntee.search",
+          "method": "GET",
+          "path": "/v1/profile/ntee-codes",
+          "purpose": "Search NTEE codes (?q=clinic&limit=20).",
+          "screens": [
+            "SC11",
+            "SC09"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w2/ntee.search/ok.json",
+            "empty": "mocks/w2/ntee.search/empty.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "ntee.suggest",
+          "method": "POST",
+          "path": "/v1/profile/ntee-suggestions",
+          "purpose": "Suggest NTEE codes from mission + programs (LLM).",
+          "screens": [
+            "SC11",
+            "SC09"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w2/ntee.suggest/ok.json",
+            "rate_limited": "mocks/w2/ntee.suggest/rate_limited.json"
+          },
+          "request_example": "mocks/w2/ntee.suggest/request.json"
+        }
+      ]
+    },
+    {
+      "id": "W3",
+      "name": "Discovery",
+      "spec": "H2",
+      "issue": 27,
+      "screens": [
+        {
+          "id": "SC24",
+          "route": "/discover",
+          "issue": 17,
+          "built_by": "H2"
+        }
+      ],
+      "goal": "One click turns the profile into a list of real, open grants, found like a web search.",
+      "steps": [
+        {
+          "name": "Read the profile into a digest",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Plan 5-8 search queries",
+          "kind": "llm",
+          "detail": "Structured QueryPlan.",
+          "calls_per_run": "1",
+          "model": "gpt-4o-mini (MID)"
+        },
+        {
+          "name": "Web search each query",
+          "kind": "web",
+          "detail": "OpenAI Responses API with the web_search tool (search model).",
+          "calls_per_run": "5-8",
+          "model": "gpt-4o-mini search"
+        },
+        {
+          "name": "De-duplicate URLs, block directories, check robots.txt",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Fetch each page (httpx, SSRF guard, 15 s, 5 MB)",
+          "kind": "code",
+          "detail": "No model. Page text is never stored.",
+          "calls_per_run": "up to 30 fetches",
+          "model": null
+        },
+        {
+          "name": "Classify the page and extract funder, amount, deadline, eligibility with quotes",
+          "kind": "llm",
+          "detail": "Structured PageExtraction; untrusted page text.",
+          "calls_per_run": "up to 2 per candidate",
+          "model": "gpt-4o-mini (MID)"
+        },
+        {
+          "name": "Verify quotes, parse amounts and dates, drop expired",
+          "kind": "code",
+          "detail": "Money in integer cents; dates by a strict parser.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Score fit 0-100 with reasons and concerns",
+          "kind": "llm",
+          "detail": "Structured FitAssessment; code keeps only cited reasons.",
+          "calls_per_run": "1 per candidate",
+          "model": "gpt-4o-mini (MID)"
+        },
+        {
+          "name": "Save candidates",
+          "kind": "code",
+          "detail": "Upsert grant_candidates.",
+          "calls_per_run": null,
+          "model": null
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "discovery.start",
+          "method": "POST",
+          "path": "/v1/discovery/jobs",
+          "purpose": "Start a discovery run (202).",
+          "screens": [
+            "SC24"
+          ],
+          "notes": null,
+          "default": "queued",
+          "scenarios": {
+            "queued": "mocks/w3/discovery.start/queued.json",
+            "job_running": "mocks/w3/discovery.start/job_running.json",
+            "profile_incomplete": "mocks/w3/discovery.start/profile_incomplete.json",
+            "daily_limit": "mocks/w3/discovery.start/daily_limit.json"
+          },
+          "request_example": "mocks/w3/discovery.start/request.json"
+        },
+        {
+          "id": "discovery.get",
+          "method": "GET",
+          "path": "/v1/discovery/jobs/{job_id}",
+          "purpose": "Poll a run (?since_seq=N).",
+          "screens": [
+            "SC24"
+          ],
+          "notes": null,
+          "default": "running",
+          "scenarios": {
+            "running": "mocks/w3/discovery.get/running.json",
+            "done": "mocks/w3/discovery.get/done.json",
+            "failed": "mocks/w3/discovery.get/failed.json",
+            "not_found": "mocks/w3/discovery.get/not_found.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "discovery.list",
+          "method": "GET",
+          "path": "/v1/discovery/jobs",
+          "purpose": "Past runs (?limit=10).",
+          "screens": [
+            "SC24"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w3/discovery.list/ok.json",
+            "empty": "mocks/w3/discovery.list/empty.json"
+          },
+          "request_example": null
+        }
+      ]
+    },
+    {
+      "id": "W4",
+      "name": "Curation",
+      "spec": "H3",
+      "issue": 28,
+      "screens": [
+        {
+          "id": "SC25",
+          "route": "/grants",
+          "issue": 18,
+          "built_by": "H3"
+        },
+        {
+          "id": "SC26",
+          "route": "/grants/[grantId]",
+          "issue": 19,
+          "built_by": "H3"
+        }
+      ],
+      "goal": "Save or pass each found grant; the shortlist feeds the brief and proposal.",
+      "steps": [
+        {
+          "name": "List, filter, sort, paginate candidates",
+          "kind": "code",
+          "detail": "No model. Shows H2's text as-is.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Save / pass / reset with reason",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "grants.list",
+          "method": "GET",
+          "path": "/v1/grants",
+          "purpose": "Grant cards (?status=new|saved|passed&sort=fit&q=&limit=20&offset=0).",
+          "screens": [
+            "SC25",
+            "SC00"
+          ],
+          "notes": "The app-shell badge calls ?status=new&limit=1 and reads counts.new (limit must be 1-100).",
+          "default": "new",
+          "scenarios": {
+            "new": "mocks/w4/grants.list/new.json",
+            "saved": "mocks/w4/grants.list/saved.json",
+            "empty": "mocks/w4/grants.list/empty.json",
+            "invalid_query": "mocks/w4/grants.list/invalid_query.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "grants.get",
+          "method": "GET",
+          "path": "/v1/grants/{grant_id}",
+          "purpose": "One grant with all reasons, concerns and citations.",
+          "screens": [
+            "SC26"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w4/grants.get/ok.json",
+            "not_found": "mocks/w4/grants.get/not_found.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "grants.save",
+          "method": "POST",
+          "path": "/v1/grants/{grant_id}/save",
+          "purpose": "Shortlist a grant.",
+          "screens": [
+            "SC25",
+            "SC26"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w4/grants.save/ok.json",
+            "not_found": "mocks/w4/grants.save/not_found.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "grants.pass",
+          "method": "POST",
+          "path": "/v1/grants/{grant_id}/pass",
+          "purpose": "Pass on a grant (optional reason).",
+          "screens": [
+            "SC25",
+            "SC26"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w4/grants.pass/ok.json",
+            "invalid_reason": "mocks/w4/grants.pass/invalid_reason.json"
+          },
+          "request_example": "mocks/w4/grants.pass/request.json"
+        },
+        {
+          "id": "grants.reset",
+          "method": "POST",
+          "path": "/v1/grants/{grant_id}/reset",
+          "purpose": "Undo save/pass.",
+          "screens": [
+            "SC25",
+            "SC26"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w4/grants.reset/ok.json"
+          },
+          "request_example": null
+        }
+      ]
+    },
+    {
+      "id": "W5",
+      "name": "Application brief",
+      "spec": "H4",
+      "issue": 29,
+      "screens": [
+        {
+          "id": "SC27",
+          "route": "/grants/[grantId]/brief",
+          "issue": 20,
+          "built_by": "H4"
+        }
+      ],
+      "goal": "Read the funder's pages live and explain how to apply, every item cited.",
+      "steps": [
+        {
+          "name": "Pick the start page + up to 6 linked pages",
+          "kind": "code",
+          "detail": "Same-site links scored by keywords.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Fetch pages (SSRF guard, robots.txt)",
+          "kind": "code",
+          "detail": "Page text only in memory.",
+          "calls_per_run": "up to 7 fetches",
+          "model": null
+        },
+        {
+          "name": "Extract steps, documents, questions, dates, requirements with quotes",
+          "kind": "llm",
+          "detail": "Structured PageExtraction per page; untrusted text.",
+          "calls_per_run": "up to 7",
+          "model": "gpt-4o-mini"
+        },
+        {
+          "name": "Classify each eligibility requirement (check + expected values)",
+          "kind": "llm",
+          "detail": "The model never returns meets.",
+          "calls_per_run": "1",
+          "model": "gpt-4o-mini"
+        },
+        {
+          "name": "Decide eligibility from profile values",
+          "kind": "code",
+          "detail": "hope_briefs.eligibility.decide: yes / no / unknown.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Write the 1-2 sentence overview",
+          "kind": "llm",
+          "detail": "Facts-only, [fN] markers.",
+          "calls_per_run": "1",
+          "model": "gpt-4o-mini"
+        },
+        {
+          "name": "Verify quotes, parse word limits and dates, stable item ids",
+          "kind": "code",
+          "detail": "Unverified items are kept and flagged.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Checklist ticks",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "brief.start",
+          "method": "POST",
+          "path": "/v1/grants/{grant_id}/brief",
+          "purpose": "Create or regenerate the brief (202).",
+          "screens": [
+            "SC27",
+            "SC26"
+          ],
+          "notes": null,
+          "default": "queued",
+          "scenarios": {
+            "queued": "mocks/w5/brief.start/queued.json",
+            "in_progress": "mocks/w5/brief.start/in_progress.json",
+            "not_found": "mocks/w5/brief.start/not_found.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "brief.get",
+          "method": "GET",
+          "path": "/v1/grants/{grant_id}/brief",
+          "purpose": "Brief, sources, checklist, key dates, latest job. SC26 derives its status chip from this.",
+          "screens": [
+            "SC27",
+            "SC26"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w5/brief.get/ok.json",
+            "no_brief_running": "mocks/w5/brief.get/no_brief_running.json",
+            "no_brief": "mocks/w5/brief.get/no_brief.json",
+            "failed": "mocks/w5/brief.get/failed.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "brief.checklist",
+          "method": "PUT",
+          "path": "/v1/grants/{grant_id}/brief/checklist/{item_id}",
+          "purpose": "Tick a required document.",
+          "screens": [
+            "SC27"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w5/brief.checklist/ok.json",
+            "item_not_found": "mocks/w5/brief.checklist/item_not_found.json"
+          },
+          "request_example": "mocks/w5/brief.checklist/request.json"
+        }
+      ]
+    },
+    {
+      "id": "W6",
+      "name": "Proposal",
+      "spec": "H5",
+      "issue": 30,
+      "screens": [
+        {
+          "id": "SC28",
+          "route": "/grants/[grantId]/proposal",
+          "issue": 21,
+          "built_by": "H5"
+        }
+      ],
+      "goal": "Draft cited answers to the grant's questions; edit, regenerate, export.",
+      "steps": [
+        {
+          "name": "Plan sections from the brief's questions",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Build the evidence list (profile + brief quotes)",
+          "kind": "code",
+          "detail": "The only thing the model may cite.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Draft each section as cited claims",
+          "kind": "llm",
+          "detail": "Structured SectionAnswer; + up to 1 retry (shorten or fix).",
+          "calls_per_run": "1-2 per section (max 2 x sections + 2)",
+          "model": "gpt-4o-mini (FRONTIER tier)"
+        },
+        {
+          "name": "Render markdown, citation check, word counts",
+          "kind": "code",
+          "detail": "Unverified claims flagged, never removed.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Regenerate one section",
+          "kind": "llm",
+          "detail": "Same as drafting, with optional guidance.",
+          "calls_per_run": "1-2",
+          "model": "gpt-4o-mini (FRONTIER tier)"
+        },
+        {
+          "name": "Save user edits (hash check) and export md/docx",
+          "kind": "code",
+          "detail": "No model.",
+          "calls_per_run": null,
+          "model": null
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "proposal.start",
+          "method": "POST",
+          "path": "/v1/grants/{grant_id}/proposal",
+          "purpose": "Draft or redraft all sections (202).",
+          "screens": [
+            "SC28"
+          ],
+          "notes": null,
+          "default": "running",
+          "scenarios": {
+            "running": "mocks/w6/proposal.start/running.json",
+            "brief_missing": "mocks/w6/proposal.start/brief_missing.json",
+            "in_progress": "mocks/w6/proposal.start/in_progress.json"
+          },
+          "request_example": "mocks/w6/proposal.start/request.json"
+        },
+        {
+          "id": "proposal.get",
+          "method": "GET",
+          "path": "/v1/grants/{grant_id}/proposal",
+          "purpose": "Grant, brief, draft, sections_meta, job. SC26 derives its status chip from this.",
+          "screens": [
+            "SC28",
+            "SC26"
+          ],
+          "notes": null,
+          "default": "ready",
+          "scenarios": {
+            "ready": "mocks/w6/proposal.get/ready.json",
+            "no_draft": "mocks/w6/proposal.get/no_draft.json",
+            "drafting": "mocks/w6/proposal.get/drafting.json"
+          },
+          "request_example": null
+        },
+        {
+          "id": "proposal.section.put",
+          "method": "PUT",
+          "path": "/v1/grants/{grant_id}/proposal/sections/{section_id}",
+          "purpose": "Save an edited section.",
+          "screens": [
+            "SC28"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w6/proposal.section.put/ok.json",
+            "stale": "mocks/w6/proposal.section.put/stale.json",
+            "unknown_citation": "mocks/w6/proposal.section.put/unknown_citation.json"
+          },
+          "request_example": "mocks/w6/proposal.section.put/request.json"
+        },
+        {
+          "id": "proposal.section.regenerate",
+          "method": "POST",
+          "path": "/v1/grants/{grant_id}/proposal/sections/{section_id}/regenerate",
+          "purpose": "Redraft one section (202).",
+          "screens": [
+            "SC28"
+          ],
+          "notes": null,
+          "default": "running",
+          "scenarios": {
+            "running": "mocks/w6/proposal.section.regenerate/running.json"
+          },
+          "request_example": "mocks/w6/proposal.section.regenerate/request.json"
+        },
+        {
+          "id": "proposal.export",
+          "method": "GET",
+          "path": "/v1/grants/{grant_id}/proposal/export",
+          "purpose": "Download (?format=md|docx).",
+          "screens": [
+            "SC28"
+          ],
+          "notes": null,
+          "default": "md",
+          "scenarios": {
+            "md": "mocks/w6/proposal.export/md.json",
+            "draft_not_ready": "mocks/w6/proposal.export/draft_not_ready.json",
+            "bad_format": "mocks/w6/proposal.export/bad_format.json"
+          },
+          "request_example": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "status": 409,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Build the brief first",
+    "status": 409,
+    "code": "brief_missing"
+  }
+}

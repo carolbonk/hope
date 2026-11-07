@@ -2,5 +2,10 @@
   "name": "hope",
   "private": true,
   "packageManager": "pnpm@9.12.3",
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "mock": "pnpm --filter @hope/contracts run mock"
+  }
 }

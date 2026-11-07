@@ -1,0 +1,48 @@
+{
+  "status": 202,
+  "headers": {},
+  "body": {
+    "job": {
+      "job_id": "0b9f5c3e-1d2a-4c6b-9e8f-7a6b5c4d3e21",
+      "status": "queued",
+      "queries": [],
+      "progress": {
+        "queries_total": 0,
+        "queries_done": 0,
+        "pages_read": 0,
+        "candidates_found": 0,
+        "current_step": "Starting"
+      },
+      "error": null,
+      "started_at": "2026-11-08T14:00:00Z",
+      "finished_at": null
+    },
+    "request": {
+      "focus_keywords": [
+        "dental",
+        "rural"
+      ],
+      "location": "Chelan County, WA"
+    },
+    "counts": {
+      "urls_found": 0,
+      "pages_read": 0,
+      "candidates_new": 0,
+      "candidates_updated": 0,
+      "skipped_expired": 0,
+      "skipped_not_grant": 0,
+      "skipped_known": 0,
+      "failed_pages": 0,
+      "queries_failed": 0
+    },
+    "steps": [],
+    "last_seq": 0,
+    "candidates": [],
+    "elapsed_s": 0,
+    "limits": {
+      "max_queries": 8,
+      "max_pages": 30,
+      "timeout_s": 300
+    }
+  }
+}

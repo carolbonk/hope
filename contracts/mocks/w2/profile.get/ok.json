@@ -1,0 +1,75 @@
+{
+  "status": 200,
+  "headers": {
+    "etag": "\"3\""
+  },
+  "body": {
+    "version": 3,
+    "updated_at": "2026-11-07T21:40:12Z",
+    "updated_by": "demo@hope.org",
+    "onboarding_complete": true,
+    "form": {
+      "basics": {
+        "legal_name": "Riverbend Community Health Alliance",
+        "ein": "84-3917265",
+        "tax_status": "501c3_public_charity",
+        "hq_city": "Wenatchee",
+        "hq_state": "WA",
+        "service_area": [
+          "Chelan County, WA",
+          "Douglas County, WA"
+        ],
+        "website": "https://riverbendhealth.example.org/"
+      },
+      "mission": {
+        "mission_statement": "Riverbend Community Health Alliance brings preventive care, dental services and mental health support to rural families in north-central Washington, regardless of ability to pay.",
+        "vision_statement": "Every rural family in the Columbia River valley can see a clinician within a day.",
+        "values": [
+          "Care regardless of ability to pay",
+          "Community-led",
+          "Bilingual by default"
+        ]
+      },
+      "ntee_codes": [
+        "E32",
+        "F30"
+      ],
+      "budget": {
+        "budget_band": "1m-5m",
+        "annual_operating_budget_usd": 3120000,
+        "fiscal_year_end": "06-30"
+      },
+      "programs": [
+        {
+          "program_id": "prg-mobile-dental",
+          "name": "Mobile Dental Clinic",
+          "description": "Two mobile units provide cleanings, sealants and restorative care at schools and farmworker housing.",
+          "people_served": "Children and adults on Medicaid",
+          "annual_served": 3200,
+          "age_range": null
+        },
+        {
+          "program_id": "prg-chw",
+          "name": "Community Health Worker Network",
+          "description": "Bilingual community health workers connect families to primary and behavioral health care.",
+          "people_served": "Spanish-speaking farmworker families",
+          "annual_served": 1450,
+          "age_range": null
+        }
+      ]
+    },
+    "ntee_labels": {
+      "E32": "Community Clinics",
+      "F30": "Mental Health Treatment"
+    },
+    "completeness": {
+      "score": 92,
+      "missing": [
+        "programs.1.age_range"
+      ],
+      "suggestions": [
+        "Add the age range for Community Health Worker Network"
+      ]
+    }
+  }
+}

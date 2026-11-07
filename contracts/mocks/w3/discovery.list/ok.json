@@ -1,0 +1,26 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "items": [
+      {
+        "job_id": "0b9f5c3e-1d2a-4c6b-9e8f-7a6b5c4d3e21",
+        "status": "done",
+        "started_at": "2026-11-08T14:00:00Z",
+        "finished_at": "2026-11-08T14:02:41Z",
+        "request": {
+          "focus_keywords": [
+            "dental"
+          ],
+          "location": "Chelan County, WA"
+        },
+        "queries_total": 6,
+        "pages_read": 9,
+        "candidates_found": 3,
+        "candidates_new": 2,
+        "error": null
+      }
+    ],
+    "running_job_id": null
+  }
+}

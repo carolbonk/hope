@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "suggestions": [
+      {
+        "code": "E32",
+        "label": "Community Clinics",
+        "reason": "Runs mobile dental and preventive clinics for rural families.",
+        "verified": true,
+        "citation": {
+          "citation_id": "c1",
+          "kind": "profile",
+          "url": null,
+          "title": null,
+          "quote": "Two mobile units provide cleanings, sealants and restorative care",
+          "profile_path": "programs.0.description",
+          "retrieved_at": null
+        }
+      },
+      {
+        "code": "F30",
+        "label": "Mental Health Treatment",
+        "reason": "Provides mental health support.",
+        "verified": true,
+        "citation": {
+          "citation_id": "c2",
+          "kind": "profile",
+          "url": null,
+          "title": null,
+          "quote": "mental health support",
+          "profile_path": "mission.mission_statement",
+          "retrieved_at": null
+        }
+      }
+    ],
+    "error": null
+  }
+}

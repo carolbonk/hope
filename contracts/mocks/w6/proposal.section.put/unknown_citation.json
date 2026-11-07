@@ -1,0 +1,15 @@
+{
+  "status": 422,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Unknown citation",
+    "status": 422,
+    "code": "unknown_citation",
+    "citation_ids": [
+      "c9"
+    ]
+  }
+}

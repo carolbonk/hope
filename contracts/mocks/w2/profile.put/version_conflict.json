@@ -1,0 +1,13 @@
+{
+  "status": 409,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Profile changed",
+    "status": 409,
+    "code": "version_conflict",
+    "current_version": 4
+  }
+}

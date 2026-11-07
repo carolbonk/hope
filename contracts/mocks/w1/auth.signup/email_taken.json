@@ -1,0 +1,12 @@
+{
+  "status": 409,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Email already registered",
+    "status": 409,
+    "code": "email_taken"
+  }
+}

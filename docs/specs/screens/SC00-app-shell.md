@@ -47,9 +47,9 @@ Mobile (<= 640 px): top bar with the logo and avatar; nav as a bottom tab bar (G
 |---|---|---|---|
 | Logo | static | "Hope" wordmark | Links to `/grants` |
 | Nav items | `nav.ts` | icon + label | Active item uses `glass-active` and `aria-current="page"` |
-| Grants count badge | `GET /v1/grants?status=new&limit=0` -> `total` | "3" | Hidden at 0; caps at "99+" |
+| Grants count badge | `GET /v1/grants?status=new&limit=1` -> `counts.new` | "3" | Hidden at 0; caps at "99+" |
 | User name + initials | `GET /v1/me` -> `display_name` | "Dana Smith", avatar "DS" | Truncated at 24 characters |
-| Organization name | `GET /v1/agencies/{agency_id}/profile` -> `legal.legal_name` | secondary text | Hidden until onboarding is done |
+| Organization name | `GET /v1/profile` -> `form.basics.legal_name` | secondary text | Hidden until onboarding is done |
 
 ## 5. Components
 
@@ -80,8 +80,8 @@ The sidebar is a `Card` (`glass-panel`); nav items are `Button` variant `nav`; t
 | Trigger | Call | Fields | Cache |
 |---|---|---|---|
 | App load, window focus | `GET /v1/me` | `display_name`, `agency_id`, `onboarding_complete` | Session; refetch on focus |
-| After `me` | `GET /v1/agencies/{agency_id}/profile` | `legal.legal_name` | Session |
-| After `me`, every 60 s | `GET /v1/grants?status=new&limit=0` | `total` | 60 s |
+| After `me` | `GET /v1/profile` | `form.basics.legal_name` | Session |
+| After `me`, every 60 s | `GET /v1/grants?status=new&limit=1` | `counts.new` | 60 s |
 | Sign out | `POST /v1/auth/logout` | - | Clears all caches |
 
 ## 9. Responsive behaviour
