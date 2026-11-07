@@ -63,6 +63,8 @@ orchestrator.
 - There is no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the root, and `@/*` maps to `./*`.
 - The seam: pages call `useHope()` / `useOpportunities()` only. Backends plug in through `lib/hope/sync/<name>.ts`
   (profile H1, opportunities H2, decisions H3) without changing hook signatures or pages.
+  H0 creates the three no-op stubs and wires them once, before H1-H5 start. H1-H3 replace only their stub's body
+  (signatures are in H0, section 3).
 - H4/H5 are browser state plus `POST /api/hope/draft`. The OpenAI key is server-only (`OPENAI_API_KEY`).
 - Web checks: `pnpm --filter @hope/web typecheck && pnpm --filter @hope/web lint && pnpm --filter @hope/web test`.
   Don't commit the generated `apps/web/AGENTS.md` / `CLAUDE.md`.
