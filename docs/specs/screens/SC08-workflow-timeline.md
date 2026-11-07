@@ -1,5 +1,7 @@
 # SC08: Workflow timeline
 
+> **Out of scope for the hackathon. Don't build this.** This screen belongs to the earlier design. Hackathon agents build only the H0-H5 screens (SC00, SC01, SC09, SC11, SC24-SC28); see [`README.md`](../README.md).
+
 | | |
 |---|---|
 | Route | `/workflows/[workflowId]` (query: `history` = `all` \| `decisions`, default `all`) |
