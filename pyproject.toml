@@ -38,6 +38,9 @@ python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
 ignore_missing_imports = true
+# Type-check sources only (like packages/core/src): service test dirs share module names
+# (conftest, test_api, ...) that mypy would treat as duplicate top-level modules.
+exclude = ["^services/[^/]+/tests/"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
