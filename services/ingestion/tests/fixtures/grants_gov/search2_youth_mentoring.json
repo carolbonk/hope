@@ -1,0 +1,526 @@
+{
+  "errorcode": 0,
+  "msg": "Webservice Succeeds",
+  "token": "REDACTED",
+  "data": {
+    "searchParams": {
+      "resultType": "json",
+      "searchOnly": false,
+      "oppNum": "",
+      "cfda": "",
+      "sortBy": "",
+      "oppStatuses": "posted",
+      "startRecordNum": 0,
+      "eligibilities": "",
+      "fundingInstruments": "",
+      "fundingCategories": "",
+      "agencies": "",
+      "rows": 3,
+      "keyword": "youth mentoring",
+      "keywordEncoded": true
+    },
+    "hitCount": 98,
+    "startRecord": 0,
+    "oppHits": [
+      {
+        "id": "364058",
+        "number": "O-OJJDP-2026-172743",
+        "title": "OJJDP FY 2026 Mentoring for Youth Impacted by Opioids and Other Substance Use",
+        "agencyCode": "USDOJ-OJP-OJJDP",
+        "agency": "Office of Juvenile Justice Delinquency Prevention ",
+        "openDate": "10/09/2026",
+        "closeDate": "11/16/2026",
+        "oppStatus": "posted",
+        "docType": "synopsis",
+        "cfdaList": [
+          "16.726"
+        ]
+      },
+      {
+        "id": "350561",
+        "number": "PD-24-1699",
+        "title": "Cognitive Neuroscience (CogNeuro)",
+        "agencyCode": "NSF",
+        "agency": "U.S. National Science Foundation",
+        "openDate": "10/12/2023",
+        "closeDate": "02/01/2027",
+        "oppStatus": "posted",
+        "docType": "synopsis",
+        "cfdaList": [
+          "47.075"
+        ]
+      },
+      {
+        "id": "359145",
+        "number": "RFA-DK-26-310",
+        "title": "Diabetes Research Centers (P30 Clinical Trial Optional)",
+        "agencyCode": "HHS-NIH11",
+        "agency": "National Institutes of Health",
+        "openDate": "12/05/2025",
+        "closeDate": "01/27/2027",
+        "oppStatus": "posted",
+        "docType": "synopsis",
+        "cfdaList": [
+          "93.847"
+        ]
+      }
+    ],
+    "oppStatusOptions": [
+      {
+        "label": "posted",
+        "value": "posted",
+        "count": 98
+      },
+      {
+        "label": "closed",
+        "value": "closed",
+        "count": 2475
+      },
+      {
+        "label": "archived",
+        "value": "archived",
+        "count": 15454
+      },
+      {
+        "label": "forecasted",
+        "value": "forecasted",
+        "count": 71
+      }
+    ],
+    "dateRangeOptions": [
+      {
+        "label": "Posted Date - Last 3 Days",
+        "value": "3",
+        "count": 1
+      },
+      {
+        "label": "Posted Date - Last 1 Week",
+        "value": "7",
+        "count": 2
+      },
+      {
+        "label": "Posted Date - Last 2 Weeks",
+        "value": "14",
+        "count": 10
+      },
+      {
+        "label": "Posted Date - Last 3 Weeks",
+        "value": "21",
+        "count": 12
+      },
+      {
+        "label": "Posted Date - Last 4 Weeks",
+        "value": "28",
+        "count": 16
+      },
+      {
+        "label": "Posted Date - Last 5 Weeks",
+        "value": "35",
+        "count": 25
+      },
+      {
+        "label": "Posted Date - Last 6 Weeks",
+        "value": "42",
+        "count": 28
+      },
+      {
+        "label": "Posted Date - Last 7 Weeks",
+        "value": "49",
+        "count": 31
+      },
+      {
+        "label": "Posted Date - Last 8 Weeks",
+        "value": "56",
+        "count": 31
+      }
+    ],
+    "suggestion": "",
+    "eligibilities": [
+      {
+        "label": "City or township governments",
+        "value": "02",
+        "count": 38
+      },
+      {
+        "label": "County governments",
+        "value": "01",
+        "count": 39
+      },
+      {
+        "label": "For profit organizations other than small businesses",
+        "value": "22",
+        "count": 37
+      },
+      {
+        "label": "Independent school districts",
+        "value": "05",
+        "count": 32
+      },
+      {
+        "label": "Native American tribal governments (Federally recognized)",
+        "value": "07",
+        "count": 44
+      },
+      {
+        "label": "Native American tribal organizations (other than Federally recognized tribal governments)",
+        "value": "11",
+        "count": 38
+      },
+      {
+        "label": "Nonprofits having a 501(c)(3) status with the IRS, other than institutions of higher education",
+        "value": "12",
+        "count": 50
+      },
+      {
+        "label": "Nonprofits that do not have a 501(c)(3) status with the IRS, other than institutions of higher education",
+        "value": "13",
+        "count": 48
+      },
+      {
+        "label": "Others (see text field entitled \"Additional Information on Eligibility\" for clarification)",
+        "value": "25",
+        "count": 75
+      },
+      {
+        "label": "Private institutions of higher education",
+        "value": "20",
+        "count": 49
+      },
+      {
+        "label": "Public and State controlled institutions of higher education",
+        "value": "06",
+        "count": 49
+      },
+      {
+        "label": "Public housing authorities/Indian housing authorities",
+        "value": "08",
+        "count": 32
+      },
+      {
+        "label": "Small businesses",
+        "value": "23",
+        "count": 33
+      },
+      {
+        "label": "Special district governments",
+        "value": "04",
+        "count": 35
+      },
+      {
+        "label": "State governments",
+        "value": "00",
+        "count": 41
+      },
+      {
+        "label": "Unrestricted (i.e., open to any type of entity above), subject to any clarification in text field entitled \"Additional Information on Eligibility\"",
+        "value": "99",
+        "count": 7
+      }
+    ],
+    "fundingCategories": [
+      {
+        "label": "Agriculture",
+        "value": "AG",
+        "count": 5
+      },
+      {
+        "label": "Arts",
+        "value": "AR",
+        "count": 10
+      },
+      {
+        "label": "Community Development",
+        "value": "CD",
+        "count": 2
+      },
+      {
+        "label": "Education",
+        "value": "ED",
+        "count": 5
+      },
+      {
+        "label": "Employment, Labor and Training",
+        "value": "ELT",
+        "count": 8
+      },
+      {
+        "label": "Health",
+        "value": "HL",
+        "count": 41
+      },
+      {
+        "label": "Housing",
+        "value": "HO",
+        "count": 1
+      },
+      {
+        "label": "Humanities",
+        "value": "HU",
+        "count": 10
+      },
+      {
+        "label": "Income Security and Social Services",
+        "value": "ISS",
+        "count": 3
+      },
+      {
+        "label": "Law, Justice and Legal Services",
+        "value": "LJL",
+        "count": 5
+      },
+      {
+        "label": "Opportunity Zone Benefits",
+        "value": "OZ",
+        "count": 3
+      },
+      {
+        "label": "Other (see text field entitled \"Explanation of Other Category of Funding Activity\" for clarification)",
+        "value": "O",
+        "count": 5
+      },
+      {
+        "label": "Science and Technology and other Research and Development",
+        "value": "ST",
+        "count": 17
+      }
+    ],
+    "fundingInstruments": [
+      {
+        "label": "Cooperative Agreement",
+        "value": "CA",
+        "count": 26
+      },
+      {
+        "label": "Grant",
+        "value": "G",
+        "count": 78
+      },
+      {
+        "label": "Other",
+        "value": "O",
+        "count": 8
+      },
+      {
+        "label": "Procurement Contract",
+        "value": "PC",
+        "count": 4
+      }
+    ],
+    "agencies": [
+      {
+        "subAgencyOptions": [
+          {
+            "label": "National Institute of Food and Agriculture",
+            "value": "USDA-NIFA",
+            "count": 5
+          }
+        ],
+        "label": "Department of Agriculture",
+        "value": "USDA",
+        "count": 5
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "Economic Development Administration",
+            "value": "DOC-EDA",
+            "count": 1
+          }
+        ],
+        "label": "Department of Commerce",
+        "value": "DOC",
+        "count": 1
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "Air Force Office of Scientific Research",
+            "value": "DOD-AFOSR",
+            "count": 2
+          },
+          {
+            "label": "Defense Health Agency Contracting Activity - DHACA",
+            "value": "DOD-AMRAA",
+            "count": 1
+          },
+          {
+            "label": "Dept of the Army -- Materiel Command",
+            "value": "DOD-AMC",
+            "count": 4
+          },
+          {
+            "label": "Washington Headquarters Services",
+            "value": "DOD-WHS",
+            "count": 1
+          }
+        ],
+        "label": "Department of Defense",
+        "value": "DOD",
+        "count": 8
+      },
+      {
+        "subAgencyOptions": [],
+        "label": "Department of Education",
+        "value": "ED",
+        "count": 1
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "Advanced Research Projects Agency Energy ",
+            "value": "DOE-ARPAE",
+            "count": 3
+          }
+        ],
+        "label": "Department of Energy",
+        "value": "DOE",
+        "count": 3
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "Office of Science",
+            "value": "PAMS-SC",
+            "count": 3
+          }
+        ],
+        "label": "Department of Energy - Office of Science",
+        "value": "PAMS",
+        "count": 3
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "Administration for Children and Families",
+            "value": "HHS-ACF",
+            "count": 1
+          },
+          {
+            "label": "Administration for Children and Families - ORR",
+            "value": "HHS-ACF-ORR",
+            "count": 2
+          },
+          {
+            "label": "National Institutes of Health",
+            "value": "HHS-NIH11",
+            "count": 38
+          }
+        ],
+        "label": "Department of Health and Human Services",
+        "value": "HHS",
+        "count": 41
+      },
+      {
+        "subAgencyOptions": [],
+        "label": "Department of Housing and Urban Development",
+        "value": "HUD",
+        "count": 1
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "Office of Juvenile Justice Delinquency Prevention ",
+            "value": "USDOJ-OJP-OJJDP",
+            "count": 5
+          }
+        ],
+        "label": "Department of Justice",
+        "value": "USDOJ",
+        "count": 5
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "Employment and Training Administration",
+            "value": "DOL-ETA",
+            "count": 1
+          }
+        ],
+        "label": "Department of Labor",
+        "value": "DOL",
+        "count": 1
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "Bureau of Democracy Human Rights and Labor",
+            "value": "DOS-DRL",
+            "count": 1
+          },
+          {
+            "label": "Bureau of Global Health Security and Diplomacy",
+            "value": "DOS-GHSD",
+            "count": 1
+          },
+          {
+            "label": "Bureau of Human Resources",
+            "value": "DOS-HR",
+            "count": 6
+          },
+          {
+            "label": "U.S. Mission to Austria",
+            "value": "DOS-AUT",
+            "count": 1
+          },
+          {
+            "label": "U.S. Mission to Cape Verde",
+            "value": "DOS-CPV",
+            "count": 1
+          },
+          {
+            "label": "U.S. Mission to Tunisia",
+            "value": "DOS-TUN",
+            "count": 1
+          }
+        ],
+        "label": "Department of State",
+        "value": "DOS",
+        "count": 11
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "National Park Service",
+            "value": "DOI-NPS",
+            "count": 1
+          }
+        ],
+        "label": "Department of the Interior",
+        "value": "DOI",
+        "count": 1
+      },
+      {
+        "subAgencyOptions": [
+          {
+            "label": "National Highway Traffic Safety Administration",
+            "value": "DOT-NHTSA",
+            "count": 1
+          }
+        ],
+        "label": "Department of Transportation",
+        "value": "DOT",
+        "count": 1
+      },
+      {
+        "subAgencyOptions": [],
+        "label": "Institute of Museum and Library Services",
+        "value": "IMLS",
+        "count": 10
+      },
+      {
+        "subAgencyOptions": [],
+        "label": "National Aeronautics and Space Administration",
+        "value": "NASA",
+        "count": 1
+      },
+      {
+        "subAgencyOptions": [],
+        "label": "U.S. National Science Foundation",
+        "value": "NSF",
+        "count": 5
+      }
+    ],
+    "accessKey": "",
+    "errorMsgs": []
+  }
+}

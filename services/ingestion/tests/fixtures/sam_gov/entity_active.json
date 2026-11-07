@@ -1,0 +1,31 @@
+{
+  "totalRecords": 1,
+  "entityData": [
+    {
+      "entityRegistration": {
+        "samRegistered": "Yes",
+        "ueiSAM": "RV56IG5JM6G9",
+        "entityEFTIndicator": null,
+        "cageCode": "8AB12",
+        "dodaac": null,
+        "legalBusinessName": "RIVERBEND YOUTH ALLIANCE",
+        "dbaName": null,
+        "purposeOfRegistrationCode": "Z1",
+        "purposeOfRegistrationDesc": "Federal Assistance Awards",
+        "registrationStatus": "Active",
+        "registrationDate": "2019-04-02",
+        "lastUpdateDate": "2026-03-10",
+        "registrationExpirationDate": "2027-03-10",
+        "activationDate": "2026-03-10",
+        "ueiStatus": "Active",
+        "ueiExpirationDate": "2027-03-10",
+        "ueiCreationDate": "2019-04-02",
+        "noPublicDisplayFlag": "N",
+        "exclusionStatusFlag": null,
+        "exclusionURL": null,
+        "dnbOpenData": "Y"
+      }
+    }
+  ],
+  "links": {"selfLink": "https://api.sam.gov/entity-information/v3/entities?ueiSAM=RV56IG5JM6G9"}
+}
