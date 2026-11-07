@@ -1,0 +1,84 @@
+{
+  "$defs": {
+    "Gate": {
+      "enum": [
+        "HITL-0",
+        "HITL-1",
+        "HITL-2",
+        "HITL-3",
+        "HITL-4",
+        "HITL-5",
+        "REVIEW-ELIGIBILITY",
+        "REVIEW-PARSE"
+      ],
+      "title": "Gate",
+      "type": "string"
+    }
+  },
+  "$id": "https://schemas.hope.dev/hitl-decision/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_hash": {
+      "title": "Artifact Hash",
+      "type": "string"
+    },
+    "comment": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Comment"
+    },
+    "decided_at": {
+      "format": "date-time",
+      "title": "Decided At",
+      "type": "string"
+    },
+    "decided_by": {
+      "title": "Decided By",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "approve",
+        "reject",
+        "request_changes",
+        "go",
+        "no_go",
+        "defer"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "details": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Details",
+      "type": "object"
+    },
+    "gate": {
+      "$ref": "#/$defs/Gate"
+    },
+    "request_id": {
+      "format": "uuid",
+      "title": "Request Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "gate",
+    "decision",
+    "artifact_hash",
+    "decided_by",
+    "decided_at"
+  ],
+  "title": "HitlDecision",
+  "type": "object"
+}

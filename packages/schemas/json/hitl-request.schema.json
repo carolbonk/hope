@@ -1,0 +1,92 @@
+{
+  "$defs": {
+    "Gate": {
+      "enum": [
+        "HITL-0",
+        "HITL-1",
+        "HITL-2",
+        "HITL-3",
+        "HITL-4",
+        "HITL-5",
+        "REVIEW-ELIGIBILITY",
+        "REVIEW-PARSE"
+      ],
+      "title": "Gate",
+      "type": "string"
+    }
+  },
+  "$id": "https://schemas.hope.dev/hitl-request/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approver_roles": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Approver Roles",
+      "type": "array"
+    },
+    "artifact_hash": {
+      "description": "approval is void if the artifact changes",
+      "title": "Artifact Hash",
+      "type": "string"
+    },
+    "due_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Due At"
+    },
+    "gate": {
+      "$ref": "#/$defs/Gate"
+    },
+    "payload_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Payload Ref"
+    },
+    "request_id": {
+      "format": "uuid",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "tenant_id": {
+      "format": "uuid",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "workflow_id": {
+      "title": "Workflow Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "tenant_id",
+    "workflow_id",
+    "gate",
+    "artifact_hash",
+    "approver_roles",
+    "summary"
+  ],
+  "title": "HitlRequest",
+  "type": "object"
+}

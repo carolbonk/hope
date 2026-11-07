@@ -1,0 +1,947 @@
+{
+  "$defs": {
+    "CostShare": {
+      "additionalProperties": false,
+      "properties": {
+        "in_kind_allowed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In Kind Allowed"
+        },
+        "ratio_bps": {
+          "anyOf": [
+            {
+              "description": "basis points, e.g. 1500 = 15%",
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ratio Bps"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "required"
+      ],
+      "title": "CostShare",
+      "type": "object"
+    },
+    "Deadlines": {
+      "additionalProperties": false,
+      "properties": {
+        "anticipated_award_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anticipated Award Date"
+        },
+        "application_due": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedDeadline"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "loi_due": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedDeadline"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project_period_months": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Project Period Months"
+        },
+        "questions_due": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedDeadline"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rolling": {
+          "default": false,
+          "title": "Rolling",
+          "type": "boolean"
+        }
+      },
+      "title": "Deadlines",
+      "type": "object"
+    },
+    "Eligibility": {
+      "additionalProperties": false,
+      "properties": {
+        "applicant_types": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Applicant Types",
+          "type": "array"
+        },
+        "budget_band_restrictions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Budget Band Restrictions",
+          "type": "array"
+        },
+        "clauses": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EligibilityClause"
+          },
+          "title": "Clauses",
+          "type": "array"
+        },
+        "geographic_restrictions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Geographic Restrictions",
+          "type": "array"
+        },
+        "required_registrations": {
+          "default": [],
+          "items": {
+            "enum": [
+              "sam",
+              "uei",
+              "grants_gov",
+              "state_charity",
+              "other"
+            ],
+            "type": "string"
+          },
+          "title": "Required Registrations",
+          "type": "array"
+        }
+      },
+      "title": "Eligibility",
+      "type": "object"
+    },
+    "EligibilityClause": {
+      "additionalProperties": false,
+      "properties": {
+        "compiled_rule": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "JSON Logic, once approved",
+          "title": "Compiled Rule"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "rule_status": {
+          "default": "draft",
+          "enum": [
+            "draft",
+            "approved",
+            "needs_review"
+          ],
+          "title": "Rule Status",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "evidence"
+      ],
+      "title": "EligibilityClause",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "char_end": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char End"
+        },
+        "char_start": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char Start"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quote"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "page"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "ExtractedDeadline": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "extractor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "model or parser id + version",
+          "title": "Extractor"
+        },
+        "timezone": {
+          "description": "IANA tz, e.g. America/New_York",
+          "title": "Timezone",
+          "type": "string"
+        },
+        "value": {
+          "format": "date-time",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "confidence",
+        "evidence",
+        "value",
+        "timezone"
+      ],
+      "title": "ExtractedDeadline",
+      "type": "object"
+    },
+    "ExtractedStrings": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "extractor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "model or parser id + version",
+          "title": "Extractor"
+        },
+        "value": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Value",
+          "type": "array"
+        }
+      },
+      "required": [
+        "confidence",
+        "evidence",
+        "value"
+      ],
+      "title": "ExtractedStrings",
+      "type": "object"
+    },
+    "Formatting": {
+      "additionalProperties": false,
+      "properties": {
+        "file_types": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "File Types",
+          "type": "array"
+        },
+        "font_min_pt": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Font Min Pt"
+        },
+        "margins_in": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Margins In"
+        },
+        "spacing": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Spacing"
+        }
+      },
+      "title": "Formatting",
+      "type": "object"
+    },
+    "Funder": {
+      "additionalProperties": false,
+      "properties": {
+        "aln": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Aln",
+          "type": "array"
+        },
+        "contact_email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contact Email"
+        },
+        "funder_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Funder Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "federal",
+            "state",
+            "local",
+            "private_foundation",
+            "community_foundation",
+            "corporate",
+            "other"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "Funder",
+      "type": "object"
+    },
+    "Funding": {
+      "additionalProperties": false,
+      "properties": {
+        "award_ceiling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "award_floor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cost_share": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CostShare"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "expected_awards": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Awards"
+        },
+        "indirect_cost_policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IndirectCostPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_program_funding": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "unallowable_costs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Unallowable Costs",
+          "type": "array"
+        }
+      },
+      "title": "Funding",
+      "type": "object"
+    },
+    "IndirectCostPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "title": "Allowed",
+          "type": "boolean"
+        },
+        "base": {
+          "default": "unspecified",
+          "enum": [
+            "MTDC",
+            "TDC",
+            "salaries_wages",
+            "unspecified"
+          ],
+          "title": "Base",
+          "type": "string"
+        },
+        "cap_bps": {
+          "anyOf": [
+            {
+              "description": "basis points, e.g. 1500 = 15%",
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cap Bps"
+        }
+      },
+      "required": [
+        "allowed"
+      ],
+      "title": "IndirectCostPolicy",
+      "type": "object"
+    },
+    "Money": {
+      "properties": {
+        "amount_minor": {
+          "title": "Amount Minor",
+          "type": "integer"
+        },
+        "currency": {
+          "default": "USD",
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount_minor"
+      ],
+      "title": "Money",
+      "type": "object"
+    },
+    "ParseQuality": {
+      "additionalProperties": false,
+      "properties": {
+        "injection_suspected": {
+          "default": false,
+          "title": "Injection Suspected",
+          "type": "boolean"
+        },
+        "missing_critical_fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Critical Fields",
+          "type": "array"
+        },
+        "overall_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Overall Confidence",
+          "type": "number"
+        },
+        "pipeline_path": {
+          "default": [],
+          "items": {
+            "enum": [
+              "native_text",
+              "layout_model",
+              "ocr",
+              "vision_llm",
+              "human"
+            ],
+            "type": "string"
+          },
+          "title": "Pipeline Path",
+          "type": "array"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "overall_confidence"
+      ],
+      "title": "ParseQuality",
+      "type": "object"
+    },
+    "RequirementSection": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluation_criteria": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Evaluation Criteria",
+          "type": "array"
+        },
+        "instructions": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Instructions"
+        },
+        "page_limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page Limit"
+        },
+        "scoring_weight_points": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scoring Weight Points"
+        },
+        "section_id": {
+          "title": "Section Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "word_limit": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Word Limit"
+        }
+      },
+      "required": [
+        "section_id",
+        "title"
+      ],
+      "title": "RequirementSection",
+      "type": "object"
+    },
+    "Requirements": {
+      "additionalProperties": false,
+      "properties": {
+        "attachments": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Attachments",
+          "type": "array"
+        },
+        "formatting": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Formatting"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "forms": {
+          "default": [],
+          "description": "e.g. SF-424, SF-424A, SF-LLL",
+          "items": {
+            "type": "string"
+          },
+          "title": "Forms",
+          "type": "array"
+        },
+        "sections": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RequirementSection"
+          },
+          "title": "Sections",
+          "type": "array"
+        },
+        "submission_channel": {
+          "anyOf": [
+            {
+              "enum": [
+                "grants_gov",
+                "funder_portal",
+                "email",
+                "mail",
+                "other"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Submission Channel"
+        }
+      },
+      "title": "Requirements",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "amendment_seq": {
+          "default": 0,
+          "title": "Amendment Seq",
+          "type": "integer"
+        },
+        "artifact_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Artifact Ids",
+          "type": "array"
+        },
+        "source_id": {
+          "description": "e.g. Grants.gov opportunity number",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "system": {
+          "enum": [
+            "grants_gov",
+            "sam_gov",
+            "candid",
+            "funder_site",
+            "state_portal",
+            "email",
+            "upload"
+          ],
+          "title": "System",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        }
+      },
+      "required": [
+        "system",
+        "source_id"
+      ],
+      "title": "Source",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.hope.dev/grant-opportunity/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "deadlines": {
+      "$ref": "#/$defs/Deadlines"
+    },
+    "eligibility": {
+      "$ref": "#/$defs/Eligibility"
+    },
+    "funder": {
+      "$ref": "#/$defs/Funder"
+    },
+    "funding": {
+      "$ref": "#/$defs/Funding"
+    },
+    "funding_priorities": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExtractedStrings"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "opportunity_id": {
+      "format": "uuid",
+      "title": "Opportunity Id",
+      "type": "string"
+    },
+    "parse_quality": {
+      "$ref": "#/$defs/ParseQuality"
+    },
+    "requirements": {
+      "$ref": "#/$defs/Requirements",
+      "default": {
+        "attachments": [],
+        "formatting": null,
+        "forms": [],
+        "sections": [],
+        "submission_channel": null
+      }
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Summary"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "opportunity_id",
+    "source",
+    "title",
+    "funder",
+    "deadlines",
+    "funding",
+    "eligibility",
+    "parse_quality"
+  ],
+  "title": "GrantOpportunity",
+  "type": "object"
+}

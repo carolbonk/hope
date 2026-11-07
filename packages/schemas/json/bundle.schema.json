@@ -1,0 +1,3350 @@
+{
+  "$defs": {
+    "Activity": {
+      "additionalProperties": false,
+      "properties": {
+        "activity_id": {
+          "title": "Activity Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "end_month": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Month"
+        },
+        "responsible_role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Responsible Role"
+        },
+        "start_month": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Month"
+        }
+      },
+      "required": [
+        "activity_id",
+        "description"
+      ],
+      "title": "Activity",
+      "type": "object"
+    },
+    "AgencyProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "agency_id": {
+          "format": "uuid",
+          "title": "Agency Id",
+          "type": "string"
+        },
+        "approval_hierarchy": {
+          "items": {
+            "$ref": "#/$defs/ApprovalRule"
+          },
+          "minItems": 1,
+          "title": "Approval Hierarchy",
+          "type": "array"
+        },
+        "capacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Capacity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "compliance_calendar": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ComplianceItem"
+          },
+          "title": "Compliance Calendar",
+          "type": "array"
+        },
+        "data_governance": {
+          "$ref": "#/$defs/DataGovernance",
+          "default": {
+            "allow_cross_tenant_learning": false,
+            "allow_style_finetune": false,
+            "data_residency": "us",
+            "retention_days": null
+          }
+        },
+        "financials": {
+          "$ref": "#/$defs/Financials"
+        },
+        "grant_history": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GrantHistoryItem"
+          },
+          "title": "Grant History",
+          "type": "array"
+        },
+        "legal": {
+          "$ref": "#/$defs/Legal"
+        },
+        "mission": {
+          "$ref": "#/$defs/Mission"
+        },
+        "programs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Program"
+          },
+          "title": "Programs",
+          "type": "array"
+        },
+        "tenant_id": {
+          "format": "uuid",
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid From"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "agency_id",
+        "tenant_id",
+        "version",
+        "legal",
+        "mission",
+        "financials",
+        "approval_hierarchy"
+      ],
+      "title": "AgencyProfile",
+      "type": "object"
+    },
+    "Approval": {
+      "additionalProperties": false,
+      "properties": {
+        "approved_hash": {
+          "title": "Approved Hash",
+          "type": "string"
+        },
+        "approver_user_id": {
+          "title": "Approver User Id",
+          "type": "string"
+        },
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "esign_envelope_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Esign Envelope Id"
+        },
+        "gate": {
+          "$ref": "#/$defs/Gate"
+        }
+      },
+      "required": [
+        "gate",
+        "approver_user_id",
+        "approved_hash",
+        "at"
+      ],
+      "title": "Approval",
+      "type": "object"
+    },
+    "ApprovalRule": {
+      "additionalProperties": false,
+      "properties": {
+        "approver_roles": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Approver Roles",
+          "type": "array"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "JSON Logic over the gate payload",
+          "title": "Condition"
+        },
+        "escalate_to_role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Escalate To Role"
+        },
+        "gate": {
+          "$ref": "#/$defs/Gate"
+        },
+        "min_approvals": {
+          "default": 1,
+          "title": "Min Approvals",
+          "type": "integer"
+        },
+        "sla_hours": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sla Hours"
+        }
+      },
+      "required": [
+        "gate",
+        "approver_roles"
+      ],
+      "title": "ApprovalRule",
+      "type": "object"
+    },
+    "BudgetLedger": {
+      "additionalProperties": false,
+      "properties": {
+        "cap_checks": {
+          "items": {
+            "$ref": "#/$defs/CapCheck"
+          },
+          "title": "Cap Checks",
+          "type": "array"
+        },
+        "computed_by": {
+          "const": "budget-engine",
+          "default": "budget-engine",
+          "description": "ledgers from any other producer are rejected",
+          "title": "Computed By",
+          "type": "string"
+        },
+        "currency": {
+          "default": "USD",
+          "title": "Currency",
+          "type": "string"
+        },
+        "engine_version": {
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "ledger_id": {
+          "title": "Ledger Id",
+          "type": "string"
+        },
+        "line_items": {
+          "items": {
+            "$ref": "#/$defs/LineItem"
+          },
+          "title": "Line Items",
+          "type": "array"
+        },
+        "periods": {
+          "default": 1,
+          "title": "Periods",
+          "type": "integer"
+        },
+        "sf424a_mapping": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {},
+          "title": "Sf424A Mapping",
+          "type": "object"
+        },
+        "totals": {
+          "$ref": "#/$defs/Totals"
+        }
+      },
+      "required": [
+        "ledger_id",
+        "engine_version",
+        "line_items",
+        "totals",
+        "cap_checks"
+      ],
+      "title": "BudgetLedger",
+      "type": "object"
+    },
+    "CapCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_minor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actual Minor"
+        },
+        "adjustment_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Adjustment Note"
+        },
+        "limit_minor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limit Minor"
+        },
+        "rule": {
+          "enum": [
+            "award_ceiling",
+            "award_floor",
+            "indirect_cap",
+            "cost_share_ratio",
+            "category_cap",
+            "unallowable_cost",
+            "period_cap"
+          ],
+          "title": "Rule",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "adjusted"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "status"
+      ],
+      "title": "CapCheck",
+      "type": "object"
+    },
+    "Capacity": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_share_capacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "grant_writer_fte": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Grant Writer Fte"
+        },
+        "max_concurrent_applications": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Concurrent Applications"
+        },
+        "monthly_hours_available": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Monthly Hours Available"
+        }
+      },
+      "title": "Capacity",
+      "type": "object"
+    },
+    "ComplianceItem": {
+      "additionalProperties": false,
+      "properties": {
+        "due_on": {
+          "format": "date",
+          "title": "Due On",
+          "type": "string"
+        },
+        "item": {
+          "enum": [
+            "sam_renewal",
+            "form_990",
+            "single_audit",
+            "state_charity_registration",
+            "insurance_renewal",
+            "nicra_renewal",
+            "board_meeting",
+            "custom"
+          ],
+          "title": "Item",
+          "type": "string"
+        },
+        "owner_user_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner User Id"
+        }
+      },
+      "required": [
+        "item",
+        "due_on"
+      ],
+      "title": "ComplianceItem",
+      "type": "object"
+    },
+    "CostShare": {
+      "additionalProperties": false,
+      "properties": {
+        "in_kind_allowed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In Kind Allowed"
+        },
+        "ratio_bps": {
+          "anyOf": [
+            {
+              "description": "basis points, e.g. 1500 = 15%",
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ratio Bps"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "required"
+      ],
+      "title": "CostShare",
+      "type": "object"
+    },
+    "DataGovernance": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_cross_tenant_learning": {
+          "default": false,
+          "title": "Allow Cross Tenant Learning",
+          "type": "boolean"
+        },
+        "allow_style_finetune": {
+          "default": false,
+          "title": "Allow Style Finetune",
+          "type": "boolean"
+        },
+        "data_residency": {
+          "default": "us",
+          "enum": [
+            "us",
+            "eu",
+            "ca"
+          ],
+          "title": "Data Residency",
+          "type": "string"
+        },
+        "retention_days": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retention Days"
+        }
+      },
+      "title": "DataGovernance",
+      "type": "object"
+    },
+    "Deadlines": {
+      "additionalProperties": false,
+      "properties": {
+        "anticipated_award_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anticipated Award Date"
+        },
+        "application_due": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedDeadline"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "loi_due": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedDeadline"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project_period_months": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Project Period Months"
+        },
+        "questions_due": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedDeadline"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rolling": {
+          "default": false,
+          "title": "Rolling",
+          "type": "boolean"
+        }
+      },
+      "title": "Deadlines",
+      "type": "object"
+    },
+    "Demographic": {
+      "additionalProperties": false,
+      "properties": {
+        "age_range": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Age Range"
+        },
+        "annual_served": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Annual Served"
+        },
+        "population": {
+          "title": "Population",
+          "type": "string"
+        }
+      },
+      "required": [
+        "population"
+      ],
+      "title": "Demographic",
+      "type": "object"
+    },
+    "DimensionScores": {
+      "additionalProperties": false,
+      "properties": {
+        "deadline_feasibility": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Deadline Feasibility",
+          "type": "number"
+        },
+        "effort_to_funding": {
+          "description": "normalized inverse of EFR",
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Effort To Funding",
+          "type": "number"
+        },
+        "funder_relationship": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Funder Relationship",
+          "type": "number"
+        },
+        "funding_fit": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Funding Fit",
+          "type": "number"
+        },
+        "mission_alignment": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Mission Alignment",
+          "type": "number"
+        },
+        "strategic_priority_boost": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Strategic Priority Boost",
+          "type": "number"
+        },
+        "win_probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Win Probability",
+          "type": "number"
+        }
+      },
+      "required": [
+        "mission_alignment",
+        "funding_fit",
+        "effort_to_funding",
+        "win_probability",
+        "deadline_feasibility"
+      ],
+      "title": "DimensionScores",
+      "type": "object"
+    },
+    "Eligibility": {
+      "additionalProperties": false,
+      "properties": {
+        "applicant_types": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Applicant Types",
+          "type": "array"
+        },
+        "budget_band_restrictions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Budget Band Restrictions",
+          "type": "array"
+        },
+        "clauses": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EligibilityClause"
+          },
+          "title": "Clauses",
+          "type": "array"
+        },
+        "geographic_restrictions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Geographic Restrictions",
+          "type": "array"
+        },
+        "required_registrations": {
+          "default": [],
+          "items": {
+            "enum": [
+              "sam",
+              "uei",
+              "grants_gov",
+              "state_charity",
+              "other"
+            ],
+            "type": "string"
+          },
+          "title": "Required Registrations",
+          "type": "array"
+        }
+      },
+      "title": "Eligibility",
+      "type": "object"
+    },
+    "EligibilityClause": {
+      "additionalProperties": false,
+      "properties": {
+        "compiled_rule": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "JSON Logic, once approved",
+          "title": "Compiled Rule"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "rule_status": {
+          "default": "draft",
+          "enum": [
+            "draft",
+            "approved",
+            "needs_review"
+          ],
+          "title": "Rule Status",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "evidence"
+      ],
+      "title": "EligibilityClause",
+      "type": "object"
+    },
+    "Estimates": {
+      "additionalProperties": false,
+      "properties": {
+        "days_to_internal_deadline": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Days To Internal Deadline"
+        },
+        "expected_hours": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Hours"
+        },
+        "expected_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "Estimates",
+      "type": "object"
+    },
+    "EventType": {
+      "enum": [
+        "opportunity.raw_ingested",
+        "opportunity.normalized",
+        "opportunity.parse_incomplete",
+        "opportunity.amended",
+        "opportunity.eligibility_evaluated",
+        "opportunity.alignment_scored",
+        "opportunity.state_changed",
+        "recommendation.updated",
+        "profile.updated",
+        "profile.change_proposed",
+        "profile.stale_field",
+        "framework.drafted",
+        "framework.locked",
+        "verification.reported",
+        "hitl.requested",
+        "hitl.decided",
+        "submission.authorized",
+        "application.submitted",
+        "notification.requested"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "char_end": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char End"
+        },
+        "char_start": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char Start"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quote"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "page"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "ExtractedDeadline": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "extractor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "model or parser id + version",
+          "title": "Extractor"
+        },
+        "timezone": {
+          "description": "IANA tz, e.g. America/New_York",
+          "title": "Timezone",
+          "type": "string"
+        },
+        "value": {
+          "format": "date-time",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "confidence",
+        "evidence",
+        "value",
+        "timezone"
+      ],
+      "title": "ExtractedDeadline",
+      "type": "object"
+    },
+    "ExtractedStrings": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "extractor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "model or parser id + version",
+          "title": "Extractor"
+        },
+        "value": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Value",
+          "type": "array"
+        }
+      },
+      "required": [
+        "confidence",
+        "evidence",
+        "value"
+      ],
+      "title": "ExtractedStrings",
+      "type": "object"
+    },
+    "Financials": {
+      "additionalProperties": false,
+      "properties": {
+        "annual_operating_budget": {
+          "$ref": "#/$defs/Money"
+        },
+        "budget_band": {
+          "anyOf": [
+            {
+              "enum": [
+                "<250k",
+                "250k-1m",
+                "1m-5m",
+                "5m-25m",
+                ">25m"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Budget Band"
+        },
+        "fiscal_year_end": {
+          "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "title": "Fiscal Year End",
+          "type": "string"
+        },
+        "fringe_rate_bps": {
+          "anyOf": [
+            {
+              "description": "basis points, e.g. 1500 = 15%",
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fringe Rate Bps"
+        },
+        "indirect_rate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IndirectRate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "last_audit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LastAudit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "fiscal_year_end",
+        "annual_operating_budget"
+      ],
+      "title": "Financials",
+      "type": "object"
+    },
+    "Formatting": {
+      "additionalProperties": false,
+      "properties": {
+        "file_types": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "File Types",
+          "type": "array"
+        },
+        "font_min_pt": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Font Min Pt"
+        },
+        "margins_in": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Margins In"
+        },
+        "spacing": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Spacing"
+        }
+      },
+      "title": "Formatting",
+      "type": "object"
+    },
+    "Funder": {
+      "additionalProperties": false,
+      "properties": {
+        "aln": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Aln",
+          "type": "array"
+        },
+        "contact_email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contact Email"
+        },
+        "funder_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Funder Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "federal",
+            "state",
+            "local",
+            "private_foundation",
+            "community_foundation",
+            "corporate",
+            "other"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "Funder",
+      "type": "object"
+    },
+    "Funding": {
+      "additionalProperties": false,
+      "properties": {
+        "award_ceiling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "award_floor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cost_share": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CostShare"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "expected_awards": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Awards"
+        },
+        "indirect_cost_policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IndirectCostPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_program_funding": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "unallowable_costs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Unallowable Costs",
+          "type": "array"
+        }
+      },
+      "title": "Funding",
+      "type": "object"
+    },
+    "Gate": {
+      "enum": [
+        "HITL-0",
+        "HITL-1",
+        "HITL-2",
+        "HITL-3",
+        "HITL-4",
+        "HITL-5",
+        "REVIEW-ELIGIBILITY",
+        "REVIEW-PARSE"
+      ],
+      "title": "Gate",
+      "type": "string"
+    },
+    "Goal": {
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "title": "Goal Id",
+          "type": "string"
+        },
+        "objectives": {
+          "items": {
+            "$ref": "#/$defs/Objective"
+          },
+          "minItems": 1,
+          "title": "Objectives",
+          "type": "array"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "goal_id",
+        "statement",
+        "objectives"
+      ],
+      "title": "Goal",
+      "type": "object"
+    },
+    "GrantHistoryItem": {
+      "additionalProperties": false,
+      "properties": {
+        "aln": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Assistance Listing Number, e.g. 93.243",
+          "title": "Aln"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "funder_id": {
+          "title": "Funder Id",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "awarded",
+            "declined",
+            "withdrawn",
+            "pending"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "period_end": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Period End"
+        },
+        "period_start": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Period Start"
+        },
+        "program_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Program Name"
+        },
+        "reviewer_feedback_artifact_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer Feedback Artifact Id"
+        }
+      },
+      "required": [
+        "funder_id",
+        "outcome"
+      ],
+      "title": "GrantHistoryItem",
+      "type": "object"
+    },
+    "GrantOpportunity": {
+      "additionalProperties": false,
+      "properties": {
+        "deadlines": {
+          "$ref": "#/$defs/Deadlines"
+        },
+        "eligibility": {
+          "$ref": "#/$defs/Eligibility"
+        },
+        "funder": {
+          "$ref": "#/$defs/Funder"
+        },
+        "funding": {
+          "$ref": "#/$defs/Funding"
+        },
+        "funding_priorities": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedStrings"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "opportunity_id": {
+          "format": "uuid",
+          "title": "Opportunity Id",
+          "type": "string"
+        },
+        "parse_quality": {
+          "$ref": "#/$defs/ParseQuality"
+        },
+        "requirements": {
+          "$ref": "#/$defs/Requirements",
+          "default": {
+            "attachments": [],
+            "formatting": null,
+            "forms": [],
+            "sections": [],
+            "submission_channel": null
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/Source"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "opportunity_id",
+        "source",
+        "title",
+        "funder",
+        "deadlines",
+        "funding",
+        "eligibility",
+        "parse_quality"
+      ],
+      "title": "GrantOpportunity",
+      "type": "object"
+    },
+    "HitlDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_hash": {
+          "title": "Artifact Hash",
+          "type": "string"
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comment"
+        },
+        "decided_at": {
+          "format": "date-time",
+          "title": "Decided At",
+          "type": "string"
+        },
+        "decided_by": {
+          "title": "Decided By",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "approve",
+            "reject",
+            "request_changes",
+            "go",
+            "no_go",
+            "defer"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": true,
+          "default": {},
+          "title": "Details",
+          "type": "object"
+        },
+        "gate": {
+          "$ref": "#/$defs/Gate"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "gate",
+        "decision",
+        "artifact_hash",
+        "decided_by",
+        "decided_at"
+      ],
+      "title": "HitlDecision",
+      "type": "object"
+    },
+    "HitlRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "approver_roles": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Approver Roles",
+          "type": "array"
+        },
+        "artifact_hash": {
+          "description": "approval is void if the artifact changes",
+          "title": "Artifact Hash",
+          "type": "string"
+        },
+        "due_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Due At"
+        },
+        "gate": {
+          "$ref": "#/$defs/Gate"
+        },
+        "payload_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Payload Ref"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "tenant_id": {
+          "format": "uuid",
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "workflow_id": {
+          "title": "Workflow Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "tenant_id",
+        "workflow_id",
+        "gate",
+        "artifact_hash",
+        "approver_roles",
+        "summary"
+      ],
+      "title": "HitlRequest",
+      "type": "object"
+    },
+    "IndirectCostPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "title": "Allowed",
+          "type": "boolean"
+        },
+        "base": {
+          "default": "unspecified",
+          "enum": [
+            "MTDC",
+            "TDC",
+            "salaries_wages",
+            "unspecified"
+          ],
+          "title": "Base",
+          "type": "string"
+        },
+        "cap_bps": {
+          "anyOf": [
+            {
+              "description": "basis points, e.g. 1500 = 15%",
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cap Bps"
+        }
+      },
+      "required": [
+        "allowed"
+      ],
+      "title": "IndirectCostPolicy",
+      "type": "object"
+    },
+    "IndirectRate": {
+      "additionalProperties": false,
+      "properties": {
+        "agreement_expires_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agreement Expires On"
+        },
+        "base": {
+          "anyOf": [
+            {
+              "enum": [
+                "MTDC",
+                "TDC",
+                "salaries_wages"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Base"
+        },
+        "rate_bps": {
+          "anyOf": [
+            {
+              "description": "basis points, e.g. 1500 = 15%",
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rate Bps"
+        },
+        "type": {
+          "enum": [
+            "negotiated_nicra",
+            "de_minimis",
+            "none"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "IndirectRate",
+      "type": "object"
+    },
+    "Kpi": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "profile metric_id; never a free number",
+          "title": "Baseline Ref"
+        },
+        "metric": {
+          "title": "Metric",
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "metric"
+      ],
+      "title": "Kpi",
+      "type": "object"
+    },
+    "LastAudit": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Id"
+        },
+        "findings": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Findings"
+        },
+        "fiscal_year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fiscal Year"
+        },
+        "type": {
+          "enum": [
+            "single_audit",
+            "financial_audit",
+            "review",
+            "none"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "LastAudit",
+      "type": "object"
+    },
+    "Legal": {
+      "additionalProperties": false,
+      "properties": {
+        "dba": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Dba",
+          "type": "array"
+        },
+        "ein": {
+          "pattern": "^[0-9]{2}-[0-9]{7}$",
+          "title": "Ein",
+          "type": "string"
+        },
+        "fiscal_sponsor_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fiscal Sponsor Id"
+        },
+        "legal_name": {
+          "title": "Legal Name",
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "sam_registration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SamRegistration"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "state_of_incorporation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "State Of Incorporation"
+        },
+        "tax_status": {
+          "enum": [
+            "501c3_public_charity",
+            "501c3_private_foundation",
+            "501c4",
+            "501c6",
+            "fiscally_sponsored",
+            "government",
+            "tribal",
+            "other"
+          ],
+          "title": "Tax Status",
+          "type": "string"
+        },
+        "uei": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z0-9]{12}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uei"
+        }
+      },
+      "required": [
+        "legal_name",
+        "ein",
+        "tax_status"
+      ],
+      "title": "Legal",
+      "type": "object"
+    },
+    "LineItem": {
+      "additionalProperties": false,
+      "properties": {
+        "allowability": {
+          "default": "allowable",
+          "enum": [
+            "allowable",
+            "unallowable",
+            "needs_review"
+          ],
+          "title": "Allowability",
+          "type": "string"
+        },
+        "amount_minor": {
+          "title": "Amount Minor",
+          "type": "integer"
+        },
+        "basis": {
+          "$ref": "#/$defs/LineItemBasis"
+        },
+        "category": {
+          "enum": [
+            "personnel",
+            "fringe",
+            "travel",
+            "equipment",
+            "supplies",
+            "contractual",
+            "construction",
+            "other",
+            "indirect"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "funding_source": {
+          "default": "request",
+          "enum": [
+            "request",
+            "cost_share_cash",
+            "cost_share_in_kind"
+          ],
+          "title": "Funding Source",
+          "type": "string"
+        },
+        "justification": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Justification"
+        },
+        "line_id": {
+          "title": "Line Id",
+          "type": "string"
+        },
+        "period": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Period",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "line_id",
+        "category",
+        "basis",
+        "amount_minor"
+      ],
+      "title": "LineItem",
+      "type": "object"
+    },
+    "LineItemBasis": {
+      "additionalProperties": false,
+      "description": "What an LLM may propose. Amounts are never part of the basis.",
+      "properties": {
+        "cost_basis_ref": {
+          "description": "e.g. hris:position:PM-02 or erp:vendor-quote:Q-118",
+          "title": "Cost Basis Ref",
+          "type": "string"
+        },
+        "effort_pct_bps": {
+          "anyOf": [
+            {
+              "description": "basis points, e.g. 1500 = 15%",
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Effort Pct Bps"
+        },
+        "quantity": {
+          "default": "1",
+          "description": "decimal string",
+          "title": "Quantity",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "unit_rate_minor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "resolved by the engine from the ref",
+          "title": "Unit Rate Minor"
+        }
+      },
+      "required": [
+        "cost_basis_ref"
+      ],
+      "title": "LineItemBasis",
+      "type": "object"
+    },
+    "LogicModel": {
+      "additionalProperties": false,
+      "properties": {
+        "activities": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Activities",
+          "type": "array"
+        },
+        "inputs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Inputs",
+          "type": "array"
+        },
+        "outcomes_long": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Outcomes Long",
+          "type": "array"
+        },
+        "outcomes_short": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Outcomes Short",
+          "type": "array"
+        },
+        "outputs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Outputs",
+          "type": "array"
+        }
+      },
+      "title": "LogicModel",
+      "type": "object"
+    },
+    "MatrixRow": {
+      "additionalProperties": false,
+      "properties": {
+        "capacity_fit": {
+          "anyOf": [
+            {
+              "enum": [
+                "fits",
+                "tight",
+                "conflicts"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacity Fit"
+        },
+        "composite_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Composite Score",
+          "type": "number"
+        },
+        "eligibility": {
+          "enum": [
+            "eligible",
+            "needs_review",
+            "ineligible"
+          ],
+          "title": "Eligibility",
+          "type": "string"
+        },
+        "estimates": {
+          "$ref": "#/$defs/Estimates",
+          "default": {
+            "days_to_internal_deadline": null,
+            "expected_hours": null,
+            "expected_value": null
+          }
+        },
+        "explanation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "generated only from the values above",
+          "title": "Explanation"
+        },
+        "opportunity_id": {
+          "format": "uuid",
+          "title": "Opportunity Id",
+          "type": "string"
+        },
+        "rank": {
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        },
+        "recommendation": {
+          "enum": [
+            "pursue",
+            "consider",
+            "watch",
+            "skip"
+          ],
+          "title": "Recommendation",
+          "type": "string"
+        },
+        "risks": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Risks",
+          "type": "array"
+        },
+        "scores": {
+          "$ref": "#/$defs/DimensionScores"
+        },
+        "top_matched_programs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Top Matched Programs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "opportunity_id",
+        "rank",
+        "composite_score",
+        "eligibility",
+        "scores",
+        "recommendation"
+      ],
+      "title": "MatrixRow",
+      "type": "object"
+    },
+    "Mission": {
+      "additionalProperties": false,
+      "properties": {
+        "focus_areas": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Focus Areas",
+          "type": "array"
+        },
+        "mission_statement": {
+          "maxLength": 2000,
+          "title": "Mission Statement",
+          "type": "string"
+        },
+        "ntee_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Ntee Codes",
+          "type": "array"
+        },
+        "theory_of_change": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Theory Of Change"
+        },
+        "vision_statement": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vision Statement"
+        }
+      },
+      "required": [
+        "mission_statement"
+      ],
+      "title": "Mission",
+      "type": "object"
+    },
+    "Money": {
+      "properties": {
+        "amount_minor": {
+          "title": "Amount Minor",
+          "type": "integer"
+        },
+        "currency": {
+          "default": "USD",
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount_minor"
+      ],
+      "title": "Money",
+      "type": "object"
+    },
+    "Objective": {
+      "additionalProperties": false,
+      "properties": {
+        "activities": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Activity"
+          },
+          "title": "Activities",
+          "type": "array"
+        },
+        "kpis": {
+          "items": {
+            "$ref": "#/$defs/Kpi"
+          },
+          "minItems": 1,
+          "title": "Kpis",
+          "type": "array"
+        },
+        "objective_id": {
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "smart_statement": {
+          "title": "Smart Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "objective_id",
+        "smart_statement",
+        "kpis"
+      ],
+      "title": "Objective",
+      "type": "object"
+    },
+    "OpportunityMatrix": {
+      "additionalProperties": false,
+      "properties": {
+        "agency_id": {
+          "format": "uuid",
+          "title": "Agency Id",
+          "type": "string"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "model_version": {
+          "title": "Model Version",
+          "type": "string"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/MatrixRow"
+          },
+          "title": "Rows",
+          "type": "array"
+        },
+        "weights_profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Weights Profile"
+        }
+      },
+      "required": [
+        "agency_id",
+        "generated_at",
+        "model_version",
+        "rows"
+      ],
+      "title": "OpportunityMatrix",
+      "type": "object"
+    },
+    "Outcome": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "metric_id": {
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "period": {
+          "title": "Period",
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "metric_id",
+        "label",
+        "value",
+        "period"
+      ],
+      "title": "Outcome",
+      "type": "object"
+    },
+    "ParseQuality": {
+      "additionalProperties": false,
+      "properties": {
+        "injection_suspected": {
+          "default": false,
+          "title": "Injection Suspected",
+          "type": "boolean"
+        },
+        "missing_critical_fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Critical Fields",
+          "type": "array"
+        },
+        "overall_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Overall Confidence",
+          "type": "number"
+        },
+        "pipeline_path": {
+          "default": [],
+          "items": {
+            "enum": [
+              "native_text",
+              "layout_model",
+              "ocr",
+              "vision_llm",
+              "human"
+            ],
+            "type": "string"
+          },
+          "title": "Pipeline Path",
+          "type": "array"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "overall_confidence"
+      ],
+      "title": "ParseQuality",
+      "type": "object"
+    },
+    "PillarEnvelope": {
+      "additionalProperties": false,
+      "properties": {
+        "data_classification": {
+          "default": "internal",
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ],
+          "title": "Data Classification",
+          "type": "string"
+        },
+        "event_id": {
+          "description": "idempotency key",
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_type": {
+          "$ref": "#/$defs/EventType"
+        },
+        "occurred_at": {
+          "format": "date-time",
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "payload": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Payload"
+        },
+        "payload_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "S3 URI when payload > 256 KB",
+          "title": "Payload Ref"
+        },
+        "producer": {
+          "$ref": "#/$defs/Producer"
+        },
+        "schema_ref": {
+          "title": "Schema Ref",
+          "type": "string"
+        },
+        "subject_id": {
+          "description": "partition key, usually opportunity_id",
+          "title": "Subject Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "None only for public, cross-tenant data",
+          "title": "Tenant Id"
+        },
+        "trace": {
+          "$ref": "#/$defs/Trace"
+        }
+      },
+      "required": [
+        "event_type",
+        "schema_ref",
+        "subject_id",
+        "producer"
+      ],
+      "title": "PillarEnvelope",
+      "type": "object"
+    },
+    "Producer": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agent Id"
+        },
+        "model_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Model Ids",
+          "type": "array"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        },
+        "service": {
+          "title": "Service",
+          "type": "string"
+        },
+        "version": {
+          "default": "0.1.0",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "service"
+      ],
+      "title": "Producer",
+      "type": "object"
+    },
+    "Program": {
+      "additionalProperties": false,
+      "properties": {
+        "annual_cost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "geography": {
+          "default": [],
+          "description": "FIPS or ISO-3166-2 codes",
+          "items": {
+            "type": "string"
+          },
+          "title": "Geography",
+          "type": "array"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "outcomes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Outcome"
+          },
+          "title": "Outcomes",
+          "type": "array"
+        },
+        "program_id": {
+          "title": "Program Id",
+          "type": "string"
+        },
+        "status": {
+          "default": "active",
+          "enum": [
+            "active",
+            "pilot",
+            "planned",
+            "sunset"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "target_demographics": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Demographic"
+          },
+          "title": "Target Demographics",
+          "type": "array"
+        }
+      },
+      "required": [
+        "program_id",
+        "name",
+        "description"
+      ],
+      "title": "Program",
+      "type": "object"
+    },
+    "ProposalFramework": {
+      "additionalProperties": false,
+      "properties": {
+        "agency_id": {
+          "format": "uuid",
+          "title": "Agency Id",
+          "type": "string"
+        },
+        "approvals": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Approval"
+          },
+          "title": "Approvals",
+          "type": "array"
+        },
+        "budget": {
+          "$ref": "#/$defs/BudgetLedger"
+        },
+        "content_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "sha256 of canonical JSON",
+          "title": "Content Hash"
+        },
+        "extra": {
+          "additionalProperties": true,
+          "default": {},
+          "title": "Extra",
+          "type": "object"
+        },
+        "framework_id": {
+          "format": "uuid",
+          "title": "Framework Id",
+          "type": "string"
+        },
+        "opportunity_id": {
+          "format": "uuid",
+          "title": "Opportunity Id",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "verified",
+            "approved_locked",
+            "superseded"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "framework_id",
+        "opportunity_id",
+        "agency_id",
+        "version",
+        "status",
+        "scope",
+        "budget"
+      ],
+      "title": "ProposalFramework",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "source": {
+          "enum": [
+            "user_input",
+            "document_extraction",
+            "crm_sync",
+            "erp_sync",
+            "sam_gov",
+            "irs",
+            "system"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "artifact_id, record id or URL",
+          "title": "Source Ref"
+        },
+        "verified_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "user_id if confirmed by a human",
+          "title": "Verified By"
+        }
+      },
+      "required": [
+        "source",
+        "captured_at"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "RequirementCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "covered_by": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covered By",
+          "type": "array"
+        },
+        "section_id": {
+          "title": "Section Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "covered",
+            "partial",
+            "missing"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "section_id",
+        "status"
+      ],
+      "title": "RequirementCoverage",
+      "type": "object"
+    },
+    "RequirementSection": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluation_criteria": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Evaluation Criteria",
+          "type": "array"
+        },
+        "instructions": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Instructions"
+        },
+        "page_limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page Limit"
+        },
+        "scoring_weight_points": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scoring Weight Points"
+        },
+        "section_id": {
+          "title": "Section Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "word_limit": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Word Limit"
+        }
+      },
+      "required": [
+        "section_id",
+        "title"
+      ],
+      "title": "RequirementSection",
+      "type": "object"
+    },
+    "Requirements": {
+      "additionalProperties": false,
+      "properties": {
+        "attachments": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Attachments",
+          "type": "array"
+        },
+        "formatting": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Formatting"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "forms": {
+          "default": [],
+          "description": "e.g. SF-424, SF-424A, SF-LLL",
+          "items": {
+            "type": "string"
+          },
+          "title": "Forms",
+          "type": "array"
+        },
+        "sections": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RequirementSection"
+          },
+          "title": "Sections",
+          "type": "array"
+        },
+        "submission_channel": {
+          "anyOf": [
+            {
+              "enum": [
+                "grants_gov",
+                "funder_portal",
+                "email",
+                "mail",
+                "other"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Submission Channel"
+        }
+      },
+      "title": "Requirements",
+      "type": "object"
+    },
+    "SamRegistration": {
+      "additionalProperties": false,
+      "properties": {
+        "exclusions_flag": {
+          "default": false,
+          "title": "Exclusions Flag",
+          "type": "boolean"
+        },
+        "expires_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expires On"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "expired",
+            "pending",
+            "none"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "SamRegistration",
+      "type": "object"
+    },
+    "Scope": {
+      "additionalProperties": false,
+      "properties": {
+        "goals": {
+          "items": {
+            "$ref": "#/$defs/Goal"
+          },
+          "minItems": 1,
+          "title": "Goals",
+          "type": "array"
+        },
+        "logic_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LogicModel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "problem_statement_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Problem Statement Ref"
+        },
+        "program_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Program Ids",
+          "type": "array"
+        },
+        "project_title": {
+          "title": "Project Title",
+          "type": "string"
+        },
+        "requirement_coverage": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RequirementCoverage"
+          },
+          "title": "Requirement Coverage",
+          "type": "array"
+        }
+      },
+      "required": [
+        "project_title",
+        "goals"
+      ],
+      "title": "Scope",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "amendment_seq": {
+          "default": 0,
+          "title": "Amendment Seq",
+          "type": "integer"
+        },
+        "artifact_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Artifact Ids",
+          "type": "array"
+        },
+        "source_id": {
+          "description": "e.g. Grants.gov opportunity number",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "system": {
+          "enum": [
+            "grants_gov",
+            "sam_gov",
+            "candid",
+            "funder_site",
+            "state_portal",
+            "email",
+            "upload"
+          ],
+          "title": "System",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        }
+      },
+      "required": [
+        "system",
+        "source_id"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Totals": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_share_minor": {
+          "title": "Cost Share Minor",
+          "type": "integer"
+        },
+        "direct_minor": {
+          "title": "Direct Minor",
+          "type": "integer"
+        },
+        "indirect_minor": {
+          "title": "Indirect Minor",
+          "type": "integer"
+        },
+        "mtdc_base_minor": {
+          "title": "Mtdc Base Minor",
+          "type": "integer"
+        },
+        "project_total_minor": {
+          "title": "Project Total Minor",
+          "type": "integer"
+        },
+        "request_minor": {
+          "title": "Request Minor",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "direct_minor",
+        "mtdc_base_minor",
+        "indirect_minor",
+        "request_minor",
+        "cost_share_minor",
+        "project_total_minor"
+      ],
+      "title": "Totals",
+      "type": "object"
+    },
+    "Trace": {
+      "additionalProperties": false,
+      "properties": {
+        "causation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Causation Id"
+        },
+        "correlation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "workflow id",
+          "title": "Correlation Id"
+        },
+        "trace_id": {
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "title": "Trace",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.hope.dev/bundle/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HopeContracts"
+}
