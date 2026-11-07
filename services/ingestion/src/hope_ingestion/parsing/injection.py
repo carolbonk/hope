@@ -33,7 +33,7 @@ def injection_signals(text: str, hidden_text: list[str] | None = None) -> list[s
         signals.append("zero_width_chars")
     if BIDI.search(text):
         signals.append("bidi_override")
-    if hidden_text:
+    if any(rx.search(strip_invisible(h)) for h in hidden_text or [] for rx in PATTERNS.values()):
         signals.append("hidden_text")
     scanned = strip_invisible(" ".join([text, *(hidden_text or [])]))
     signals.extend(f"pattern:{name}" for name, rx in PATTERNS.items() if rx.search(scanned))
