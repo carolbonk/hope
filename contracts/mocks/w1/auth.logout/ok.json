@@ -1,0 +1,7 @@
+{
+  "status": 204,
+  "headers": {
+    "set-cookie": "hope_session=; Path=/; Max-Age=0"
+  },
+  "body": null
+}

@@ -1,0 +1,166 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "items": [
+      {
+        "grant_id": "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+        "title": "Rural Oral Health Access Grant 2027",
+        "funder": "Cascade Health Foundation",
+        "url": "https://cascadehealth.example.org/grants/rural-oral-health",
+        "domain": "cascadehealth.example.org",
+        "summary": "Two-year grants for nonprofits that bring preventive dental care to rural Washington communities.",
+        "amount_text": "up to $75,000 per year",
+        "amount_max": {
+          "amount_minor": 7500000,
+          "currency": "USD"
+        },
+        "deadline_text": "Applications due March 3, 2027",
+        "deadline": "2027-03-03",
+        "days_left": 116,
+        "urgency": "later",
+        "fit_score": 88,
+        "fit_band": "strong",
+        "reasons": [
+          {
+            "text": "Funds mobile and school-based dental care, which matches your Mobile Dental Clinic",
+            "citation_ids": [
+              "c1",
+              "c3"
+            ],
+            "unverified": false
+          },
+          {
+            "text": "Limited to rural Washington counties, including Chelan and Douglas",
+            "citation_ids": [
+              "c2"
+            ],
+            "unverified": false
+          },
+          {
+            "text": "Award size fits your $3.1M budget",
+            "citation_ids": [],
+            "unverified": true
+          }
+        ],
+        "concerns": [
+          {
+            "text": "Requires a 2025 audited financial statement",
+            "citation_ids": [
+              "c4"
+            ],
+            "unverified": false
+          }
+        ],
+        "citations": [
+          {
+            "citation_id": "c1",
+            "kind": "web",
+            "url": "https://cascadehealth.example.org/grants/rural-oral-health",
+            "title": "Rural Oral Health Access | Cascade Health Foundation",
+            "quote": "supports mobile and school-based preventive dental programs",
+            "profile_path": null,
+            "retrieved_at": "2026-11-07T14:02:11Z"
+          },
+          {
+            "citation_id": "c2",
+            "kind": "web",
+            "url": "https://cascadehealth.example.org/grants/rural-oral-health",
+            "title": "Rural Oral Health Access | Cascade Health Foundation",
+            "quote": "open to nonprofits serving rural counties in Washington State",
+            "profile_path": null,
+            "retrieved_at": "2026-11-07T14:02:11Z"
+          },
+          {
+            "citation_id": "c3",
+            "kind": "profile",
+            "url": null,
+            "title": null,
+            "quote": "Two mobile units provide cleanings, sealants and restorative care",
+            "profile_path": "programs.0.description",
+            "retrieved_at": null
+          },
+          {
+            "citation_id": "c4",
+            "kind": "web",
+            "url": "https://cascadehealth.example.org/grants/rural-oral-health",
+            "title": "Rural Oral Health Access | Cascade Health Foundation",
+            "quote": "Applicants must submit audited financial statements for fiscal year 2025",
+            "profile_path": null,
+            "retrieved_at": "2026-11-07T14:02:11Z"
+          }
+        ],
+        "status": "new",
+        "discovered_at": "2026-11-07T14:02:30Z"
+      },
+      {
+        "grant_id": "5d1c7a90-2b3e-4f61-9c8d-0e1f2a3b4c5d",
+        "title": "Youth Mental Health Innovation Fund",
+        "funder": "Columbia River Community Foundation",
+        "url": "https://crcf.example.org/youth-mental-health",
+        "domain": "crcf.example.org",
+        "summary": "One-year grants for community programs that expand youth mental health support in central Washington.",
+        "amount_text": "$10,000 to $40,000",
+        "amount_max": {
+          "amount_minor": 4000000,
+          "currency": "USD"
+        },
+        "deadline_text": "Rolling; reviewed quarterly",
+        "deadline": null,
+        "days_left": null,
+        "urgency": "rolling",
+        "fit_score": 74,
+        "fit_band": "good",
+        "reasons": [
+          {
+            "text": "Funds bilingual mental health outreach, like your Community Health Worker Network",
+            "citation_ids": [
+              "c1"
+            ],
+            "unverified": false
+          }
+        ],
+        "concerns": [
+          {
+            "text": "Priority goes to programs for ages 12-18; your programs serve all ages",
+            "citation_ids": [
+              "c2"
+            ],
+            "unverified": false
+          }
+        ],
+        "citations": [
+          {
+            "citation_id": "c1",
+            "kind": "web",
+            "url": "https://crcf.example.org/youth-mental-health",
+            "title": "Youth Mental Health Innovation Fund",
+            "quote": "including bilingual and culturally specific outreach",
+            "profile_path": null,
+            "retrieved_at": "2026-11-07T14:02:11Z"
+          },
+          {
+            "citation_id": "c2",
+            "kind": "web",
+            "url": "https://crcf.example.org/youth-mental-health",
+            "title": "Youth Mental Health Innovation Fund",
+            "quote": "Priority is given to programs serving youth ages 12-18",
+            "profile_path": null,
+            "retrieved_at": "2026-11-07T14:02:11Z"
+          }
+        ],
+        "status": "new",
+        "discovered_at": "2026-11-07T14:02:30Z"
+      }
+    ],
+    "total": 2,
+    "limit": 20,
+    "offset": 0,
+    "counts": {
+      "new": 2,
+      "saved": 1,
+      "passed": 1
+    },
+    "hidden_past": 0
+  }
+}

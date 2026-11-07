@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "headers": {
+    "set-cookie": "hope_session=mock; Path=/; HttpOnly; SameSite=Lax"
+  },
+  "body": {
+    "user": {
+      "user_id": "6e1f2a3b-4c5d-4e6f-8a7b-9c0d1e2f3a4b",
+      "email": "demo@hope.org",
+      "display_name": "Dana Okafor"
+    }
+  }
+}

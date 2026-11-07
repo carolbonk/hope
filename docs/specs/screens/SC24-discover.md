@@ -131,10 +131,10 @@ Mobile (<= 640 px):
 
 | Element | Source | Format and example | Rules |
 |---|---|---|---|
-| Org name in the subtitle | `GET /v1/me` -> agency, via the profile (`GET /v1/agencies/{agency_id}/profile` from H1) -> `legal.legal_name` | "…that fit Riverbend Youth Alliance." | Falls back to "…that fit your organization." |
+| Org name in the subtitle | the profile (`GET /v1/profile` from H1) -> `form.basics.legal_name` | "…that fit Riverbend Youth Alliance." | Falls back to "…that fit your organization." |
 | Profile summary: mission | profile `mission.mission_statement` | Quote, first 160 characters + "…" | Hidden if empty (then the start is blocked; see section 7) |
 | Profile summary: programs | profile `programs[].name` | Chips, at most 4, then "+2 more" | |
-| Profile summary: serves | `programs[].target_demographics[].population` (first), `service_area[]` | "Youth 10-18 · Cuyahoga County, OH" | Parts that are missing are left out |
+| Profile summary: serves | `form.programs[].people_served` (first), `form.basics.service_area[]` | "Youth 10-18 · Cuyahoga County, OH" | Parts that are missing are left out |
 | Focus keywords | local input -> `focus_keywords` | Chips with × | 0-5 chips, 2-40 characters each. Enter or comma adds one, and duplicates are ignored (case-insensitive). Counter "2 of 5" |
 | Location | local input, prefilled from `service_area[0]` -> `location` | Free text | 2-80 characters or empty. Placeholder "City, county or state (optional)" |
 | Status chip | `job.status` | "● Running", "✓ Done", "✕ Failed", "◌ Starting" | Icon + text |
@@ -193,7 +193,7 @@ count below lives on a `glass-panel` or stronger.
    - if `running_job_id` is set, or the URL has `?job=`, call `GET /v1/discovery/jobs/{id}?since_seq=0`
      and show the running or done view
    - otherwise show the idle view
-   - the profile summary loads in parallel from `GET /v1/agencies/{agency_id}/profile` (H1)
+   - the profile summary loads in parallel from `GET /v1/profile` (H1)
 2. **Add a keyword.** Typing, then Enter or comma, adds a chip. Backspace in an empty input
    removes the last chip. A 6th keyword shows the inline hint "Up to 5 keywords." and isn't
    added.
@@ -258,7 +258,7 @@ count below lives on a `glass-panel` or stronger.
 | Trigger | Call | Fields used | Cache / refetch |
 |---|---|---|---|
 | Mount | `GET /v1/discovery/jobs?limit=10` | `items[]` (all fields), `running_job_id` | Refetched when a run finishes |
-| Mount | `GET /v1/agencies/{agency_id}/profile` (H1) | `legal.legal_name`, `mission.mission_statement`, `programs[].name`, `programs[].target_demographics[].population`, `service_area` | Session cache |
+| Mount | `GET /v1/profile` (H1) | `form.basics.legal_name`, `form.mission.mission_statement`, `form.programs[].name`, `form.programs[].people_served`, `form.basics.service_area` | Session cache |
 | Mount | `GET /v1/me` (H0) | `agency_id` | Session |
 | Find grants | `POST /v1/discovery/jobs` | the whole `DiscoveryJobView` | — |
 | Poll | `GET /v1/discovery/jobs/{id}?since_seq={last_seq}` | `job.status`, `job.queries`, `job.progress.*`, `job.error`, `counts.*`, `steps[]`, `last_seq`, `candidates[]` (`grant_id`, `title`, `funder`, `fit_score`, `amount_text`, `amount_max`, `deadline_text`, `deadline`, `summary`, `is_new`, `status`), `elapsed_s`, `limits` | Every 1.5 s while running (5 s when the tab is hidden) |

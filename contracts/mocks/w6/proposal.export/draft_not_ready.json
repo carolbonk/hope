@@ -1,0 +1,12 @@
+{
+  "status": 409,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Draft isn't ready",
+    "status": 409,
+    "code": "draft_not_ready"
+  }
+}

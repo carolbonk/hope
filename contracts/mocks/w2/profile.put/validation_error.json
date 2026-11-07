@@ -1,0 +1,19 @@
+{
+  "status": 422,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Validation failed",
+    "status": 422,
+    "code": "validation_error",
+    "errors": [
+      {
+        "field": "basics.ein",
+        "code": "invalid_ein_prefix",
+        "message": "This EIN prefix isn't assigned by the IRS. Check the number."
+      }
+    ]
+  }
+}

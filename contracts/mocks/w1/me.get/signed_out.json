@@ -1,0 +1,12 @@
+{
+  "status": 401,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Sign in to continue",
+    "status": 401,
+    "code": "not_signed_in"
+  }
+}

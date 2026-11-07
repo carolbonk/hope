@@ -1,0 +1,82 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "draft": {
+      "grant_id": "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+      "status": "ready",
+      "generated_at": "2026-11-09T14:00:41Z",
+      "content_hash": "sha256:6f2b8c3d",
+      "sections": [
+        {
+          "section_id": "q-2f4e6a80",
+          "title": "Describe the communities your program serves and their barriers to dental care.",
+          "body_md": "Riverbend serves rural families in Chelan and Douglas counties. [c1]\n\nThe foundation funds preventive dental care in rural Washington. [c2]\n\nMost families we serve live more than 40 miles from a dentist who accepts Medicaid.",
+          "citation_ids": [
+            "c1",
+            "c2"
+          ],
+          "unverified_claims": [
+            "Most families we serve live more than 40 miles from a dentist who accepts Medicaid."
+          ],
+          "edited_by_user": false
+        },
+        {
+          "section_id": "q-7b1d9c22",
+          "title": "How will you measure the program's results?",
+          "body_md": "We will track the number of children who receive sealants each year. [c3]",
+          "citation_ids": [
+            "c3"
+          ],
+          "unverified_claims": [],
+          "edited_by_user": true
+        }
+      ],
+      "citations": [
+        {
+          "citation_id": "c1",
+          "kind": "profile",
+          "url": null,
+          "title": null,
+          "quote": "Chelan County, WA; Douglas County, WA",
+          "profile_path": "basics.service_area",
+          "retrieved_at": null
+        },
+        {
+          "citation_id": "c2",
+          "kind": "web",
+          "url": "https://cascadehealth.example.org/grants/rural-oral-health",
+          "title": "Rural Oral Health Access",
+          "quote": "supports mobile and school-based preventive dental programs",
+          "profile_path": null,
+          "retrieved_at": "2026-11-09T13:41:10Z"
+        },
+        {
+          "citation_id": "c3",
+          "kind": "profile",
+          "url": null,
+          "title": null,
+          "quote": "Two mobile units provide cleanings, sealants and restorative care",
+          "profile_path": "programs.0.description",
+          "retrieved_at": null
+        }
+      ]
+    },
+    "sections_meta": {
+      "q-2f4e6a80": {
+        "question": "Describe the communities your program serves and their barriers to dental care.",
+        "word_limit": 500,
+        "word_count": 34,
+        "over_limit": false,
+        "kind": "question"
+      },
+      "q-7b1d9c22": {
+        "question": "How will you measure the program's results?",
+        "word_limit": 300,
+        "word_count": 13,
+        "over_limit": false,
+        "kind": "question"
+      }
+    }
+  }
+}

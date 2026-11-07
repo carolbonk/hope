@@ -1,0 +1,19 @@
+{
+  "status": 404,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "No brief yet",
+    "status": 404,
+    "code": "no_brief",
+    "grant": {
+      "grant_id": "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+      "title": "Rural Oral Health Access Grant 2027",
+      "funder": "Cascade Health Foundation",
+      "url": "https://cascadehealth.example.org/grants/rural-oral-health"
+    },
+    "job": null
+  }
+}

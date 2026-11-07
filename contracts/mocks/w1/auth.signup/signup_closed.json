@@ -1,0 +1,12 @@
+{
+  "status": 403,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Sign-up is invite-only",
+    "status": 403,
+    "code": "signup_closed"
+  }
+}

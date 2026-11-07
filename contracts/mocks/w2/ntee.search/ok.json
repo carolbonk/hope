@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "items": [
+      {
+        "code": "E32",
+        "label": "Community Clinics",
+        "group": "E",
+        "group_label": "Health Care"
+      },
+      {
+        "code": "E30",
+        "label": "Ambulatory Health Center",
+        "group": "E",
+        "group_label": "Health Care"
+      }
+    ]
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "job": {
+      "job_id": "0b9f5c3e-1d2a-4c6b-9e8f-7a6b5c4d3e21",
+      "status": "done",
+      "queries": [
+        "rural dental care grants Washington 2027",
+        "mobile dental clinic funding nonprofit",
+        "community health worker grants Washington",
+        "youth mental health grants central Washington",
+        "farmworker health grants Pacific Northwest",
+        "community foundation health grants Chelan County"
+      ],
+      "progress": {
+        "queries_total": 6,
+        "queries_done": 6,
+        "pages_read": 9,
+        "candidates_found": 3,
+        "current_step": "Done"
+      },
+      "error": null,
+      "started_at": "2026-11-08T14:00:00Z",
+      "finished_at": "2026-11-08T14:02:41Z"
+    },
+    "request": {
+      "focus_keywords": [
+        "dental",
+        "rural"
+      ],
+      "location": "Chelan County, WA"
+    },
+    "counts": {
+      "urls_found": 21,
+      "pages_read": 7,
+      "candidates_new": 2,
+      "candidates_updated": 1,
+      "skipped_expired": 1,
+      "skipped_not_grant": 2,
+      "skipped_known": 3,
+      "failed_pages": 1,
+      "queries_failed": 0
+    },
+    "steps": [
+      {
+        "seq": 1,
+        "at": "2026-11-08T14:00:01Z",
+        "kind": "info",
+        "text": "Reading your profile"
+      },
+      {
+        "seq": 2,
+        "at": "2026-11-08T14:00:03Z",
+        "kind": "info",
+        "text": "Planning searches"
+      },
+      {
+        "seq": 3,
+        "at": "2026-11-08T14:00:06Z",
+        "kind": "query",
+        "text": "Searching: rural dental care grants Washington 2027",
+        "query": "rural dental care grants Washington 2027",
+        "result_count": 8
+      },
+      {
+        "seq": 12,
+        "at": "2026-11-08T14:00:31Z",
+        "kind": "skip",
+        "text": "Skipping Rural Health Mini-Grants 2025: deadline has passed",
+        "url": "https://wahealth.example.org/mini-grants-2025"
+      },
+      {
+        "seq": 15,
+        "at": "2026-11-08T14:00:44Z",
+        "kind": "candidate",
+        "text": "Saved: Rural Oral Health Access Grant 2027 (fit 88)",
+        "url": "https://cascadehealth.example.org/grants/rural-oral-health",
+        "grant_id": "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+        "is_new": true
+      },
+      {
+        "seq": 22,
+        "at": "2026-11-08T14:02:41Z",
+        "kind": "info",
+        "text": "Done: 3 grants found, 2 new"
+      }
+    ],
+    "last_seq": 22,
+    "candidates": [
+      {
+        "grant_id": "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+        "title": "Rural Oral Health Access Grant 2027",
+        "funder": "Cascade Health Foundation",
+        "url": "https://cascadehealth.example.org/grants/rural-oral-health",
+        "fit_score": 88,
+        "amount_text": "up to $75,000 per year",
+        "amount_max": {
+          "amount_minor": 7500000,
+          "currency": "USD"
+        },
+        "deadline_text": "Applications due March 3, 2027",
+        "deadline": "2027-03-03",
+        "summary": "Two-year grants for nonprofits that bring preventive dental care to rural Washington communities.",
+        "is_new": true,
+        "status": "new"
+      }
+    ],
+    "elapsed_s": 161,
+    "limits": {
+      "max_queries": 8,
+      "max_pages": 30,
+      "timeout_s": 300
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "status": 202,
+  "headers": {},
+  "body": {
+    "job": {
+      "job_id": "0b7e2d4f-6a8b-4c1d-9e0f-1a2b3c4d5e6f",
+      "kind": "proposal:3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+      "status": "running",
+      "progress": {
+        "sections_total": 2,
+        "sections_done": 0,
+        "current_step": "Reading your profile and the brief"
+      },
+      "result": null,
+      "error": null,
+      "started_at": "2026-11-09T14:00:03Z",
+      "finished_at": null
+    }
+  }
+}

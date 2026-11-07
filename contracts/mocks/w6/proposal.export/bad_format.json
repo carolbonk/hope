@@ -1,0 +1,12 @@
+{
+  "status": 400,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Unsupported format",
+    "status": 400,
+    "code": "bad_format"
+  }
+}

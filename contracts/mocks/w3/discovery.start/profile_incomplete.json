@@ -1,0 +1,16 @@
+{
+  "status": 422,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Finish your profile first",
+    "status": 422,
+    "code": "profile_incomplete",
+    "missing": [
+      "mission.mission_statement",
+      "programs"
+    ]
+  }
+}

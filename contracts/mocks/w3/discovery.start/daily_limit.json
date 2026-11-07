@@ -1,0 +1,14 @@
+{
+  "status": 429,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Daily limit reached",
+    "status": 429,
+    "code": "daily_limit",
+    "limit": 20,
+    "resets_at": "2026-11-09T05:00:00Z"
+  }
+}

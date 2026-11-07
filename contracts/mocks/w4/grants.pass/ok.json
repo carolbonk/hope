@@ -1,0 +1,10 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "grant_id": "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+    "status": "passed",
+    "previous_status": "new",
+    "changed": true
+  }
+}

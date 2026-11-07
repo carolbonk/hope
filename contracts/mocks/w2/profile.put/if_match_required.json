@@ -1,0 +1,12 @@
+{
+  "status": 428,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "If-Match required",
+    "status": 428,
+    "code": "if_match_required"
+  }
+}
