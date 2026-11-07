@@ -1,14 +1,31 @@
+import os
+from collections.abc import Iterator
+
 import psycopg
 import pytest
 from hope_budget.engine import BudgetEngine
 from hope_budget.store import LedgerIntegrityError, load_ledger, save_ledger
 from hope_budget.testing import line, sample_context, sample_lines
 from hope_core.db import connect, tenant_tx
+from hope_core.migrate import apply_migrations
 from hope_core.testing.factories import TENANT_A, TENANT_B
 
 pytestmark = pytest.mark.db
 
 APP_URL = "postgresql://hope_app:hope_app@localhost:5432/hope"
+ADMIN_URL = os.environ.get("HOPE_DATABASE_ADMIN_URL", "postgresql://hope:hope@localhost:5432/hope")
+
+
+@pytest.fixture(scope="module")
+def migrated_db() -> Iterator[str]:
+    try:
+        psycopg.connect(ADMIN_URL, connect_timeout=2).close()
+    except psycopg.OperationalError:
+        pytest.skip(
+            "Postgres not reachable; run `docker compose -f infra/docker-compose.yml up -d`"
+        )
+    apply_migrations(ADMIN_URL)
+    yield ADMIN_URL
 
 
 def _seed(admin_url: str) -> None:
