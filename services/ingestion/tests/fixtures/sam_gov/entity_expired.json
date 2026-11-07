@@ -1,0 +1,33 @@
+{
+  "totalRecords": 1,
+  "entityData": [
+    {
+      "entityRegistration": {
+        "samRegistered": "Yes",
+        "ueiSAM": "ZQGGHJH74DW7",
+        "entityEFTIndicator": null,
+        "cageCode": "8AB12",
+        "dodaac": null,
+        "legalBusinessName": "LAPSED HOPE CENTER",
+        "dbaName": null,
+        "purposeOfRegistrationCode": "Z1",
+        "purposeOfRegistrationDesc": "Federal Assistance Awards",
+        "registrationStatus": "Expired",
+        "registrationDate": "2019-04-02",
+        "lastUpdateDate": "2026-03-10",
+        "registrationExpirationDate": "2026-08-01",
+        "activationDate": "2026-03-10",
+        "ueiStatus": "Active",
+        "ueiExpirationDate": "2027-03-10",
+        "ueiCreationDate": "2019-04-02",
+        "noPublicDisplayFlag": "N",
+        "exclusionStatusFlag": null,
+        "exclusionURL": null,
+        "dnbOpenData": "Y"
+      }
+    }
+  ],
+  "links": {
+    "selfLink": "https://api.sam.gov/entity-information/v3/entities?ueiSAM=ZQGGHJH74DW7"
+  }
+}
