@@ -166,7 +166,11 @@ After H0 (assumed merged):
       - (a) the model labelled it `fact` and it has no valid citation;
       - (b) it contains a numeric token (`\$?\d[\d,]*(\.\d+)?%?`; years count) that doesn't
         appear, normalized (no `$`, `,`, `%`), in any of the sentence's cited quotes;
-      - (c) after a user edit, it contains a numeric token and has no marker at all.
+      - (c) after a user edit, it has no marker and is new or changed. Code keeps each generated
+        sentence's `kind` in `sections_meta.claim_kinds`, keyed by its normalized text, so an
+        unchanged sentence the model labelled non-`fact` stays clean. A new or changed markerless
+        sentence is unverified, with or without numbers, unless it is under 4 words or ends with `:`
+        (headings and list leads).
    3. Unverified claims are **never removed or rewritten** by code. They are listed and
       highlighted in SC28.
 8. **Word limit.** `word_count` = the whitespace tokens of `body_md` with markers removed.
@@ -413,7 +417,7 @@ always uses `ModelGateway([MockProvider with mock_answer])`.
 - [ ] AC1 `section_plan` uses the brief's questions (in order, capped at 12, with titles and limits), or the five standard sections when there are none.
 - [ ] AC2 `build_evidence` creates profile and web items in the given order, capped at 60, with quotes ≤ 500 chars; all prompt text is inside `untrusted` blocks.
 - [ ] AC3 Rendering maps evidence ids to `c` ids, drops unknown ids, keeps existing ids stable across a regenerate, and appends new ones.
-- [ ] AC4 The citation check flags: an uncited `fact`; a number missing from the cited quotes; a numeric sentence with no marker after an edit. It never removes text. (Unit + hypothesis property test.)
+- [ ] AC4 The citation check flags: an uncited `fact`; a number missing from the cited quotes; any new or changed sentence with no marker after an edit, with or without numbers (for example "We operate clinics across Washington."), while unchanged non-`fact` sentences stay clean. It never removes text. (Unit + hypothesis property test.)
 - [ ] AC5 An unknown `[cN]` in an edit returns `422 unknown_citation` with the ids.
 - [ ] AC6 An over-limit section is retried once with the shorten instruction; if it is still over, `over_limit: true` and the text is untouched.
 - [ ] AC7 Sections with type (a)/(b) unverified claims are retried exactly once; the second result is kept.

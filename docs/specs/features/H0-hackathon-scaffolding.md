@@ -21,17 +21,24 @@ logic beyond auth.
 
 - `HopeSettings` gains `tenant_id: UUID` (`HOPE_TENANT_ID`), `agency_id: UUID` (`HOPE_AGENCY_ID`),
   `session_secret` (`HOPE_SESSION_SECRET`), `openai_api_key`, `openai_model` (default `gpt-4o-mini`)
-  and `openai_search_model` (default `gpt-4o-mini`).
+  `openai_search_model` (default `gpt-4o-mini`), `signup_allowed_emails` (`HOPE_SIGNUP_ALLOWED_EMAILS`),
+  `invite_code` (`HOPE_INVITE_CODE`) and `cookie_secure` (`HOPE_COOKIE_SECURE`, default `true`).
 - Table `users` (`user_id uuid pk`, `tenant_id`, `email citext unique`, `password_hash`, `display_name`,
   `created_at`), with RLS like every other tenant table. Passwords are hashed with `argon2-cffi`.
 - `services/pillar/src/hope_pillar/api/auth.py`:
-  - `POST /v1/auth/signup` `{email, password, display_name}` returns 201 `{user}` and sets the session
-    cookie. Passwords must be at least 8 characters (422 `weak_password`); a taken email returns 409
+  - `POST /v1/auth/signup` `{email, password, display_name, invite_code?}` returns 201 `{user}` and sets
+    the session cookie. Sign-up is closed by default, so a stranger who can reach the app can't join the
+    nonprofit. It succeeds only when the email is in `HOPE_SIGNUP_ALLOWED_EMAILS` (comma-separated; an
+    entry starting with `@` allows the whole domain) or `invite_code` matches `HOPE_INVITE_CODE`
+    (compared with `hmac.compare_digest`). Otherwise it returns 403 `signup_closed`. With neither setting,
+    sign-up is off and only seeded users (`make demo`) can sign in. Passwords must be at least 8
+    characters (422 `weak_password`); a taken email returns 409
     `email_taken`.
   - `POST /v1/auth/login` `{email, password}` returns 200 `{user}` and sets the cookie. A bad email or
     password returns 401 `invalid_credentials`, with the same response for both.
   - `POST /v1/auth/logout` returns 204 and clears the cookie.
-  - The cookie is `hope_session`: signed (itsdangerous), `HttpOnly`, `SameSite=Lax`, 14 days.
+  - The cookie is `hope_session`: signed (itsdangerous), `HttpOnly`, `SameSite=Lax`, `Secure`, 14 days.
+    Only `make demo` sets `HOPE_COOKIE_SECURE=false`, because it serves plain `http://localhost`.
 - `hope_core/auth.py`: `Principal(tenant_id, user_id, email, display_name)` and `get_principal`, which
   reads the cookie and returns 401 `not_signed_in` when there is no valid session. `tenant_id` always
   comes from settings. Replace the header-based principal in the pillar and profile services with it.
@@ -172,6 +179,12 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
   - uses httpx with a 15 s timeout, a 5 MB cap and a Hope user agent;
   - extracts HTML text with `trafilatura` and PDF text with `pypdf`;
   - respects `robots.txt`;
+  - blocks requests to internal addresses: only `http`/`https` on ports 80 and 443; the host is
+    resolved first, and any address that isn't public (`ipaddress.ip_address(a).is_global` is false:
+    loopback, private, link-local including `169.254.169.254`, multicast, reserved) raises
+    `FetchError("blocked_address")`. Redirects are followed by hand (`follow_redirects=False`, at most
+    5), and every hop is checked the same way. The connection goes to the address that was checked, so a
+    DNS change between the check and the request can't bypass it;
   - returns nothing that is persisted, and stores nothing.
 - `WebTools` protocol with `RealWebTools` and `RecordedWebTools(fixture_dir)`. The recorded tools
   replay JSON fixtures from `packages/core/tests/fixtures/web/`. H0 records about 6 real grant pages
@@ -183,8 +196,11 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
   `embed`). `default_gateway()` returns OpenAI when the key is set and `MockProvider` otherwise. Each
   call logs its tokens and estimated cost.
 - `hope_core/jobs.py`:
-  - `start_job(kind, fn, *args) -> job_id` runs `fn` in a background thread pool inside the API
-    process, with `report(progress)` and `finish(result | error)` callbacks;
+  - `start_job(kind, fn, *args, job_id=None) -> job_id` runs `fn` in a background thread pool inside
+    the API process, with `report(progress)` and `finish(result | error)` callbacks. It creates the job
+    record, unless `job_id` is given: then it adopts that record (already created with `create_job` in a
+    committed transaction, with the same `kind` and status `queued`) and returns the same id. One run
+    always has exactly one job id;
   - on startup, jobs left `running` are marked `failed`, with the error "Interrupted by restart";
   - a `HOPE_JOBS_INLINE=1` setting runs jobs synchronously for tests.
 
@@ -227,6 +243,8 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
   Each seed is idempotent.
 - With no `HOPE_OPENAI_API_KEY`, everything runs on the mock and the recorded web tools, so the demo
   always works.
+- It sets `HOPE_COOKIE_SECURE=false` (plain `http://localhost`) and `HOPE_SIGNUP_ALLOWED_EMAILS=@hope.org`,
+  so teammates can add `@hope.org` accounts on demo day and nobody else can sign up.
 
 ## Owns
 
@@ -239,12 +257,12 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 
 ## Acceptance criteria
 
-- [ ] AC1 Sign up, log in, `/v1/me` and log out work; a bad email or password both return 401 `invalid_credentials`; protected routes return 401 `not_signed_in` without the cookie.
+- [ ] AC1 Sign up, log in, `/v1/me` and log out work; a bad email or password both return 401 `invalid_credentials`; protected routes return 401 `not_signed_in` without the cookie; sign-up without an allowed email or the right invite code returns 403 `signup_closed`, and is always closed when neither setting is set; the cookie is `Secure` unless `HOPE_COOKIE_SECURE=false`.
 - [ ] AC2 Every contract in section 2 validates, exports to JSON Schema and TS, and the generated outputs are fresh.
 - [ ] AC3 The store functions round-trip every table; `save_section` with a stale hash raises `StaleArtifactError`; RLS blocks another tenant's rows.
-- [ ] AC4 `RecordedWebTools` replays the search and fetch fixtures; `fetch` extracts text and links from HTML and PDF fixtures; no test touches the network.
+- [ ] AC4 `RecordedWebTools` replays the search and fetch fixtures; `fetch` extracts text and links from HTML and PDF fixtures; `fetch` rejects loopback, private, link-local and metadata addresses, other schemes and ports, and redirects to any of them, with `blocked_address`; no test touches the network.
 - [ ] AC5 `default_gateway()` is the mock without a key; `OpenAIProvider` structured and web-search calls work against an httpx `MockTransport`.
-- [ ] AC6 `start_job` runs inline in tests, reports progress and stores the result; restarted jobs are marked failed.
+- [ ] AC6 `start_job` runs inline in tests, reports progress and stores the result; with `job_id=` it adopts that record and creates no second row; restarted jobs are marked failed.
 - [ ] AC7 All routers are mounted and each has its own snapshot; existing tests still pass.
 - [ ] AC8 Web: unauthenticated users are sent to `/login`; users who haven't onboarded go to `/onboarding`; the nav and all placeholders render; the citation chip and popover render both web and profile citations.
 - [ ] AC10 Every primitive renders with `glass-*` classes; under `prefers-reduced-transparency` panels are solid; axe finds no contrast violations on the shell over the backdrop.
@@ -254,12 +272,12 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 
 | AC | Test |
 |---|---|
-| AC1 | `services/pillar/tests/test_auth.py` (signup, login, logout, invalid, not_signed_in) |
+| AC1 | `services/pillar/tests/test_auth.py` (signup, login, logout, invalid, not_signed_in, signup_closed, invite code, allowed domain, cookie flags) |
 | AC2 | `packages/core/tests/test_hackathon_schemas.py` + schema freshness check |
 | AC3 | `packages/core/tests/test_store.py` (`@pytest.mark.db`) |
-| AC4 | `packages/core/tests/test_web_tools.py` |
+| AC4 | `packages/core/tests/test_web_tools.py` (incl. `test_fetch_blocks_internal_addresses`, parametrized over addresses and a redirect, using a fake resolver) |
 | AC5 | `packages/core/tests/test_openai_provider.py` |
-| AC6 | `packages/core/tests/test_jobs.py` |
+| AC6 | `packages/core/tests/test_jobs.py` (incl. `test_adopts_existing_job_id`) |
 | AC7 | `services/pillar/tests/test_openapi.py::test_router_snapshots` + full suite |
 | AC8 | `apps/web/src/components/RequireSession.test.tsx`, `nav.test.ts`, `components/ui/Citation.test.tsx` |
 | AC9 | manual, recorded in the PR |

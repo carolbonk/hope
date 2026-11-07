@@ -64,7 +64,9 @@ The old `services/ingestion` (Grants.gov connector and parser) is **not** used.
    3. If 20 discovery jobs or more were created since local midnight (`HOPE_DISCOVERY_DAILY_LIMIT`),
       return 429 `daily_limit` with `limit` and `resets_at`.
    4. `store.create_job(kind="discovery")` and insert into `discovery_runs`.
-5. `hope_core.jobs.start_job("discovery", run_discovery, job_id)`, then return 202 with the
+5. After the transaction commits, `hope_core.jobs.start_job("discovery", run_discovery, job_id, job_id=job_id)`.
+   With `job_id=`, H0's runner adopts the job created in step 4.4 instead of creating a second one, so
+   the agent, polling and the `job_running` check all see the same id. Then return 202 with the
    `DiscoveryJobView` (below), status `queued`.
 
 ### B. The agent (`hope_discovery.agent.DiscoveryAgent.run(job_id)`)
