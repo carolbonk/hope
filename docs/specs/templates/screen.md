@@ -5,51 +5,86 @@
 | Route | `/path/[param]` |
 | Feature folder | `apps/web/src/features/<feature>/` |
 | Built by | Sxx |
-| Roles | who can see it; who can act on it |
+| Primary users | role(s) who come here most, and how often |
+| Can act | roles allowed to take each action |
 | Status | Draft / Ready / Done |
 
-## Purpose
+Write this as a UX lead. A designer and an engineer should be able to build the screen from
+this spec alone, without asking a question. Use `screens/SC03-opportunity-matrix.md` as the
+reference for the level of detail.
 
-One or two sentences: who uses this screen and what they come to do.
+## 1. Purpose and user goals
 
-## Layout
+Who arrives here, from where, and with what job to be done. List the top 3 questions the
+screen must answer within 5 seconds, and the one primary action.
 
-Regions from top to bottom, with the neumorphic primitive each one uses (`Card`
-`neu-raised`, `Table`, `Input` `neu-inset`, `Button` `neu-pressed` when active, `Badge`).
-Desktop and mobile (<= 640 px) layouts.
+## 2. Information hierarchy
 
-## Data and endpoints
+What the eye should see first, second and third, and why. What is deliberately hidden
+behind a click, and why.
 
-For each call: when it fires, method + path, query/body, the fields the screen uses from the
-response, and caching or refetch rules. Use the exact shapes from the owning feature spec.
+## 3. Wireframe
 
-| Trigger | Call | Uses |
-|---|---|---|
+ASCII wireframe for desktop (>= 1024 px), with every region labelled. Add a second
+wireframe for mobile (<= 640 px) whenever the layout changes.
 
-## Interactions
+## 4. Content inventory
 
-Numbered list: each user action, what it calls, the optimistic or pending UI, and the
-result on success and on each error `code` (for example `stale_artifact` -> reload the
-artifact and explain that it changed).
+Every piece of information on the screen:
 
-## States
+| Element | Source (endpoint + JSON field) | Format and example | Rules (sorting, truncation, colour/icon, thresholds) |
+|---|---|---|---|
 
-Loading, empty (with the expected reason), error, permission-denied, and stale-artifact states.
+## 5. Components
 
-## Accessibility
+Each region, mapped to the design-system primitive (`Card` `neu-raised`, `Table`, `Input`
+`neu-inset`, `Button` with `neu-pressed` when active, `Badge`, `Modal`, `Drawer`) and its
+variants. Name any new shared primitive under "Shared contract additions" instead of
+building it inside the feature.
 
-Keyboard order, focus management on dialogs, ARIA labels, status not by colour alone,
-reduced motion.
+## 6. Interactions
 
-## Fixture data
+Numbered: the user action, the API call (method + path + body), the pending UI, the
+success result, and the result for each error `code`. Include keyboard shortcuts and
+deep links (URL query parameters that preserve filters and selection).
 
-What `api/<feature>/fixture.ts` returns so the screen works with no backend.
+## 7. States and exact copy
 
-## Acceptance criteria
+The exact UI text for each state: loading (skeleton shape), empty (each distinct reason),
+filtered-to-empty, error (each `code`), permission denied, stale artifact, offline.
 
-- [ ] ... (each one maps to a Vitest + Testing Library test)
+## 8. Data and endpoints
 
-## Test plan
+| Trigger | Call | Fields used | Cache / refetch |
+|---|---|---|---|
+
+## 9. Responsive behaviour
+
+What collapses, stacks, or moves into a drawer at each breakpoint.
+
+## 10. Accessibility
+
+Tab order, focus on open/close, ARIA roles and labels, live regions, status shown by icon or
+text and not colour alone, contrast, `prefers-reduced-motion`.
+
+## 11. Fixture data
+
+What `api/<feature>/fixture.ts` returns so that every state above can be shown without a
+backend (list each fixture case).
+
+## 12. Analytics and success measures
+
+Events to log (name and properties) and the metric that says the screen works.
+
+## 13. Acceptance criteria
+
+- [ ] AC1 ... (each maps to a Vitest + Testing Library test, or to a Playwright test for flows)
+
+## 14. Test plan
 
 | AC | Test (file::name) |
 |---|---|
+
+## 15. Open questions
+
+With a recommended default for each.
