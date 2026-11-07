@@ -94,12 +94,12 @@ action bar.
 | Element | Source | Format and example | Rules |
 |---|---|---|---|
 | Updated time | `OpportunityMatrix.generated_at` | "Updated 12 min ago"; tooltip with the full local time | Turns amber with "Scores may be out of date" if older than 24 h |
-| Summary counts | derived from `rows` (after the eligibility filter) | "42 open · 9 recommended to pursue · 3 due in 14 days" | Each count is a link that applies that filter |
+| Summary counts | `summary.open`, `summary.pursue`, `summary.due_within_14_days` (server-side, after the eligibility and skip filters; M2) | "42 open · 9 recommended to pursue · 3 due in 14 days" | Each count is a link that applies that filter |
 | Rank | `MatrixRow.rank` | "1" | Rank is Hope's order; it doesn't change when the user re-sorts, so it stays a stable reference |
 | Recommendation | `MatrixRow.recommendation` | Badge "Pursue" / "Consider" / "Watch" / "Skip" | Icon + text + colour: Pursue ● green, Consider ◐ blue, Watch ○ amber, Skip – grey. Never colour alone |
 | Composite score | `MatrixRow.composite_score` | "87" (integer, 0-100) | Rounded half-up. Shown next to the badge |
-| Title | `GrantOpportunity.title` (`GET /v1/opportunities/{id}`, batch-loaded) | "Youth Mentoring Expansion" | One line, ellipsis at 60 characters; full title in tooltip |
-| Funder line | `funder.agency_name`, `funder.sub_agency`, `source.external_id` | "DOJ · OJJDP · O-OJJDP-2026-0042" | Secondary text style |
+| Title | `GrantOpportunity.title` (M1 `GET /v1/opportunities?ids=…`, one batch per page) | "Youth Mentoring Expansion" | One line, ellipsis at 60 characters; full title in tooltip |
+| Funder line | `funder.name`, `funder.aln[0]`, `source.source_id` | "Office of Juvenile Justice and Delinquency Prevention · ALN 16.726 · O-OJJDP-2026-0042" | Secondary text style; funder name ellipsis at 50 characters; the ALN part is omitted when `aln` is empty |
 | Award | `funding.award_ceiling` (or `award_floor`-`award_ceiling`) | "$250,000" with "up to"; "$50k-$100k" for a range | `Money` in minor units, formatted with `lib/money.ts`. "Not stated" if missing |
 | Due | `deadlines.application_due` and `estimates.days_to_internal_deadline` | "12 days" with "Mar 3" below | Red with "!" icon if <= 7 days; amber if <= 14; "Rolling" if no deadline; "Passed" rows are never shown |
 | Drivers | `scores.mission_alignment`, `funding_fit`, `effort_to_funding`, `win_probability` (×100), `deadline_feasibility` | Five mini-bars, fixed order, with hover labels | Each bar has an `aria-label` like "Mission alignment 91 of 100" |
@@ -110,8 +110,9 @@ action bar.
 | Eligibility checks | `.../explanation` -> `eligibility.rules[]` | "Applicant type: 501(c)(3) ✓" | Failing or needs-review rules listed first |
 | Effort and value | `estimates.expected_hours`, `estimates.expected_value` | "~60 h · Expected value $85k" | "~" because it's an estimate. Hidden if both are null |
 | Risks | `MatrixRow.risks[]` | Bulleted, max 3, "+2 more" | Amber icon |
-| Matched programs | `MatrixRow.top_matched_programs[]` | Chips | Each links to that program in SC09 |
-| Disposition | `.../disposition` (S05) | Row shows "Watching" or "Skipped" chip | Skipped rows are hidden unless the "Skip" filter is on |
+| Matched programs | `MatrixRow.top_matched_programs[]` (names); links from `.../explanation` -> `matched_programs[]` (`program_id`, `name`) | Chips | Each links to `/profile#program-{program_id}` (SC09) once the explanation has loaded |
+| Pursuing | `MatrixListRow.workflow_id`, `lifecycle_state` (M2, from M4's projection) | "Pursuing" chip linking to `/workflows/{workflow_id}` | Pursue button is replaced by "Open workflow" when `workflow_id` is set |
+| Disposition | `MatrixListRow.disposition` (M2) | Row shows "Watching" or "Skipped" chip | Skipped rows are hidden unless the footer's "Show skipped" link is used (`show_skipped=true`); the footer shows `hidden_skipped` next to `hidden_ineligible` |
 
 ## 5. Components
 
@@ -125,14 +126,14 @@ action bar.
 ## 6. Interactions
 
 1. **Filter / search / sort.** Updates the URL query (`?rec=pursue&due=14&q=youth&sort=due`), then refetches
-   `GET /v1/agencies/{agency_id}/matrix?recommendation=&eligibility=&due_within_days=&q=&sort=&page=`.
+   `GET /v1/agencies/{agency_id}/matrix?recommendation=&eligibility=&due_within_days=&q=&sort=&page=&page_size=25&show_skipped=`.
    The previous rows stay visible, dimmed, while loading. Search is debounced by 300 ms.
 2. **Open details.** Click a row, or press Enter on a focused row. Sets `?selected={opportunity_id}`,
    opens the drawer, and fetches `GET .../matrix/{opportunity_id}/explanation`. The drawer shows the row's
    own data immediately and a skeleton for the evidence.
 3. **Pursue.** Opens a confirmation modal: "Start a pursuit for *Youth Mentoring Expansion*? This creates a
    workflow and asks {go/no-go approver role} for a go/no-go decision (HITL-1)." Confirm ->
-   `POST /v1/opportunities/{opportunity_id}/pursue` `{ "agency_id": "…" }`.
+   `api.workflow.pursue(opportunityId, { agency_id })` (M4) -> `POST /v1/opportunities/{opportunity_id}/pursue` `{ "agency_id": "…" }`.
    - 201 -> toast "Pursuit started" with a link "Open workflow" (`/workflows/{workflow_id}`). The row shows a "Pursuing" chip.
    - 409 `already_pursuing` -> "A pursuit already exists" with a link to the existing workflow.
    - 403 `forbidden` -> the Pursue button is hidden for users without the role; if it's still hit, show "You don't have permission to start a pursuit."
@@ -141,7 +142,7 @@ action bar.
    Optimistic: the chip updates immediately, with an "Undo" toast for 8 s (undo sends `"disposition": "none"`).
    Skip asks for an optional reason (select: "Not a mission fit", "Too much effort", "Deadline too soon", "Other").
 5. **Evidence popover.** `[ev]` opens the snippets; "View in document" opens SC04 at that evidence span.
-6. **Refresh.** Refetches the matrix. While a re-score is in progress, the header shows "Re-scoring…" with a spinner (reduced-motion: a static icon).
+6. **Refresh.** Refetches the matrix. When the response has `rescoring: true` (M2 re-scores in the background after the profile, opportunities or date change), the header shows "Re-scoring…" with a spinner (reduced-motion: a static icon) and the screen polls the same URL every 3 s, for up to 2 minutes, until `rescoring` is false; then it shows "Scores updated".
 7. **Keyboard.** `/` focuses search, ↑/↓ moves between rows, Enter opens the drawer, Esc closes it, `p` pursues from the drawer (after the confirmation modal).
 
 ## 7. States and exact copy
@@ -150,7 +151,8 @@ action bar.
 |---|---|
 | Loading (first load) | Summary strip skeleton + 8 skeleton rows |
 | Empty: no opportunities yet | "No opportunities yet. Hope checks Grants.gov every morning; new matches will appear here." + button "Check sources" (link to SC17 schedules, admins only) |
-| Empty: profile incomplete | "Hope needs more about your agency to score opportunities." + "Complete your profile (63%)" -> SC09 |
+| Empty: profile incomplete (`empty_reason: profile_incomplete`) | "Hope needs more about your agency to score opportunities." + "Complete your profile (63%)" -> SC09 (the % is `score` from `GET /v1/agencies/{id}/profile/completeness`) |
+| Empty: first scoring (`empty_reason: not_scored_yet`) | "Hope is scoring opportunities for your agency. This takes about a minute." + spinner; polls as in interaction 6 |
 | Filtered to empty | "No opportunities match these filters." + "Clear filters" |
 | Error (network / 5xx) | Inline banner "We couldn't load the matrix. Try again." + Retry; keep showing the last rows if there are any |
 | Stale scores (`generated_at` > 24 h) | Amber banner "Scores were last updated {time}. Refresh to re-score." |
@@ -161,8 +163,10 @@ action bar.
 
 | Trigger | Call | Fields used | Cache / refetch |
 |---|---|---|---|
-| Mount, filter change, page change | `GET /v1/agencies/{agency_id}/matrix?…` | all `MatrixRow` fields, `generated_at`, `total`, `hidden_ineligible` | Keep previous page while loading; refetch on window focus if older than 5 min |
-| Rows rendered | `GET /v1/opportunities?ids=…` (batch, S03) | title, funder, funding, deadlines | Cached per id for the session |
+| Mount, filter change, page change | `GET /v1/agencies/{agency_id}/matrix?…` | all `MatrixListRow` fields, `generated_at`, `rescoring`, `empty_reason`, `total`, `hidden_ineligible`, `hidden_skipped`, `summary`, `page_count` | Keep previous page while loading; refetch on window focus if older than 5 min |
+| Rows rendered | `api.opportunities.getMany(ids)` -> `GET /v1/opportunities?ids=…` (batch, M1) | `title`, `funder.name`, `funder.aln`, `source.source_id`, `funding`, `deadlines` | Cached per id for the session |
+| `rescoring: true` or `empty_reason: not_scored_yet` | same matrix call, every 3 s, max 2 min | `rescoring`, `generated_at` | Stops when `rescoring` is false |
+| `empty_reason: profile_incomplete` | `GET /v1/agencies/{agency_id}/profile/completeness` (profile, built) | `score` | Once |
 | Drawer open | `GET /v1/agencies/{agency_id}/matrix/{opportunity_id}/explanation` | `dimensions[]`, `eligibility.rules[]` | Cached per row until `generated_at` changes |
 | Pursue | `POST /v1/opportunities/{opportunity_id}/pursue` | `workflow_id` | Invalidates the matrix row and the workflow list |
 | Watch / Skip | `PUT /v1/agencies/{agency_id}/matrix/{opportunity_id}/disposition` | `disposition` | Optimistic, rolled back on error |
@@ -215,6 +219,7 @@ over 70% of pursued opportunities come from the top 10 ranks.
 - [ ] AC10 Keyboard: `/`, ↑/↓, Enter and Esc work, and focus returns to the row when the drawer closes.
 - [ ] AC11 The mobile layout (<= 640 px) shows cards, a filter sheet and a full-screen drawer.
 - [ ] AC12 axe finds no violations in the default, drawer-open and empty states.
+- [ ] AC13 While `rescoring` is true (or `empty_reason` is `not_scored_yet`) the header shows "Re-scoring…" and the screen polls every 3 s until it is false.
 
 ## 14. Test plan
 
@@ -231,6 +236,7 @@ over 70% of pursued opportunities come from the top 10 ranks.
 | AC10 | `MatrixScreen.test.tsx::keyboard navigation` |
 | AC11 | `MatrixScreen.test.tsx::mobile layout` (matchMedia mock) |
 | AC12 | `MatrixScreen.a11y.test.tsx` (vitest-axe) |
+| AC13 | `MatrixScreen.test.tsx::polls while rescoring` |
 
 ## 15. Open questions
 
