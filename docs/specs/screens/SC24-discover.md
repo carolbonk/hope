@@ -3,11 +3,18 @@
 | | |
 |---|---|
 | Route | `/discover` (query: `job` = the run being shown; defaults to the running or latest run) |
-| Feature folder | `apps/web/src/features/discover/` |
+| Feature folder | `apps/web/features/discover/` |
 | Built by | H2 |
 | Primary users | Executive director or development lead of a small nonprofit. They come once during onboarding, then weekly or whenever they want fresh grants |
 | Can act | Any signed-in user (the hackathon has no roles) |
 | Status | Draft |
+
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **Route is now `/hope/discover`** (built: swipe deck, filters, match reasons, Save / Pass / Undo). Remaining H2 work: the real catalog through `lib/hope/sync/opportunities.ts`, plus a run/progress panel (`components/hope/discovery/`).
 
 ## 1. Purpose and user goals
 
@@ -301,7 +308,7 @@ screen makes no other calls.
 
 ## 11. Fixture data
 
-`apps/web/src/api/discover/fixture.ts` exports `FixtureDiscoverApi`, with times relative
+`apps/web/api/discover/fixture.ts` exports `FixtureDiscoverApi`, with times relative
 to `FIXED_NOW`.
 
 **Past runs** (`listJobs`):
@@ -382,7 +389,7 @@ Success:
 | AC11 | `DiscoverScreen.test.tsx::mobile layout` (matchMedia mock) |
 | AC12 | `features/discover/Discover.a11y.test.tsx` (vitest-axe) |
 | AC13 | `Discover.a11y.test.tsx::reduced transparency renders solid panels and no text on backdrop` (matchMedia mock + DOM check) |
-| contract | `apps/web/src/api/discover/http.test.ts::matches openapi snapshot` |
+| contract | `apps/web/api/discover/http.test.ts::matches openapi snapshot` |
 
 ## 15. Open questions
 

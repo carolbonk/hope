@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Route | `/path/[param]` |
-| Feature folder | `apps/web/src/features/<feature>/` |
+| Feature folder | `apps/web/features/<feature>/` |
 | Built by | Sxx |
 | Primary users | role(s) who come here most, and how often |
 | Can act | roles allowed to take each action |

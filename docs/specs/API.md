@@ -1,5 +1,7 @@
 # API catalog (`/v1`)
 
+> **Hackathon agents (H0-H5): this map is the long-term ("Later") product, not your build target.** Use the H0-H5 table in [`README.md`](README.md), your feature spec, [`contracts/`](../../contracts/) and `apps/web/docs/hope/file-ownership.md`. The hackathon web app lives under `/hope/*` and `/onboarding`, with no `src/`.
+
 The one list of Hope's HTTP endpoints. All of them are served by the pillar app
 (`uvicorn hope_pillar.api:app`), one router module per spec (see `FOLDERS.md`). The MVP is
 single-tenant: clients never send a tenant; the server uses `HOPE_TENANT_ID` (S00). Until S01

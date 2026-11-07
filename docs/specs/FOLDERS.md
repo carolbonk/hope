@@ -1,5 +1,7 @@
 # Folder map
 
+> **Hackathon agents (H0-H5): this map is the long-term ("Later") product, not your build target.** Use the H0-H5 table in [`README.md`](README.md), your feature spec, [`contracts/`](../../contracts/) and `apps/web/docs/hope/file-ownership.md`. The hackathon web app lives under `/hope/*` and `/onboarding`, with no `src/`.
+
 The target layout once `S00` has merged. Each path has exactly one owner. A spec may change
 only the paths in its `Owns` list; everything else goes through the wave's contracts spec
 (`S00`, `C2`, `C3`, `C4`).
@@ -55,7 +57,7 @@ hope/
 │   ├── submission/                   S22                                    [skeleton by S00]
 │   ├── integrations/                 S24 (framework, crm/), S25 (erp/)      [skeleton by S00]
 │   └── awards/                       S23                                    [skeleton by S00]
-├── apps/web/src/
+├── apps/web/
 │   ├── app/<route>/page.tsx          thin route file; renders features/<feature>/<Screen>
 │   ├── features/<feature>/           one folder per screen group (see SCREENS.md)
 │   ├── api/client.ts                 composes the per-feature clients (S00)

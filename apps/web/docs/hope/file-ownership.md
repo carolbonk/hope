@@ -1,29 +1,20 @@
-# Hope — proposed file ownership and merge order
+# Hope web: file ownership (hackathon)
 
-Goal: the experience track and the backend track can work in parallel without two people (or agents) editing the same file.
+The specs in `docs/specs/` are the source of truth. This file is the short version for `apps/web`, so no two
+agents edit the same file.
 
-| Track | Owners | Files |
-| --- | --- | --- |
-| Experience and visual direction | Carito (+ daughter) | `app/hope/**/page.tsx`, `app/hope/layout.tsx`, `components/hope/**`, `lib/hope/i18n.ts` (copy), Hope tokens in `app/globals.css` |
-| Backend and data | Jimmy, Carol | `lib/hope/types.ts`, `lib/hope/store.ts`, `lib/hope/dossier.ts` (requirement rules), `lib/hope/opportunities.ts`, `lib/hope/demo.ts` (later replaced by a real catalog), `lib/hope/draft.ts`, `app/api/hope/**`, future `app/api/orgs/**`, `app/api/applications/**`, DB schema |
-| Shared, change by PR with both tracks reviewing | all | `lib/hope/types.ts` (the contract), `docs/hope/data-contract.md` |
-| Existing Nonprofit MRI (do not edit from Hope work) | — | `app/(intake…report)`, `lib/*.ts` outside `lib/hope`, `app/api/draft` |
+| Spec | Owns in `apps/web` |
+| --- | --- |
+| H0 | `app/layout.tsx`, `app/page.tsx`, `app/hope/layout.tsx` (session guard), `components/hope/ui.tsx`, `api/http.ts`, `api/session/**`, `lib/hope/sync/index.ts`, `package.json`. Also a one-time edit before H1-H5 start: it creates the no-op `lib/hope/sync/{profile,opportunities,decisions}.ts` stubs and wires them into `lib/hope/store.ts` / `lib/hope/opportunities.ts`. After that, each stub belongs to its spec. |
+| H1 | `app/login/**`, `app/onboarding/**`, `features/onboarding/**`, `api/profile/**`, `api/onboarding/**`, `lib/hope/fromOnboarding.ts`, `lib/hope/sync/profile.ts`, `app/hope/profile/**` |
+| H2 | `app/hope/discover/**`, `components/hope/discovery/**`, `lib/hope/opportunities.ts`, `lib/hope/demo.ts`, `lib/hope/sync/opportunities.ts` |
+| H3 | `app/hope/saved/**`, `app/hope/deadlines/**`, `lib/hope/sync/decisions.ts` |
+| H4 | `app/hope/applications/[oppId]/page.tsx`, `lib/hope/store.ts` (eligibility, stage gates), `lib/hope/dossier.ts` |
+| H5 | `components/hope/draft/**`, `lib/hope/draft.ts`, `app/api/hope/draft/**` |
+| Shared: add keys, never rename | `lib/hope/types.ts`, `lib/hope/i18n.ts`, `docs/hope/data-contract.md` |
+| Don't change without asking | `app/globals.css` (liquid glass), `components/ui/**` |
 
-Seam: pages only call `useHope()` / `useOpportunities()` and the `/api/hope/draft` route. When the backend replaces localStorage, it changes the inside of `lib/hope/store.ts` and keeps the hook's signatures, so no page edits are needed.
+H1-H3 replace only the body of their own stub. They never create the stubs or edit the wiring.
 
-## Merge order
-
-1. [ark305/nonprofit-mri#1](https://github.com/ark305/nonprofit-mri/pull/1): the Nonprofit MRI base (Next.js app, i18n, the `/api/draft` pattern).
-2. [ark305/nonprofit-mri#2](https://github.com/ark305/nonprofit-mri/pull/2) (`devin/hope-discovery`): Hope discovery deck, application workspace, shared record, five-step profile.
-3. `devin/hope-expediente`: document dossier, conditional requirements, review with pending items / Resolve, local-only review request. Stacked on #2.
-
-Each PR is stacked on the previous one; merging in order lets GitHub retarget the next PR to `main`.
-
-## Port to carolbonk/hope
-
-Devin's GitHub app could not reach `carolbonk/hope` (clone "repository not found", API 404), so its `main`, open PRs and `docs/architecture/blueprint.md` have not been inspected. When access exists:
-
-1. Inspect `main`, every open PR and the blueprint; note which files another agent owns.
-2. Port only what is missing, in one branch, keeping attribution (`git cherry-pick -x` of the Hope commits, or `git format-patch` from this repo + `git am`). Hope-only paths: `app/hope/**`, `components/hope/**`, `lib/hope/**`, `app/api/hope/**`, `docs/hope/**`, Hope tokens in `app/globals.css`.
-3. Do not bring Nonprofit MRI pages, `.env*` files or anything from Bored Billionaires.
-4. Re-run `npx tsc --noEmit`, `npm run lint`, `npm run build` and the browser journey there; open one PR, no merge or deploy.
+The seam: pages only call `useHope()` / `useOpportunities()` and `/api/hope/draft`. A backend replaces the
+inside through `lib/hope/sync/*`, keeps the hook signatures, and needs no page edits.

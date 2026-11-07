@@ -18,7 +18,7 @@
         },
         {
           "id": "SC00",
-          "route": "app shell",
+          "route": "app/hope/layout.tsx (shell)",
           "issue": 13,
           "built_by": "H0"
         }
@@ -134,7 +134,7 @@
         },
         {
           "id": "SC09",
-          "route": "/profile",
+          "route": "/hope/profile",
           "issue": 16,
           "built_by": "H1"
         }
@@ -269,7 +269,7 @@
       "screens": [
         {
           "id": "SC24",
-          "route": "/discover",
+          "route": "/hope/discover",
           "issue": 17,
           "built_by": "H2"
         }
@@ -403,13 +403,13 @@
       "screens": [
         {
           "id": "SC25",
-          "route": "/grants",
+          "route": "/hope/saved",
           "issue": 18,
           "built_by": "H3"
         },
         {
           "id": "SC26",
-          "route": "/grants/[grantId]",
+          "route": "(no page: Discover card + /hope/applications/[oppId] header)",
           "issue": 19,
           "built_by": "H3"
         }

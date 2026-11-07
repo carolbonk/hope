@@ -1,5 +1,7 @@
 # M5: Budget (hackathon MVP)
 
+> **Out of scope for the hackathon. Don't build this.** This spec belongs to the earlier design (the Phase 1 pipeline and the M0-M7 / S-spec roadmap). Hackathon agents build only H0-H5 (see [`README.md`](../README.md)). Keep this file for after the hackathon.
+
 | | |
 |---|---|
 | Wave | MVP (runs in parallel with M1-M4, M6, M7 after M0) |

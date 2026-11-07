@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Route | `/profile` (hash anchors `#basics`, `#mission`, `#cause`, `#budget`, `#programs`, `#program-{program_id}`) |
-| Feature folder | `apps/web/src/features/profile/` (replaces today's `ProfileEditor.tsx`, `SectionShell.tsx`, `sections.tsx`) |
+| Feature folder | `apps/web/features/profile/` (replaces today's `ProfileEditor.tsx`, `SectionShell.tsx`, `sections.tsx`) |
 | Built by | [H1](../features/H1-sign-in-and-profile.md) |
 | Primary users | Development director / grant writer (after onboarding, then whenever programs or numbers change); the presenter, to show what the agents read |
 | Can act | Any signed-in user (no roles in the hackathon) |
@@ -11,6 +11,13 @@
 
 The enterprise version of this screen (health strip, SAM.gov, HITL-0, documents, history) is
 the S09 draft on `specs/profile`; this hackathon version keeps its layout ideas and drops those features.
+
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **Route is now `/hope/profile`** (built): the 5-step profile (identity, mission & programs, capacity, documents & requirements, review). Remaining H1 work is the backend sync only (`lib/hope/sync/profile.ts`).
 
 ## 1. Purpose and user goals
 
@@ -171,7 +178,7 @@ All from `GET /v1/profile` (H1).
 
 ## 11. Fixture data
 
-`apps/web/src/api/profile/fixture.ts`:
+`apps/web/api/profile/fixture.ts`:
 - `getProfile` default: the H1 demo form (Riverbend), version 3, completeness 92 with `missing: ["programs.1.age_range"]` and the matching suggestion.
 - Switches: `"incomplete"` (score 58; vision, values, website, exact budget missing), `"complete"` (100), `"none"` (404), `"error"` (503).
 - `patchProfile`: merges the section, bumps the version; switches `"invalid"` (422 `programs.0.description` too_short), `"conflict"` (409 with `current_version: 4`), `"network"`.
@@ -201,18 +208,18 @@ Success: profile strength >= 90% for the demo org; after edits, discovery is re-
 
 | AC | Test (file::name) |
 |---|---|
-| AC1 | `apps/web/src/features/profile/ProfileScreen.test.tsx::read mode content and strength` |
+| AC1 | `apps/web/features/profile/ProfileScreen.test.tsx::read mode content and strength` |
 | AC2 | `ProfileScreen.test.tsx::one section edits at a time` |
 | AC3 | `ProfileScreen.test.tsx::saves one section with if match` |
 | AC4 | `ProfileScreen.test.tsx::validation and conflict` |
-| AC5 | `apps/web/src/features/profile/ProgramCard.test.tsx::add edit remove programs` |
+| AC5 | `apps/web/features/profile/ProgramCard.test.tsx::add edit remove programs` |
 | AC6 | `ProfileScreen.test.tsx::fix focuses missing field` |
 | AC7 | `ProfileScreen.test.tsx::program deep link` |
 | AC8 | `ProfileScreen.test.tsx::redirects to onboarding without profile` |
 | AC9 | `ProfileScreen.test.tsx::cancel discards with confirm` |
 | AC10 | `ProfileScreen.test.tsx::state copy` |
 | AC11 | `ProfileScreen.test.tsx::mobile layout` (matchMedia mock) |
-| AC12 | `apps/web/src/features/profile/ProfileScreen.a11y.test.tsx` (vitest-axe) |
+| AC12 | `apps/web/features/profile/ProfileScreen.a11y.test.tsx` (vitest-axe) |
 
 ## 15. Open questions
 
