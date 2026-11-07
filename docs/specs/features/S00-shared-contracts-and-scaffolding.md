@@ -60,9 +60,14 @@ creates empty skeletons for every folder that later specs own.
 4. **Lifecycle rollback rules.** Move the amendment / revalidation rollback table from
    `hope_workflow` into `hope_core/schemas/lifecycle.py` as `ROLLBACK_ON: dict[Trigger, OpportunityState]`,
    with `rollback_target(current, trigger)`. Workflow imports it.
-5. **`hope_core/auth.py`.** Move `Principal` (`tenant_id`, `user_id`, `roles`, `mfa`) and the
-   header-based `get_principal` here, plus `require_roles(*roles)`. The pillar and profile both use it.
-   S01 later replaces the header implementation with OIDC behind the same function.
+5. **`hope_core/auth.py`, single tenant.** Move `Principal` (`tenant_id`, `user_id`, `roles`, `mfa`)
+   here, plus `require_roles(*roles)`. `get_principal` no longer reads `X-Hope-Tenant`: it always
+   sets `tenant_id` from a new required setting `HOPE_TENANT_ID` (`HopeSettings.tenant_id: UUID`),
+   and reads only `X-Hope-User`, `X-Hope-Roles` and `X-Hope-MFA` (dev). The pillar and profile both
+   use it. RLS and `tenant_tx` are unchanged. Remove the tenant header and
+   `NEXT_PUBLIC_HOPE_TENANT_ID` from the web client, its env example and its tests. Matching's
+   per-tenant `MatchingConfig` becomes one global config. S01 later swaps the header user for OIDC
+   behind the same function.
 6. **`hope_core/outbox.py`.** `write_event(tx, envelope)`: inserts a `PillarEnvelope` into
    `outbox` inside the caller's `tenant_tx` so the state change and its event commit together.
    Replace the pillar's and profile's private versions with it.
@@ -126,7 +131,7 @@ pyproject.toml, uv.lock, AGENTS.md, docs/specs/README.md (status row)
 - [ ] AC2 All fields from step 2 exist, are exported to JSON Schema and TS, and old payloads without the new optional fields still validate.
 - [ ] AC3 The new event types exist, each with a registered payload schema.
 - [ ] AC4 `rollback_target` covers every rollback the workflow used before, and the workflow tests pass unchanged.
-- [ ] AC5 Pillar and profile share `hope_core.auth.get_principal`; a request without a tenant is 401 on both.
+- [ ] AC5 Pillar and profile share `hope_core.auth.get_principal`; requests carry no tenant, every row they write has `tenant_id = HOPE_TENANT_ID`, and RLS still blocks rows of any other tenant.
 - [ ] AC6 `write_event` commits the event and the state change in one transaction, or neither (test rolls back mid-way).
 - [ ] AC7 Matching accepts a `payload_ref` event and loads the payload via `get_payload`.
 - [ ] AC8 A stale `artifact_hash` returns 409 `application/problem+json` with `code: "stale_artifact"` and `current_hash`.
@@ -146,7 +151,7 @@ pyproject.toml, uv.lock, AGENTS.md, docs/specs/README.md (status row)
 | AC2 | `packages/core/tests/test_schemas.py::test_new_fields_backward_compatible` | unit |
 | AC3 | `packages/core/tests/test_topics.py::test_every_event_type_has_schema` | unit |
 | AC4 | `packages/core/tests/test_lifecycle.py::test_rollback_targets` + existing workflow tests | unit |
-| AC5 | `services/pillar/tests/test_api.py::test_missing_tenant_401`, `services/profile/tests/test_api.py::test_missing_tenant_401` | api |
+| AC5 | `services/pillar/tests/test_api.py::test_configured_tenant_used`, `services/profile/tests/test_api.py::test_configured_tenant_used`, `packages/core/tests/test_db.py::test_rls_blocks_other_tenant` | api |
 | AC6 | `packages/core/tests/test_outbox.py::test_event_and_state_commit_atomically` | db |
 | AC7 | `services/matching/tests/test_agents.py::test_payload_ref_event_loaded` | unit |
 | AC8 | `services/pillar/tests/test_api.py::test_stale_hash_problem_json` | api |
@@ -159,7 +164,7 @@ pyproject.toml, uv.lock, AGENTS.md, docs/specs/README.md (status row)
 
 ## Out of scope
 
-Any product behaviour: new endpoints with logic (beyond the recompute event), OIDC, real providers, UI screens.
+Multi-tenant features (tenant routing, tenant admin, per-tenant config). Any product behaviour: new endpoints with logic (beyond the recompute event), OIDC, real providers, UI screens.
 
 ## Decisions needed
 

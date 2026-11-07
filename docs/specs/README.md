@@ -43,6 +43,12 @@ one PR that touches only the paths the spec owns.
 
 ## Product decisions that apply to every spec
 
+- **The MVP is single-tenant: one organization per deployment.** The `tenant_id` columns and
+  row-level security stay in the database (already built), but the server always uses the one
+  tenant set in `HOPE_TENANT_ID`. No spec adds tenant IDs to URLs, tenant headers from the
+  client, a tenant picker or switcher, or per-tenant settings. The MVP has one agency;
+  `GET /v1/me` returns its `agency_id`, and the `agency_id` path segments stay so that
+  multi-tenant can be added later without changing URLs.
 - Hope is free for nonprofits to use. Paid hosting, LLM and other services behind it are fine.
 - LLMs suggest; deterministic code decides eligibility, money, deadlines, state transitions
   and submission. No LLM output contains a money amount.
@@ -83,7 +89,7 @@ dependencies are Done), `In progress` (there is a PR), `Done`.
 | Spec | Title | Wave | Depends on | Migrations | Screens | Status |
 |---|---|---|---|---|---|---|
 | [S00](features/S00-shared-contracts-and-scaffolding.md) | Shared contracts and scaffolding | 0 | - | `0002` | - | Ready |
-| S01 | Identity, roles and `/v1/me` | 1 | S00 | `0110` | SC01, SC17 | Draft |
+| S01 | Sign-in, users, roles and `/v1/me` (single tenant) | 1 | S00 | `0110` | SC01, SC17 | Draft |
 | S02 | Approval inbox API and screens | 1 | S00 | - | SC05, SC06 | Draft |
 | S03 | Opportunity search and detail | 1 | S00 | - | SC04 | Draft |
 | S04 | Pursue, workflow list and history | 1 | S00 | `0610` | SC07, SC08 | Draft |

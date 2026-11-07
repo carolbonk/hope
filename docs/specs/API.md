@@ -1,8 +1,9 @@
 # API catalog (`/v1`)
 
 The one list of Hope's HTTP endpoints. All of them are served by the pillar app
-(`uvicorn hope_pillar.api:app`), one router module per spec (see `FOLDERS.md`). Every request
-carries the tenant (`X-Hope-Tenant` in dev; from the OIDC token after S01). Errors use the
+(`uvicorn hope_pillar.api:app`), one router module per spec (see `FOLDERS.md`). The MVP is
+single-tenant: clients never send a tenant; the server uses `HOPE_TENANT_ID` (S00). Until S01
+adds OIDC, dev requests identify the user with `X-Hope-User` / `X-Hope-Roles`. Errors use the
 `application/problem+json` model from `hope_core.errors` (S00), with a machine-readable `code`;
 a stale artifact returns `409` with `code: "stale_artifact"` and `current_hash`.
 
@@ -13,10 +14,10 @@ Request and response shapes are defined in the owning spec. Status: `Built` is o
 |---|---|---|---|---|---|
 | POST | `/v1/ingest/opportunities` | Submit a raw opportunity (Idempotency-Key) | pillar | Built | connectors |
 | POST | `/v1/ingest/artifacts` | Upload a source document | pillar | Built | connectors, SC11 |
-| GET | `/v1/me` | Current user, tenant, roles, agencies | S01 | New | every screen (shell) |
-| GET | `/v1/tenants/{tenant_id}/users` | List users and roles | S01 | New | SC17 |
-| POST | `/v1/tenants/{tenant_id}/users` | Invite a user | S01 | New | SC17 |
-| PATCH | `/v1/tenants/{tenant_id}/users/{user_id}` | Change roles / deactivate | S01 | New | SC17 |
+| GET | `/v1/me` | Current user, roles, the agency | S01 | New | every screen (shell) |
+| GET | `/v1/users` | List users and roles | S01 | New | SC17 |
+| POST | `/v1/users` | Invite a user | S01 | New | SC17 |
+| PATCH | `/v1/users/{user_id}` | Change roles / deactivate | S01 | New | SC17 |
 | GET | `/v1/approvals` | Approval inbox (`status`, `gate`, `assignee=me`) | S02 | New | SC05, SC02 |
 | GET | `/v1/approvals/{request_id}` | One HITL request with artifact preview | S02 | New | SC06 |
 | POST | `/v1/workflows/{workflow_id}/signals/{gate}` | Approve / reject a gate (hash-checked) | pillar | Built | SC06, SC13, SC20, SC21 |
