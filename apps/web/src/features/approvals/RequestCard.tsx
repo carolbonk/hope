@@ -74,7 +74,7 @@ export function RequestCard({ request, workflowTitle, hasWorkflow, now, onDecide
       </div>
       <h2 id={titleId} className="mt-3 text-lg font-semibold text-ink">
         {hasWorkflow ? (
-          <Link href={`/workflows/${request.workflow_id}`} className="neu-focus hover:underline">
+          <Link href={`/workflows/${request.workflow_id}`} className="glass-focus hover:underline">
             {workflowTitle ?? request.workflow_id}
           </Link>
         ) : (

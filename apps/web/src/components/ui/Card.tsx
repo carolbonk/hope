@@ -2,11 +2,11 @@ import type { HTMLAttributes, ReactNode } from "react";
 import { cx } from "@/lib/cx";
 
 export function Card({ className, ...rest }: HTMLAttributes<HTMLElement>) {
-  return <section className={cx("neu-raised rounded-[var(--radius-neu)] p-5 sm:p-6", className)} {...rest} />;
+  return <section className={cx("glass-panel rounded-[var(--radius-glass)] p-5 sm:p-6", className)} {...rest} />;
 }
 
 export function Well({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cx("neu-inset rounded-2xl p-4", className)} {...rest} />;
+  return <div className={cx("glass-inset rounded-2xl p-4", className)} {...rest} />;
 }
 
 export function PageHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {

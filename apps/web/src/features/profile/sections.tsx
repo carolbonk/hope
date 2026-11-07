@@ -247,7 +247,7 @@ export function ApprovalHierarchySection({ profile, submit, onConflict }: Sectio
     >
       <div className="flex flex-col gap-3">
         {draft.map((r, i) => (
-          <fieldset key={r.gate} className="neu-inset grid gap-3 rounded-2xl p-4 sm:grid-cols-[6rem_2fr_1fr_1.5fr] sm:items-end">
+          <fieldset key={r.gate} className="glass-inset grid gap-3 rounded-2xl p-4 sm:grid-cols-[6rem_2fr_1fr_1.5fr] sm:items-end">
             <legend className="sr-only">{r.gate} rule</legend>
             <p className="text-sm font-bold text-accent-strong sm:pb-2.5">{r.gate}</p>
             <TextField label="Approver roles" value={r.roles} onChange={(e) => update(i, { roles: e.target.value })} />

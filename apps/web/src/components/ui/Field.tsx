@@ -2,7 +2,7 @@ import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttribu
 import { cx } from "@/lib/cx";
 
 const CONTROL =
-  "neu-inset neu-focus w-full rounded-xl px-3 py-2 text-sm text-ink placeholder:text-ink-muted disabled:opacity-70";
+  "glass-inset glass-focus w-full rounded-xl px-3 py-2 text-sm text-ink placeholder:text-ink-muted disabled:opacity-70";
 
 interface FieldShellProps {
   label: string;
@@ -98,7 +98,7 @@ export function Segmented<T extends string>({
   return (
     <fieldset className="flex flex-col gap-1.5">
       <legend className="mb-1.5 text-sm font-medium text-ink">{label}</legend>
-      <div className="neu-inset flex flex-wrap gap-1 rounded-xl p-1">
+      <div className="glass-inset flex flex-wrap gap-1 rounded-xl p-1">
         {options.map((o) => {
           const active = o.value === value;
           return (
@@ -108,8 +108,8 @@ export function Segmented<T extends string>({
               aria-pressed={active}
               onClick={() => onChange(o.value)}
               className={cx(
-                "neu-focus min-h-9 rounded-lg px-3 text-sm font-medium motion-safe:transition-shadow",
-                active ? "neu-raised-sm text-accent-strong" : "text-ink-muted hover:text-ink",
+                "glass-focus min-h-9 rounded-lg px-3 text-sm font-medium motion-safe:transition-shadow",
+                active ? "glass-control text-accent-strong" : "text-ink-muted hover:text-ink",
               )}
             >
               {o.label}

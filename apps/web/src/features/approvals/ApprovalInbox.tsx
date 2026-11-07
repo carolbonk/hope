@@ -46,8 +46,8 @@ export function ApprovalInbox() {
                 aria-pressed={on}
                 onClick={() => toggle(role)}
                 className={cx(
-                  "neu-focus min-h-9 rounded-full border px-3 text-sm font-medium motion-safe:transition-shadow",
-                  on ? "neu-pressed border-accent text-accent-strong" : "neu-raised-sm border-transparent text-ink-muted",
+                  "glass-focus min-h-9 rounded-full border px-3 text-sm font-medium motion-safe:transition-shadow",
+                  on ? "glass-active border-accent text-accent-strong" : "glass-control border-transparent text-ink-muted",
                 )}
               >
                 {on ? "✓ " : ""}

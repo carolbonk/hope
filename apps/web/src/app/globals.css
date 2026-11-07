@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
-/* Neumorphic design tokens. Shadows, colours and focus ring are defined once here. */
+/* Liquid-glass design tokens. Surfaces, colours and focus ring are defined once here. */
 @theme {
-  --color-base: #e6ebf2;
+  --color-base: #eef1f8;
   --color-base-dark: #c4cad3;
   --color-base-light: #ffffff;
-  --color-ink: #1c2330;
-  --color-ink-muted: #48505e;
+  --color-ink: #141a26;
+  --color-ink-muted: #3f4757;
   --color-accent: #2f4fc7;
   --color-accent-strong: #233c9e;
   --color-focus: #1d4ed8;
@@ -17,35 +17,89 @@
   --color-bad: #a31919;
   --color-neutral: #3f4756;
 
-  --shadow-neu-raised: 6px 6px 14px var(--color-base-dark), -6px -6px 14px var(--color-base-light);
-  --shadow-neu-raised-sm: 3px 3px 7px var(--color-base-dark), -3px -3px 7px var(--color-base-light);
-  --shadow-neu-inset: inset 4px 4px 8px var(--color-base-dark), inset -4px -4px 8px var(--color-base-light);
-  --shadow-neu-pressed: inset 2px 2px 5px var(--color-base-dark), inset -2px -2px 5px var(--color-base-light);
+  --glass-fill: rgb(255 255 255 / 0.62);
+  --glass-fill-strong: rgb(255 255 255 / 0.78);
+  --glass-fill-inset: rgb(255 255 255 / 0.4);
+  --glass-edge: rgb(255 255 255 / 0.75);
+  --glass-line: rgb(20 26 38 / 0.12);
+  --glass-blur: blur(18px) saturate(170%);
+  --shadow-glass: 0 8px 32px rgb(31 41 80 / 0.14), inset 0 1px 0 var(--glass-edge);
+  --shadow-glass-sm: 0 2px 10px rgb(31 41 80 / 0.12), inset 0 1px 0 var(--glass-edge);
 
-  --radius-neu: 1.25rem;
+  --radius-glass: 1.25rem;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-@utility neu-raised {
+/* Fixed colourful scene behind every page; text never sits on it directly. */
+@utility glass-backdrop {
   background-color: var(--color-base);
-  box-shadow: var(--shadow-neu-raised);
+  background-image:
+    radial-gradient(40rem 30rem at 8% 0%, rgb(125 211 252 / 0.55), transparent 70%),
+    radial-gradient(36rem 28rem at 95% 10%, rgb(196 181 253 / 0.55), transparent 70%),
+    radial-gradient(44rem 34rem at 70% 100%, rgb(253 186 116 / 0.45), transparent 70%),
+    radial-gradient(30rem 24rem at 0% 90%, rgb(134 239 172 / 0.4), transparent 70%);
+  background-attachment: fixed;
 }
-@utility neu-raised-sm {
-  background-color: var(--color-base);
-  box-shadow: var(--shadow-neu-raised-sm);
+@utility glass-panel {
+  background-color: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
-@utility neu-inset {
-  background-color: var(--color-base);
-  box-shadow: var(--shadow-neu-inset);
+@utility glass-control {
+  background-color: var(--glass-fill-strong);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--shadow-glass-sm);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
-@utility neu-pressed {
-  background-color: var(--color-base);
-  box-shadow: var(--shadow-neu-pressed);
+@utility glass-chrome {
+  background-color: var(--glass-fill-strong);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass-sm);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
-@utility neu-focus {
+@utility glass-inset {
+  background-color: var(--glass-fill-inset);
+  border: 1px solid var(--glass-line);
+  box-shadow: inset 0 1px 3px rgb(31 41 80 / 0.1);
+}
+@utility glass-active {
+  background-color: rgb(47 79 199 / 0.14);
+  border: 1px solid rgb(47 79 199 / 0.45);
+  box-shadow: inset 0 1px 0 var(--glass-edge);
+}
+@utility glass-overlay {
+  background-color: rgb(20 26 38 / 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+@utility glass-focus {
   &:focus-visible {
     outline: 3px solid var(--color-focus);
     outline-offset: 3px;
+  }
+}
+
+/* Solid fallbacks: no backdrop-filter support or the OS asks for less transparency. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-fill: #ffffff;
+    --glass-fill-strong: #ffffff;
+    --glass-fill-inset: #f3f5fa;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-fill: #ffffff;
+    --glass-fill-strong: #ffffff;
+    --glass-fill-inset: #f3f5fa;
+    --glass-blur: none;
+  }
+  .glass-overlay {
+    background-color: rgb(20 26 38 / 0.6);
   }
 }
 
@@ -53,6 +107,9 @@
   html {
     background-color: var(--color-base);
     color: var(--color-ink);
+  }
+  body {
+    @apply glass-backdrop;
   }
   body {
     min-height: 100dvh;

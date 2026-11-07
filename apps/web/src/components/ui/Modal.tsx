@@ -50,7 +50,7 @@ export function Modal({ open, title, onClose, children, footer, variant = "dialo
   const drawer = variant === "drawer";
   return (
     <div className={cx("fixed inset-0 z-50 flex", drawer ? "justify-end" : "items-center justify-center p-4")}>
-      <div className="absolute inset-0 bg-ink/30" aria-hidden="true" onClick={onClose} />
+      <div className="absolute inset-0 glass-overlay" aria-hidden="true" onClick={onClose} />
       <div
         ref={panel}
         role="dialog"
@@ -58,8 +58,8 @@ export function Modal({ open, title, onClose, children, footer, variant = "dialo
         aria-labelledby={titleId}
         aria-describedby={description ? descId : undefined}
         className={cx(
-          "neu-raised relative flex max-h-full flex-col",
-          drawer ? "h-full w-full max-w-xl rounded-l-[var(--radius-neu)]" : "w-full max-w-md rounded-[var(--radius-neu)]",
+          "glass-panel relative flex max-h-full flex-col",
+          drawer ? "h-full w-full max-w-xl rounded-l-[var(--radius-glass)]" : "w-full max-w-md rounded-[var(--radius-glass)]",
         )}
       >
         <div className="flex items-start justify-between gap-4 p-5 pb-3">
