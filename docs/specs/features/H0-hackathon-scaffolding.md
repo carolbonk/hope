@@ -212,7 +212,7 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
   - mount `hope_profile.api.router` (H1).
 - Remove the pillar routes the hackathon doesn't use from the app; keep their code and tests.
 - New uv workspace members with an import test: `services/discovery` (`hope_discovery`, H2),
-  `services/briefs` (`hope_briefs`, H4) and `services/drafting` (`hope_drafting`, H5).
+  ~~`services/briefs` (H4) and `services/drafting` (H5)~~: no longer needed, H4/H5 run in `apps/web` (PR #34).
 - `AGENTS.md` migration ranges: discovery `0700-0709`, grants `0710-0719`, briefs `0720-0729`,
   drafting `0800-0809`.
 - Per-router OpenAPI snapshots: `services/pillar/tests/snapshots/openapi/<router>.json`.
@@ -221,7 +221,7 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
     with Sign out;
   - `/` redirects to `/grants`;
   - `ComingSoon` placeholder pages for `/login`, `/onboarding`, `/discover`, `/grants`,
-    `/grants/[grantId]`, `/grants/[grantId]/brief` and `/grants/[grantId]/proposal`;
+    `/grants/[grantId]` (the brief/proposal routes are replaced by `/hope/applications/[oppId]`, PR #34);
   - empty `features/<f>/` and `api/<f>/` folders for `session`, `onboarding`, `profile`, `discover`,
     `grants`, `brief` and `proposal`;
   - restyle all of `components/ui` to the liquid-glass system (README "Design system"): replace the

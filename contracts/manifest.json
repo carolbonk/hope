@@ -521,274 +521,113 @@
     },
     {
       "id": "W5",
-      "name": "Application brief",
+      "name": "Eligibility and internal approval",
       "spec": "H4",
       "issue": 29,
       "screens": [
         {
           "id": "SC27",
-          "route": "/grants/[grantId]/brief",
+          "route": "/hope/applications/[oppId]",
           "issue": 20,
           "built_by": "H4"
         }
       ],
-      "goal": "Read the funder's pages live and explain how to apply, every item cited.",
+      "goal": "Per-call eligibility from evidence and profile, required documents from the dossier, then simulated Program and Director approval. Browser state (hope:state:v1).",
       "steps": [
         {
-          "name": "Pick the start page + up to 6 linked pages",
+          "name": "Requirement status: evidence > profile fact > unknown",
           "kind": "code",
-          "detail": "Same-site links scored by keywords.",
+          "detail": "lib/hope/store.ts requirementStatus / eligibility.",
           "calls_per_run": null,
           "model": null
         },
         {
-          "name": "Fetch pages (SSRF guard, robots.txt)",
+          "name": "Required documents from the dossier",
           "kind": "code",
-          "detail": "Page text only in memory.",
-          "calls_per_run": "up to 7 fetches",
-          "model": null
-        },
-        {
-          "name": "Extract steps, documents, questions, dates, requirements with quotes",
-          "kind": "llm",
-          "detail": "Structured PageExtraction per page; untrusted text.",
-          "calls_per_run": "up to 7",
-          "model": "gpt-4o-mini"
-        },
-        {
-          "name": "Classify each eligibility requirement (check + expected values)",
-          "kind": "llm",
-          "detail": "The model never returns meets.",
-          "calls_per_run": "1",
-          "model": "gpt-4o-mini"
-        },
-        {
-          "name": "Decide eligibility from profile values",
-          "kind": "code",
-          "detail": "hope_briefs.eligibility.decide: yes / no / unknown.",
+          "detail": "lib/hope/dossier.ts oppDocs.",
           "calls_per_run": null,
           "model": null
         },
         {
-          "name": "Write the 1-2 sentence overview",
-          "kind": "llm",
-          "detail": "Facts-only, [fN] markers.",
-          "calls_per_run": "1",
-          "model": "gpt-4o-mini"
-        },
-        {
-          "name": "Verify quotes, parse word limits and dates, stable item ids",
+          "name": "Stage gates and simulated approvals",
           "kind": "code",
-          "detail": "Unverified items are kept and flagged.",
-          "calls_per_run": null,
-          "model": null
-        },
-        {
-          "name": "Checklist ticks",
-          "kind": "code",
-          "detail": "No model.",
+          "detail": "eligibility -> approval only with no No/Unknown; director after program; send back needs a comment.",
           "calls_per_run": null,
           "model": null
         }
       ],
-      "endpoints": [
-        {
-          "id": "brief.start",
-          "method": "POST",
-          "path": "/v1/grants/{grant_id}/brief",
-          "purpose": "Create or regenerate the brief (202).",
-          "screens": [
-            "SC27",
-            "SC26"
-          ],
-          "notes": null,
-          "default": "queued",
-          "scenarios": {
-            "queued": "mocks/w5/brief.start/queued.json",
-            "in_progress": "mocks/w5/brief.start/in_progress.json",
-            "not_found": "mocks/w5/brief.start/not_found.json"
-          },
-          "request_example": null
-        },
-        {
-          "id": "brief.get",
-          "method": "GET",
-          "path": "/v1/grants/{grant_id}/brief",
-          "purpose": "Brief, sources, checklist, key dates, latest job. SC26 derives its status chip from this.",
-          "screens": [
-            "SC27",
-            "SC26"
-          ],
-          "notes": null,
-          "default": "ok",
-          "scenarios": {
-            "ok": "mocks/w5/brief.get/ok.json",
-            "no_brief_running": "mocks/w5/brief.get/no_brief_running.json",
-            "no_brief": "mocks/w5/brief.get/no_brief.json",
-            "failed": "mocks/w5/brief.get/failed.json"
-          },
-          "request_example": null
-        },
-        {
-          "id": "brief.checklist",
-          "method": "PUT",
-          "path": "/v1/grants/{grant_id}/brief/checklist/{item_id}",
-          "purpose": "Tick a required document.",
-          "screens": [
-            "SC27"
-          ],
-          "notes": null,
-          "default": "ok",
-          "scenarios": {
-            "ok": "mocks/w5/brief.checklist/ok.json",
-            "item_not_found": "mocks/w5/brief.checklist/item_not_found.json"
-          },
-          "request_example": "mocks/w5/brief.checklist/request.json"
-        }
-      ]
+      "endpoints": []
     },
     {
       "id": "W6",
-      "name": "Proposal",
+      "name": "Application draft",
       "spec": "H5",
       "issue": 30,
       "screens": [
         {
           "id": "SC28",
-          "route": "/grants/[grantId]/proposal",
+          "route": "/hope/applications/[oppId]",
           "issue": 21,
           "built_by": "H5"
         }
       ],
-      "goal": "Draft cited answers to the grant's questions; edit, regenerate, export.",
+      "goal": "Draft 6 fixed sections from the profile and opportunity (AI or explicit template); humans edit, export and submit.",
       "steps": [
         {
-          "name": "Plan sections from the brief's questions",
+          "name": "Validate the draft request",
           "kind": "code",
-          "detail": "No model.",
+          "detail": "Zod body, <= 40 000 chars.",
           "calls_per_run": null,
           "model": null
         },
         {
-          "name": "Build the evidence list (profile + brief quotes)",
-          "kind": "code",
-          "detail": "The only thing the model may cite.",
-          "calls_per_run": null,
-          "model": null
-        },
-        {
-          "name": "Draft each section as cited claims",
+          "name": "Draft 6 sections + reviewer notes",
           "kind": "llm",
-          "detail": "Structured SectionAnswer; + up to 1 retry (shorten or fix).",
-          "calls_per_run": "1-2 per section (max 2 x sections + 2)",
-          "model": "gpt-4o-mini (FRONTIER tier)"
+          "detail": "OpenAI Agents SDK, outputType = 6 sections; facts from input only, [TO CONFIRM] otherwise.",
+          "calls_per_run": "1 run (maxTurns 4)",
+          "model": "OPENAI_MODEL or SDK default"
         },
         {
-          "name": "Render markdown, citation check, word counts",
+          "name": "Template draft (explicit click only)",
           "kind": "code",
-          "detail": "Unverified claims flagged, never removed.",
+          "detail": "lib/hope/draft.ts hopeTemplate; budget lines sum to the ask.",
           "calls_per_run": null,
           "model": null
         },
         {
-          "name": "Regenerate one section",
-          "kind": "llm",
-          "detail": "Same as drafting, with optional guidance.",
-          "calls_per_run": "1-2",
-          "model": "gpt-4o-mini (FRONTIER tier)"
-        },
-        {
-          "name": "Save user edits (hash check) and export md/docx",
+          "name": "Overwrite guard, copy, download .md, mark ready",
           "kind": "code",
-          "detail": "No model.",
+          "detail": "Never silently overwrites origin=human.",
           "calls_per_run": null,
           "model": null
         }
       ],
-      "endpoints": [
+      "endpoints": [],
+      "next_routes": [
         {
-          "id": "proposal.start",
           "method": "POST",
-          "path": "/v1/grants/{grant_id}/proposal",
-          "purpose": "Draft or redraft all sections (202).",
-          "screens": [
-            "SC28"
-          ],
-          "notes": null,
-          "default": "running",
-          "scenarios": {
-            "running": "mocks/w6/proposal.start/running.json",
-            "brief_missing": "mocks/w6/proposal.start/brief_missing.json",
-            "in_progress": "mocks/w6/proposal.start/in_progress.json"
+          "path": "/api/hope/draft",
+          "request": {
+            "locale": "en",
+            "mode": "agent",
+            "ask": 50000,
+            "profile": {},
+            "opportunity": {
+              "id": "opp-bayfront-youth",
+              "funder": "Bayfront Community Fund (demo)",
+              "name": "Youth Mentoring Grants",
+              "currency": "USD",
+              "amountMin": 25000,
+              "amountMax": 50000
+            }
           },
-          "request_example": "mocks/w6/proposal.start/request.json"
-        },
-        {
-          "id": "proposal.get",
-          "method": "GET",
-          "path": "/v1/grants/{grant_id}/proposal",
-          "purpose": "Grant, brief, draft, sections_meta, job. SC26 derives its status chip from this.",
-          "screens": [
-            "SC28",
-            "SC26"
-          ],
-          "notes": null,
-          "default": "ready",
-          "scenarios": {
-            "ready": "mocks/w6/proposal.get/ready.json",
-            "no_draft": "mocks/w6/proposal.get/no_draft.json",
-            "drafting": "mocks/w6/proposal.get/drafting.json"
+          "responses": {
+            "200": "{ source: agent|template, model?, sections{program,alignment,logicModel,objectives,budget,budgetNarrative}, reviewerNotes[] }",
+            "400": "{ error: invalid_request }",
+            "502": "{ error: agent_failed }",
+            "503": "{ error: missing_openai_key }"
           },
-          "request_example": null
-        },
-        {
-          "id": "proposal.section.put",
-          "method": "PUT",
-          "path": "/v1/grants/{grant_id}/proposal/sections/{section_id}",
-          "purpose": "Save an edited section.",
-          "screens": [
-            "SC28"
-          ],
-          "notes": null,
-          "default": "ok",
-          "scenarios": {
-            "ok": "mocks/w6/proposal.section.put/ok.json",
-            "stale": "mocks/w6/proposal.section.put/stale.json",
-            "unknown_citation": "mocks/w6/proposal.section.put/unknown_citation.json"
-          },
-          "request_example": "mocks/w6/proposal.section.put/request.json"
-        },
-        {
-          "id": "proposal.section.regenerate",
-          "method": "POST",
-          "path": "/v1/grants/{grant_id}/proposal/sections/{section_id}/regenerate",
-          "purpose": "Redraft one section (202).",
-          "screens": [
-            "SC28"
-          ],
-          "notes": null,
-          "default": "running",
-          "scenarios": {
-            "running": "mocks/w6/proposal.section.regenerate/running.json"
-          },
-          "request_example": "mocks/w6/proposal.section.regenerate/request.json"
-        },
-        {
-          "id": "proposal.export",
-          "method": "GET",
-          "path": "/v1/grants/{grant_id}/proposal/export",
-          "purpose": "Download (?format=md|docx).",
-          "screens": [
-            "SC28"
-          ],
-          "notes": null,
-          "default": "md",
-          "scenarios": {
-            "md": "mocks/w6/proposal.export/md.json",
-            "draft_not_ready": "mocks/w6/proposal.export/draft_not_ready.json",
-            "bad_format": "mocks/w6/proposal.export/bad_format.json"
-          },
-          "request_example": null
+          "notes": "Next.js route in apps/web (not served by pnpm mock); mode=template is the offline stand-in. ask is whole currency units today (known gap vs integer minor units)."
         }
       ]
     }

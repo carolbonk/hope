@@ -182,9 +182,7 @@ seed their own rows with `store.upsert_candidate`, using the 8 fixture candidate
 
 ## Requests to H4 and H5
 
-- **H4.** `apps/web/src/api/brief/` exports `getBriefStatus(grantId: string): Promise<BriefStatus>`, where `BriefStatus = { status: "none" | "generating" | "ready" | "failed"; generated_at: string | null; job_id: string | null; error: string | null }`. It's backed by H4's GET endpoint; a 404 maps to `status: "none"`. The route is `/grants/[grantId]/brief`.
-- **H5.** `apps/web/src/api/proposal/` exports `getProposalStatus(grantId: string): Promise<ProposalStatus>`, where `ProposalStatus = { status: "none" | "drafting" | "ready" | "failed"; updated_at: string | null; sections_total: number; sections_edited: number; unverified_count: number }`. It's backed by H5's GET endpoint; a 404 maps to `none`. The route is `/grants/[grantId]/proposal`.
-- Both functions throw `ProblemError` (from `lib/problem.ts`) on other errors. SC26 shows "Status unavailable" in that case and keeps the CTA enabled.
+- None. SC26 reads the application `stage` from `lib/hope/store.ts` (`hope:state:v1`) and links to `/hope/applications/[oppId]` (H4/H5, PR #34). There are no brief/proposal status helpers.
 
 ## Decisions needed (recommended defaults)
 

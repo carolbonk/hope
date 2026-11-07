@@ -24,7 +24,7 @@ Every endpoint has named scenarios (`mocks/<workflow>/<endpoint id>/<scenario>.j
 
 1. `?mock=<scenario>` on the request, e.g. `GET /v1/grants?mock=empty`
 2. Header `x-mock-scenario: grants.list=empty, me.get=not_onboarded`
-3. Env `MOCK_SCENARIOS="grants.list=empty,brief.get=no_brief_running" pnpm mock`
+3. Env `MOCK_SCENARIOS="grants.list=empty,discovery.get=running" pnpm mock`
 4. A query value that names a scenario: `?status=saved`, `?format=md`
 5. The endpoint's `default` in `manifest.json`
 
@@ -55,5 +55,6 @@ Each response carries `x-mock-scenario: <endpoint>=<scenario>`, so you can see w
 
 - The profile is `GET/PUT/PATCH /v1/profile`. `/v1/agencies/{agency_id}/profile` is Phase 1, not the hackathon.
 - The app-shell grant badge is `GET /v1/grants?status=new&limit=1` -> `counts.new` (`limit` is 1-100).
-- There are no separate brief/proposal status endpoints. SC26's `getBriefStatus` / `getProposalStatus` are
-  client helpers over `GET /v1/grants/{id}/brief` (404 `no_brief` carries the job) and `GET /v1/grants/{id}/proposal`.
+- W5 (H4 eligibility + simulated approval) has no `/v1` endpoints: it is browser state (`hope:state:v1`) in `apps/web`.
+- W6 (H5 draft) uses the Next.js route `POST /api/hope/draft`, listed under `next_routes` in `manifest.json`. `pnpm mock` does not serve it;
+  its `mode: "template"` is the offline stand-in, and no key returns `503 missing_openai_key`.

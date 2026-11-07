@@ -83,8 +83,7 @@ sources). The Next steps panel becomes a sticky bottom bar with the primary CTA,
 | Reasons | `reasons[]` (all) | "✓ … [c1][c4]" | Order as returned. Unverified items show the chip |
 | Concerns | `concerns[]` (all) | "▲ … [c3]" | "No concerns found." when empty |
 | Sources | `citations[]` | Web: "c1 {title} ↗ "{quote}"" with the domain. Profile: "c4 Profile · {profile_path in words} "{quote}"" | Ordered by `citation_id` number. The quote is cut to 160 chars, and the popover has the full quote. `retrieved_at` shows as "Retrieved Nov 7" |
-| Brief status | `api.brief.getBriefStatus(id)` (H4) | `none`: "○ Not started". `generating`: "◌ Building…". `ready`: "✓ Ready · {generated_at}". `failed`: "✕ Failed: {error}" | Polls every 3 s while `generating`, for up to 3 min |
-| Proposal status | `api.proposal.getProposalStatus(id)` (H5) | `none`: "○ Not started". `drafting`: "◌ Drafting…". `ready`: "✓ Ready · 5 sections · 2 edited · 1 unverified". `failed`: "✕ Failed" | Polls every 3 s while `drafting` |
+| Application stage | `useHope().state.applications[applicationId(ORG_ID, id)].stage` (H4/H5, `lib/hope/store.ts`) | `saved` / `eligibility` / `approval` / `drafting` / `ready`, shown with the `StageBar` labels | Browser state; updates live across tabs |
 
 ## 5. Components
 
@@ -97,9 +96,7 @@ sources). The Next steps panel becomes a sticky bottom bar with the primary CTA,
 
 ## 6. Interactions
 
-1. **Build application brief** (brief `none` or `failed`): if `status` is `new`, first `api.grants.save(id)` (optimistic, toast "Saved to shortlist"). Then navigate to `/grants/{id}/brief`, where H4 starts generation. The label is "Build application brief"; for `failed` it's "Try again".
-2. **Open brief** (brief `ready` or `generating`): navigate to `/grants/{id}/brief`.
-3. **Draft proposal:** enabled only when the brief is `ready`. Otherwise it's disabled, with the hint "Build the application brief first: Hope needs the grant's questions." For proposal `none` it navigates to `/grants/{id}/proposal` (H5 starts drafting). For `drafting` or `ready` the label is "Open proposal".
+1. **Open application workspace:** if `status` is `new`, first save it (toast "Saved to shortlist"), then navigate to `/hope/applications/{id}` (SC27/SC28, H4/H5). The label follows the stage: "Start eligibility review" for `saved`, "Continue application" otherwise.
 4. **Save / Pass / Move to New:** `POST /v1/grants/{id}/save|pass|reset`. Optimistic badge update, and a toast with Undo for 8 s. Undo sends `reset`, or the previous status's action. Pass shows the same optional reason sheet as SC25.
 5. **Citation chip:** opens `CitationPopover` (quote, page title, domain, "Open source ↗", or the profile field with "Open profile"). Esc closes it and focus returns to the chip. Clicking a source in the Sources list highlights every chip with that ID for 2 s.
 6. **Back to grants:** returns to `/grants` with the saved tab, mode, filters and position (`from` + session storage).
@@ -124,8 +121,7 @@ sources). The Next steps panel becomes a sticky bottom bar with the primary CTA,
 | Trigger | Call | Fields used | Cache / refetch |
 |---|---|---|---|
 | Mount | `api.grants.get(id)` -> `GET /v1/grants/{id}` | all `GrantDetail` fields | Refetch on focus if older than 60 s |
-| Mount (in parallel) | `api.brief.getBriefStatus(id)` (H4) | `status`, `generated_at`, `error` | Polls every 3 s while `generating` |
-| Mount (in parallel) | `api.proposal.getProposalStatus(id)` (H5) | `status`, `updated_at`, `sections_total`, `sections_edited`, `unverified_count` | Polls every 3 s while `drafting` |
+| Mount | `useHope()` (`lib/hope/store.ts`) | `applications[applicationId(ORG_ID, id)].stage` | Browser state, no polling |
 | Save / Pass / Reset | `api.grants.save\|pass\|reset(id)` | `status`, `previous_status` | Optimistic; rolled back on error |
 
 ## 9. Responsive behaviour
@@ -149,9 +145,7 @@ sources). The Next steps panel becomes a sticky bottom bar with the primary CTA,
 `api/grants/fixture.ts` `get(id)` returns the SC25 fixtures with full detail. Fixture #1 has 7
 citations: 5 web and 2 profile. Fixture #8 is past its deadline. Fixture #3 has no citations.
 
-The `api/brief` and `api/proposal` fixtures are H4's and H5's. For SC26 tests, the H3 tests
-mock `getBriefStatus` / `getProposalStatus` with every status value: `none`, `generating` →
-`ready` (on the second poll), `failed` and an error.
+SC26 tests seed `hope:state:v1` with an application at each stage.
 
 ## 12. Analytics and success measures
 
@@ -169,10 +163,7 @@ and at least 1 source is opened in 30 % of visits (users check the proof).
 
 - [ ] AC1 The page shows the title, funder line, fit, status, key facts (amount, deadline, eligibility with citations), summary, all reasons and concerns, and the sources list.
 - [ ] AC2 "View original" opens `view_original_url` in a new tab with `rel="noopener noreferrer"`.
-- [ ] AC3 The brief CTA saves a `new` grant first, then goes to `/grants/{id}/brief`. The label follows each brief status.
-- [ ] AC4 The proposal CTA is disabled with the exact hint until the brief is `ready`, then goes to `/grants/{id}/proposal`.
-- [ ] AC5 Statuses poll while `generating` / `drafting`, and announce the change to `ready`.
-- [ ] AC6 A status-endpoint error shows "Status unavailable" without blocking the CTA.
+- [ ] AC3 The workspace CTA saves a `new` grant first, then goes to `/hope/applications/{id}`. The label follows the application stage.
 - [ ] AC7 Save, Pass and Move to New are optimistic with Undo, and roll back on error.
 - [ ] AC8 A past deadline disables both CTAs with the banner copy. An unknown id shows the not-found copy.
 - [ ] AC9 Citation chips open popovers for web and profile citations. Clicking a source highlights its chips.
