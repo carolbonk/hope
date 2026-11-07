@@ -1,122 +1,199 @@
-# SC01: Sign-in
+# SC01: Sign in and sign up
 
 | | |
 |---|---|
-| Route | `/login` (also handles the IdP redirect: `/login?code=...&state=...`) |
+| Route | `/login` (query: `tab=signin|signup`, `returnTo`, `signedOut=1`) |
 | Feature folder | `apps/web/src/features/session/` |
-| Built by | [S01](../features/S01-sign-in-users-and-roles.md) |
-| Roles | Public (no session needed). Everyone who is invited can sign in. |
+| Built by | [H1](../features/H1-sign-in-and-profile.md) (uses H0's `api/session`) |
+| Primary users | Nonprofit staff, once per 14 days (cookie lifetime); the presenter at the start of the demo |
+| Can act | Anyone (public route). Signing up joins the single organization |
 | Status | Draft |
 
-## Purpose
+## 1. Purpose and user goals
 
-Staff of the organization sign in with their identity provider and land on the screen they were
-trying to reach. The screen also explains why sign-in failed (not invited, deactivated, IdP down).
+The front door. Users arrive by opening Hope, from `RequireSession` redirecting a 401
+(`/login?returnTo=/grants/...`), or after signing out (`?signedOut=1`).
 
-## Layout
+Within 5 seconds the screen must answer:
+1. What is Hope? (one line: "Find grants that fit, and get a plain-English plan to apply.")
+2. Do I sign in or create an account? (two tabs, sign-in first)
+3. What went wrong? (one clear error, next to the field it concerns)
 
-The app shell header is hidden on this route (`nav.ts` marks `/login` as `public`, A8).
+**Primary action:** Sign in. **Secondary:** Create account; fill the demo login (demo mode only).
 
-1. Centred `Card` (`glass-panel`, max width 28rem) containing:
-   - Hope logo mark (the `glass-inset` "H" from `AppShell`) and heading "Sign in to Hope".
-   - The organization name if known (`NEXT_PUBLIC_HOPE_ORG_NAME`, optional), else no subtitle.
-   - Primary `Button` "Continue with {NEXT_PUBLIC_HOPE_OIDC_PROVIDER_NAME}" (default label "Continue with your organization account").
-   - A notice region (`ErrorNotice`, or `SuccessNotice` after sign-out) below the button.
-   - Small print: "Hope is free for nonprofits. Trouble signing in? Ask your Hope administrator."
-2. In dev mode (`NEXT_PUBLIC_HOPE_AUTH_MODE=dev`) the button is replaced by a `Well` (`glass-inset`)
-   that reads "Development mode: you are signed in as {NEXT_PUBLIC_HOPE_USER_ID}", with a
-   "Continue" button.
+## 2. Information hierarchy
 
-Mobile (<= 640 px): the card fills the width with 16 px margins, and the button is full width.
+1. Logo and the one-line promise.
+2. The active tab's form (email, password, and display name on sign-up).
+3. The submit button, full width.
+4. Small print: "Free for nonprofits." and, in demo mode, the demo-account hint.
 
-## Data and endpoints
+Hidden: password rules appear only on the sign-up tab, under the field; no "forgot password" (out of scope; see Open questions).
 
-| Trigger | Call | Uses |
-|---|---|---|
-| Click "Continue" (oidc) | Browser redirect to `{issuer}/authorize` with `response_type=code`, `client_id`, `redirect_uri={origin}/login`, `scope=openid email profile`, `state`, `code_challenge` (S256), and `nonce` | - |
-| Page load with `code` and `state` | `POST {token_endpoint}` (code + verifier), then `GET /v1/me` with the new access token | `user_id`, `display_name`, `roles`, `agency` |
-| Page load without `code` | none (no `GET /v1/me` until the user clicks) | - |
+## 3. Wireframe
 
-The issuer metadata comes from `{NEXT_PUBLIC_HOPE_OIDC_ISSUER}/.well-known/openid-configuration`
-and is fetched once per page load. `GET /v1/me` returns the shape in S01 (`MeResponse` in
-`apps/web/src/api/session/types.ts`).
+Desktop (>= 1024 px): centred card, 440 px wide, on the base colour; no app nav.
 
-## Interactions
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                                                                        │
+│                     ┌──────────────────────────────────┐               │
+│                     │            (H)  Hope              │  <- logo mark (glass-inset) + wordmark
+│                     │ Find grants that fit, and get a   │
+│                     │ plain-English plan to apply.      │
+│                     │ ┌──────────────┬───────────────┐  │  <- Tabs (pressed = active)
+│                     │ │ ● Sign in    │  Create account│  │
+│                     │ └──────────────┴───────────────┘  │
+│                     │ Email                             │
+│                     │ [ dana@riverbendhealth.org      ] │  <- Input glass-inset
+│                     │ Password                    [Show]│
+│                     │ [ ••••••••••                    ] │
+│                     │ [            Sign in            ] │  <- Button primary
+│                     │ ─────────────────────────────────  │
+│                     │ Demo: demo@hope.org / hope-demo   │  <- only when NEXT_PUBLIC_HOPE_DEMO=1
+│                     │ [ Use the demo account ]          │
+│                     │ Free for nonprofits.              │
+│                     └──────────────────────────────────┘               │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
-1. **Continue:** generate the `state`, `nonce` and PKCE verifier, store them in `sessionStorage`
-   under `hope.oidc.pending` together with `returnTo` (the `?returnTo=` query value, which must be
-   a same-origin path starting with `/`; anything else becomes `/`). The button shows a pending
-   state ("Redirecting…") and is disabled.
-2. **Callback:** if `state` doesn't match `hope.oidc.pending.state` -> error "Sign-in expired or
-   was started in another tab. Try again." and clear the pending entry. Otherwise exchange the code,
-   keep the tokens in memory (`lib/auth.ts`, A7), clear the pending entry, remove `code` and `state`
-   from the URL (`history.replaceState`), then call `GET /v1/me`:
-   - 200 with `agency: null` -> `router.replace("/onboarding")`.
-   - 200 -> `router.replace(returnTo)`.
-   - 403 `not_invited` -> "Your account ({email from the ID token}) hasn't been invited to Hope.
-     Ask your Hope administrator to invite this email address."
-   - 403 `user_deactivated` -> "Your Hope access has been turned off. Contact your administrator."
-   - 401 `invalid_token` -> "We couldn't verify your sign-in. Try again."
-   - 503 `idp_unavailable` or a network error -> "The sign-in service is unavailable right now." with a Retry button.
-3. **Token exchange error** (`error` query param from the IdP, e.g. `access_denied`) -> show the IdP's
-   `error_description` if present, else "Sign-in was cancelled."
-4. **Step-up:** other screens call `requestStepUp(returnTo)` from `features/session/oidc.ts`, which redirects with
-   `prompt=login`, `max_age=0` and `acr_values` (if `NEXT_PUBLIC_HOPE_OIDC_MFA_ACR` is set). The
-   callback is handled the same way, and the user returns to `returnTo` with a fresh `mfa: true` token.
-5. **Sign out** (user menu in the shell): clear the in-memory tokens and redirect to the IdP
-   `end_session_endpoint` if it has one, with `post_logout_redirect_uri={origin}/login?signed_out=1`.
-   The login page then shows `SuccessNotice` "You're signed out."
-6. Any API 401 anywhere in the app calls the `onUnauthenticated` handler (A7), which redirects to
-   `/login?returnTo=<current path>`.
+Create-account tab adds "Your name" above Email and a password hint
+"At least 8 characters." under Password; the button reads "Create account".
 
-## States
+Mobile (<= 640 px): the card is full width with 16 px margins, no outer shadow frame; same order.
 
-- **Idle:** the card with the button.
-- **Redirecting:** button disabled with "Redirecting…" (`aria-busy="true"`).
-- **Completing sign-in:** `Loading` "Signing you in…" (the same label as `SessionProvider`).
-- **Error:** `ErrorNotice` with the message for the code, plus a "Try again" button that restarts at step 1.
-- **Signed out:** `SuccessNotice`.
-- **Misconfigured** (oidc mode with no issuer or client id): `ErrorNotice` "Sign-in isn't configured
-  for this deployment." with no button.
-- There is no empty, permission-denied or stale-artifact state on this screen.
+## 4. Content inventory
 
-## Accessibility
+| Element | Source | Format and example | Rules |
+|---|---|---|---|
+| Promise | static | "Find grants that fit, and get a plain-English plan to apply." | - |
+| Tab | URL `tab` | "Sign in" / "Create account" | Default `signin`; invalid value -> `signin` |
+| Your name | input -> `display_name` | "Dana Okafor" | Sign-up only; required, 2-80 chars, trimmed |
+| Email | input -> `email` | "dana@riverbendhealth.org" | Required; `type="email"`; trimmed and lower-cased before sending |
+| Password | input -> `password` | masked; "Show"/"Hide" toggle | Required; sign-up needs >= 8 chars (client check mirrors H0's `weak_password`) |
+| Field errors | client checks or problem `code` | "Enter your email address." | Under the field, `role="alert"` on submit |
+| Form error | problem `code` | "That email or password isn't right." | Above the button |
+| Signed-out notice | URL `signedOut=1` | "You're signed out." | `SuccessNotice`; removed from the URL after render |
+| Demo hint | `NEXT_PUBLIC_HOPE_DEMO === "1"` | "Demo: demo@hope.org / hope-demo" | Button fills both fields and focuses Sign in |
 
-- The page `<h1>` is "Sign in to Hope". On load, focus is on the primary button; after an error,
-  focus moves to the notice (`role="alert"`).
-- The pending state uses `aria-busy` and keeps the button label readable (not only a spinner).
-- Error notices use the `alert` icon plus text, not colour alone.
-- Contrast is WCAG AA, and focus rings use `neu-focus`.
-- No animation except the `Loading` indicator, which respects `prefers-reduced-motion`.
+## 5. Components
 
-## Fixture data
+`Card` (`glass-panel`), H0 `Tabs` (active tab `glass-active`), `TextField` (`glass-inset`), `Button`
+(primary, full width; ghost for Show/Hide and the demo button), `ErrorNotice`, `SuccessNotice`.
+Feature files: `features/session/LoginScreen.tsx`, `SignInForm.tsx`, `SignUpForm.tsx`, `returnTo.ts`.
+`app/login/page.tsx` renders `LoginScreen` outside the app chrome.
 
-`apps/web/src/api/session/fixture.ts`: `getMe()` returns
-`{user_id: "u-dana", email: "dana@example.org", display_name: "Dana Okafor", roles: ["executive_director", "development_director", "finance_director", "compliance_officer", "aor", "org_admin"], mfa: false, auth_mode: "dev", agency: {agency_id: FIXTURE_AGENCY_ID, legal_name: "Riverside Family Services"}}`.
-With no API URL configured the login page shows the dev-mode card. Tests inject a fake OIDC
-client (`features/session/oidc.ts` exports `createOidcClient(deps)` with `fetch`, `crypto` and
-`location` injected).
+## 6. Interactions
 
-## Acceptance criteria
+1. **Switch tab.** Click or ←/→ on the tab list; sets `?tab=` with `router.replace`; keeps the email value; clears errors.
+2. **Sign in.** Client checks (empty email/password). Then `login({email, password})`
+   (H0: `POST /v1/auth/login`). Button shows "Signing in…" and is disabled; fields read-only.
+   - 200 -> `me()` (H0 `GET /v1/me`): `onboarding_complete` false -> `router.replace("/onboarding")`;
+     else `router.replace(returnTo ?? "/grants")`.
+   - 401 `invalid_credentials` -> form error; password cleared and focused.
+   - 422 `validation_error` -> field errors from `errors[]`.
+   - 429 (if H0 rate-limits) -> "Too many attempts. Wait a minute and try again."
+   - Network / 5xx -> form error "We couldn't reach Hope. Check your connection and try again."
+3. **Create account.** Client checks (name, email, password >= 8). `signup({email, password, display_name})`
+   (H0: `POST /v1/auth/signup`). Button "Creating account…".
+   - 201 -> `me()` -> `/onboarding` when not onboarded (normal for the first user), else `returnTo ?? "/grants"`.
+   - 409 `email_taken` -> field error on Email with a link "Sign in instead" (switches tab, keeps email).
+   - 422 `weak_password` -> field error on Password.
+   - Network / 5xx -> same as sign-in.
+4. **Show/Hide password.** Toggles `type`; button `aria-pressed`; focus stays on the toggle.
+5. **Use the demo account.** Fills `demo@hope.org` / `hope-demo` on the Sign-in tab and focuses "Sign in" (does not submit, so the presenter controls the moment).
+6. **Already signed in.** On mount, `me()`; 200 -> redirect as in interaction 2 (no form flash: show the loading state until `me()` settles).
+7. **returnTo safety.** Only same-origin paths starting with `/` and not `//` are used; anything else becomes `/grants`.
+8. **Keyboard.** Enter submits; the first field is auto-focused on load and on tab switch.
 
-- [ ] SC01-AC1 Clicking Continue stores state, nonce and verifier and redirects to the authorize URL with an S256 `code_challenge` and the configured `redirect_uri`.
-- [ ] SC01-AC2 A callback with a mismatched `state` shows the expired-sign-in error and never calls the token endpoint.
-- [ ] SC01-AC3 A successful callback calls `GET /v1/me`, removes `code` and `state` from the URL and navigates to `returnTo`; an off-site `returnTo` becomes `/`.
-- [ ] SC01-AC4 `agency: null` navigates to `/onboarding`.
-- [ ] SC01-AC5 `not_invited`, `user_deactivated`, `invalid_token` and `idp_unavailable` each show their message in a focused `role="alert"` region.
-- [ ] SC01-AC6 Dev mode shows the dev card and no IdP button.
-- [ ] SC01-AC7 `?signed_out=1` shows "You're signed out."
-- [ ] SC01-AC8 An API 401 on another screen redirects to `/login?returnTo=<path>`.
+## 7. States and exact copy
 
-## Test plan
+| State | What shows |
+|---|---|
+| Checking session (mount) | Card with logo and a `Progress` bar (indeterminate), sr text "Checking your session…" |
+| Idle | Form as in the wireframe |
+| Submitting | "Signing in…" / "Creating account…" on the button |
+| Empty email | "Enter your email address." |
+| Bad email format | "Enter an email like name@example.org." |
+| Empty password | "Enter your password." |
+| Short password (sign-up) | "Use at least 8 characters." |
+| Empty name (sign-up) | "Enter your name." |
+| `invalid_credentials` | "That email or password isn't right." |
+| `email_taken` | "There's already an account with this email. Sign in instead?" |
+| `weak_password` | "Use at least 8 characters." |
+| Rate limited | "Too many attempts. Wait a minute and try again." |
+| Network / 5xx | "We couldn't reach Hope. Check your connection and try again." |
+| Signed out | "You're signed out." |
+| Offline (`navigator.onLine` false) | "You're offline. Connect to sign in." Button disabled |
+
+## 8. Data and endpoints
+
+| Trigger | Call | Fields used | Cache / refetch |
+|---|---|---|---|
+| Mount | H0 `me()` -> `GET /v1/me` | 200: `onboarding_complete`; 401 -> show form | none |
+| Sign in | H0 `login()` -> `POST /v1/auth/login` `{"email":"demo@hope.org","password":"hope-demo"}` | 200 `{user}`; problem `code` | sets cookie |
+| Create account | H0 `signup()` -> `POST /v1/auth/signup` `{"email":"dana@riverbendhealth.org","password":"…","display_name":"Dana Okafor"}` | 201 `{user}`; problem `code`, `errors[]` | sets cookie |
+| After either | `GET /v1/me` | `onboarding_complete` | session cache in H0's provider is invalidated |
+
+## 9. Responsive behaviour
+
+- >= 641 px: 440 px card centred vertically.
+- <= 640 px: full-width card, top-aligned with 24 px top margin; buttons 48 px tall.
+
+## 10. Accessibility
+
+- `h1` "Sign in to Hope" / "Create your Hope account" (visually the wordmark; heading text updates with the tab).
+- Tabs follow the ARIA tabs pattern (`role="tablist"`, arrow keys, `aria-selected`).
+- Inputs have visible labels, `autocomplete` (`email`, `current-password` / `new-password`, `name`).
+- Errors: field errors linked via `aria-describedby`; on submit failure focus moves to the first invalid field or the form error (`role="alert"`).
+- Contrast AA; 1 px borders on inputs; `glass-focus` rings; no motion except `motion-safe:` shadow transitions.
+
+## 11. Fixture data
+
+`features/session` tests mock H0's `api/session` module:
+- `login`: `demo@hope.org` / `hope-demo` -> user Demo Admin; anything else -> `ApiError(401, …, "invalid_credentials")`.
+- `signup`: `taken@hope.org` -> 409 `email_taken`; password `short` -> 422 `weak_password`; otherwise 201.
+- `me`: switchable: 401, `{onboarding_complete: false}`, `{onboarding_complete: true}`.
+- A `network` switch throws `TypeError("Failed to fetch")`.
+
+## 12. Analytics and success measures
+
+Events: `auth_viewed {tab}`, `auth_submitted {tab}`, `auth_failed {tab, code}`, `auth_succeeded {tab, onboarding_complete}`.
+Success: sign-up to finished onboarding in under 5 minutes; fewer than 10% of sign-ins fail with `invalid_credentials`.
+
+## 13. Acceptance criteria
+
+- [ ] AC1 Sign in with valid credentials goes to `returnTo` (or `/grants`); a not-onboarded user goes to `/onboarding`.
+- [ ] AC2 `invalid_credentials` shows the exact copy, clears and focuses the password.
+- [ ] AC3 Create account sends `display_name`, `email`, `password`, then goes to `/onboarding`.
+- [ ] AC4 `email_taken` shows the field error with "Sign in instead" switching tabs and keeping the email.
+- [ ] AC5 Client validation messages match section 7 and block the request.
+- [ ] AC6 `?tab=signup` opens the create-account tab; switching tabs updates the URL.
+- [ ] AC7 An already signed-in visitor is redirected without seeing the form.
+- [ ] AC8 An unsafe `returnTo` (`https://evil.example`, `//x`) falls back to `/grants`.
+- [ ] AC9 Demo mode shows the hint and fills the fields; non-demo mode hides it.
+- [ ] AC10 `?signedOut=1` shows "You're signed out."
+- [ ] AC11 Network failure shows the network copy.
+- [ ] AC12 axe: no violations on both tabs and the error state.
+
+## 14. Test plan
 
 | AC | Test (file::name) |
 |---|---|
-| SC01-AC1 | `apps/web/src/features/session/LoginScreen.test.tsx::redirects with PKCE` |
-| SC01-AC2 | `apps/web/src/features/session/LoginScreen.test.tsx::rejects mismatched state` |
-| SC01-AC3 | `apps/web/src/features/session/LoginScreen.test.tsx::completes sign-in and returns` |
-| SC01-AC4 | `apps/web/src/features/session/LoginScreen.test.tsx::sends users without an agency to onboarding` |
-| SC01-AC5 | `apps/web/src/features/session/LoginScreen.test.tsx::shows each sign-in error` |
-| SC01-AC6 | `apps/web/src/features/session/LoginScreen.test.tsx::dev mode card` |
-| SC01-AC7 | `apps/web/src/features/session/LoginScreen.test.tsx::signed out notice` |
-| SC01-AC8 | `apps/web/src/features/session/oidc.test.ts::401 redirects to login` |
+| AC1 | `apps/web/src/features/session/LoginScreen.test.tsx::sign in redirects by onboarding state` |
+| AC2 | `LoginScreen.test.tsx::invalid credentials` |
+| AC3 | `LoginScreen.test.tsx::create account goes to onboarding` |
+| AC4 | `LoginScreen.test.tsx::email taken offers sign in` |
+| AC5 | `LoginScreen.test.tsx::client validation copy` |
+| AC6 | `LoginScreen.test.tsx::tabs sync with url` |
+| AC7 | `LoginScreen.test.tsx::redirects when already signed in` |
+| AC8 | `apps/web/src/features/session/returnTo.test.ts::rejects unsafe targets` |
+| AC9 | `LoginScreen.test.tsx::demo hint fills credentials` |
+| AC10 | `LoginScreen.test.tsx::signed out notice` |
+| AC11 | `LoginScreen.test.tsx::network error copy` |
+| AC12 | `apps/web/src/features/session/LoginScreen.a11y.test.tsx` (vitest-axe) |
+
+## 15. Open questions
+
+- Forgot password? Recommended default: no link in the hackathon (no email sending); add reset after the demo.
+- Should sign-up be closed after the first user? Recommended default: open for the hackathon (H1 D1).

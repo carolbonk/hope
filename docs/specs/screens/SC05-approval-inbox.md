@@ -153,7 +153,7 @@ Errors: any failure -> error state (section 7); 422 `validation_error` from bad 
 - `<table>` with caption and `th scope="col"`.
 - SLA text always says "left", "overdue" or "No SLA"; badges are icon + text.
 - `aria-live="polite"` region announces "{n} requests" after filter/role changes.
-- 1 px borders (>= 3:1) on cards and chips in addition to shadows; `neu-focus` ring.
+- 1 px borders (>= 3:1) on cards and chips in addition to shadows; `glass-focus` ring.
 - `prefers-reduced-motion`: no skeleton shimmer, no dimming transition.
 
 ## 11. Fixture data

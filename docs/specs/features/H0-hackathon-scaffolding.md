@@ -256,3 +256,34 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 ## Out of scope
 
 Roles and approvals, multi-tenant, password reset, email verification, Temporal, Kafka.
+
+## Integration decisions (from the H1-H5 requests; these are part of H0)
+
+The H specs may rely on all of these:
+
+1. **Contracts:**
+   - `Legal.hq_city`, `Legal.hq_state` and `Legal.website` (all optional). H1 drops its extras table.
+   - `BriefItem.due_on: date | None = None`.
+   - Docstrings: an item in `GrantCandidate.fit_reasons`, `concerns` or `ApplicationBrief.overview` may contain `[cN]` markers that refer to the parent's `citations`; an item without one renders as "Unverified".
+2. **Jobs:**
+   - `jobs.subject_id text null` and `jobs.created_by`;
+   - `create_job(tx, kind, subject_id=None, created_by=...)`, `latest_job(tx, kind, subject_id=None)`, `list_jobs(tx, kind, limit)`;
+   - an exception in `fn` marks the job `failed`, with a one-line message and no traceback.
+   - Kinds: `discovery`, `brief` (subject `grant_id`), `proposal` (subject `grant_id`) and `proposal-section` (subject `"{grant_id}:{section_id}"`).
+3. **Store:**
+   - `get_profile(tx) -> AgencyProfile` (current version);
+   - `list_candidates(..., job_id=None)` and `count_candidates(tx) -> {"new", "saved", "passed"}`;
+   - `set_candidate_status(tx, grant_id, status, *, reason=None, reason_text=None, actor=None)`, with the columns `status_changed_at`, `status_changed_by`, `pass_reason` and `pass_reason_text`.
+   - `save_section`'s `expected_hash` is the `ProposalDraft.content_hash`; the store recomputes it and stores the new hash.
+4. **Web tools:**
+   - `RecordedWebTools`: an unknown query returns `[]`, an unknown URL raises `FetchError`, and query lookup ignores case and extra whitespace.
+   - Specs may keep their own fixture dirs.
+   - `Page.content_type` is always set.
+   - H0's recorded fixtures are for H1's demo profile (Riverbend, Wenatchee WA, NTEE E32/F30): 3 searches and about 6 grants, 2 of them with linked guideline pages (one a PDF).
+5. **Web:**
+   - `RequireSession` lets `/login` render without a session, never redirects `/onboarding` to itself, and sends signed-in users away from `/login` to `/grants` (or `/onboarding`).
+   - `Toast` survives client navigation.
+   - `lib/problem.ts` keeps `errors[]` (`field`, `code`, `message`) and includes the messages for `brief_missing`, `drafting_in_progress`, `unknown_citation`, `draft_not_ready`, `section_not_found` and `bad_format`.
+   - `MarkdownView` takes an optional `citations` prop and renders `[cN]` as `CitationChip`s.
+6. **Snapshots:** the profile router's OpenAPI snapshot lives in `services/profile/tests/snapshots/openapi.json` (owned by H1). The pillar's snapshot test skips mounted external routers.
+7. **Parsing:** `parse_amount`/`parse_deadline` stay in `hope_discovery.parse` for now. H4 computes its dates from quotes with its own helper.
