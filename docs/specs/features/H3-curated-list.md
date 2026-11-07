@@ -8,6 +8,17 @@
 | Migrations | none (see Decisions 1; `0710-0719` stays reserved) |
 | Status | Draft |
 
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **SC25 shortlist:** now `/hope/saved` (built), plus `/hope/deadlines` (built).
+> - **SC26 grant overview:** has no page of its own. Its content is on the Discover card (fit reasons, facts, source) and the workspace header (`/hope/applications/[oppId]`).
+> - **Save/Pass/Undo:** these already work in the browser (`decisions`, `history`). Saving creates the application record H4 uses.
+> - **Still to build (H3):** the `/v1/grants` save/pass/reset backend and `lib/hope/sync/decisions.ts`, which mirrors `decide` / `undo` to it. The browser record stays the source for the workspace.
+> - **Owns (web):** `app/hope/saved/**`, `app/hope/deadlines/**`, `lib/hope/sync/decisions.ts`.
+
 ## Goal
 
 Discovery (H2) finds dozens of grants. H3 turns them into a decision the user can make in a
@@ -55,7 +66,7 @@ key, and can undo. The shortlist then feeds the application brief (H4) and the p
 ## Contracts
 
 - **Shared models used:** `GrantCandidate`, `Citation`, `Money`, `hope_core.auth.get_principal`, `hope_core.store.*`, `hope_core.errors`.
-- **Endpoint models**, defined in `api/grants.py` (endpoint shapes, not shared contracts): `CitedItem{text: str, citation_ids: list[str], unverified: bool}`, `GrantCard`, `GrantDetail`, `GrantListPage`, `StatusChange`, `PassBody`. TS types are hand-written in `apps/web/src/api/grants/types.ts`.
+- **Endpoint models**, defined in `api/grants.py` (endpoint shapes, not shared contracts): `CitedItem{text: str, citation_ids: list[str], unverified: bool}`, `GrantCard`, `GrantDetail`, `GrantListPage`, `StatusChange`, `PassBody`. TS types are hand-written in `apps/web/api/grants/types.ts`.
 - **Endpoints:**
 
   **`GET /v1/grants`**
@@ -119,10 +130,10 @@ key, and can undo. The shortlist then feeds the application brief (H4) and the p
 services/pillar/src/hope_pillar/api/grants.py
 services/pillar/tests/snapshots/openapi/grants.json
 services/pillar/tests/test_grants_api.py
-apps/web/src/features/grants/**
-apps/web/src/api/grants/**
-apps/web/src/app/grants/page.tsx
-apps/web/src/app/grants/[grantId]/page.tsx
+apps/web/features/grants/**
+apps/web/api/grants/**
+apps/web/app/grants/page.tsx
+apps/web/app/grants/[grantId]/page.tsx
 db/migrations/0710-0719 (reserved, unused)
 docs/specs/README.md (this spec's status row only)
 ```
@@ -158,7 +169,7 @@ seed their own rows with `store.upsert_candidate`, using the 8 fixture candidate
 | AC6 | `test_grants_api.py::test_detail_and_not_found` | api |
 | AC7 | `test_grants_api.py::test_requires_session` | api |
 | AC8 | `test_grants_api.py::test_router_uses_store_only` (AST: no `execute(` in `grants.py`), `test_openapi.py::test_router_snapshots` | unit/api |
-| AC9 | `apps/web/src/features/grants/*.test.tsx` (SC25 14, SC26 14) | web unit |
+| AC9 | `apps/web/features/grants/*.test.tsx` (SC25 14, SC26 14) | web unit |
 
 ## Out of scope
 

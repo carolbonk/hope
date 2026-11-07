@@ -3,11 +3,18 @@
 | | |
 |---|---|
 | Route | `/login` (query: `tab=signin|signup`, `returnTo`, `signedOut=1`) |
-| Feature folder | `apps/web/src/features/session/` |
+| Feature folder | `apps/web/features/session/` |
 | Built by | [H1](../features/H1-sign-in-and-profile.md) (uses H0's `api/session`) |
 | Primary users | Nonprofit staff, once per 14 days (cookie lifetime); the presenter at the start of the demo |
 | Can act | Anyone can open it (public route). Sign-up needs the team's invite code (H0), and joins the single organization |
 | Status | Draft |
+
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **To build (H1):** `app/login/page.tsx`, liquid glass with `components/ui`. After sign-in, go to `/onboarding` if the profile isn't set up yet, otherwise to `returnTo` or `/hope/discover`.
 
 ## 1. Purpose and user goals
 
@@ -187,18 +194,18 @@ Success: sign-up to finished onboarding in under 5 minutes; fewer than 10% of si
 
 | AC | Test (file::name) |
 |---|---|
-| AC1 | `apps/web/src/features/session/LoginScreen.test.tsx::sign in redirects by onboarding state` |
+| AC1 | `apps/web/features/session/LoginScreen.test.tsx::sign in redirects by onboarding state` |
 | AC2 | `LoginScreen.test.tsx::invalid credentials` |
 | AC3 | `LoginScreen.test.tsx::create account goes to onboarding` |
 | AC4 | `LoginScreen.test.tsx::email taken offers sign in` |
 | AC5 | `LoginScreen.test.tsx::client validation copy` |
 | AC6 | `LoginScreen.test.tsx::tabs sync with url` |
 | AC7 | `LoginScreen.test.tsx::redirects when already signed in` |
-| AC8 | `apps/web/src/features/session/returnTo.test.ts::rejects unsafe targets` |
+| AC8 | `apps/web/features/session/returnTo.test.ts::rejects unsafe targets` |
 | AC9 | `LoginScreen.test.tsx::demo hint fills credentials` |
 | AC10 | `LoginScreen.test.tsx::signed out notice` |
 | AC11 | `LoginScreen.test.tsx::network error copy` |
-| AC12 | `apps/web/src/features/session/LoginScreen.a11y.test.tsx` (vitest-axe) |
+| AC12 | `apps/web/features/session/LoginScreen.a11y.test.tsx` (vitest-axe) |
 | AC13 | `LoginScreen.test.tsx::signup closed asks for invite code` |
 
 ## 15. Open questions

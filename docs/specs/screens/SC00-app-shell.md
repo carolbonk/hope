@@ -3,11 +3,18 @@
 | | |
 |---|---|
 | Route | wraps every route; `/` redirects |
-| Feature folder | `apps/web/src/components/AppShell.tsx`, `components/RequireSession.tsx`, `nav.ts` |
+| Feature folder | `apps/web/components/AppShell.tsx`, `components/RequireSession.tsx`, `nav.ts` |
 | Built by | H0 |
 | Primary users | everyone, on every screen |
 | Can act | any signed-in user |
 | Status | Ready |
+
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **Built:** `app/hope/layout.tsx` + `HopeNav` (Discover, Saved, Deadlines, Our profile, EN/ES) and `HopeFooter`. The one thing left for H0 is the session guard; the nav stays as is.
 
 ## 1. Purpose and user goals
 

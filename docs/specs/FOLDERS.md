@@ -55,7 +55,7 @@ hope/
 │   ├── submission/                   S22                                    [skeleton by S00]
 │   ├── integrations/                 S24 (framework, crm/), S25 (erp/)      [skeleton by S00]
 │   └── awards/                       S23                                    [skeleton by S00]
-├── apps/web/src/
+├── apps/web/
 │   ├── app/<route>/page.tsx          thin route file; renders features/<feature>/<Screen>
 │   ├── features/<feature>/           one folder per screen group (see SCREENS.md)
 │   ├── api/client.ts                 composes the per-feature clients (S00)

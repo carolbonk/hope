@@ -44,6 +44,17 @@ orchestrator.
 - **Tests run without network or API keys** (MockProvider, InMemoryPillar). DB tests use the
   `migrated_db` fixture pattern from `packages/core/tests/conftest.py` and `@pytest.mark.db`.
 
+## Web app (`apps/web`, after PR #34)
+
+- The Hope UI is built: the zip frontend under `/hope/*` and SC11 `/onboarding`. Don't rebuild screens. Keep the
+  liquid-glass `app/globals.css` and `features/onboarding/**`; map any new colour names onto glass tokens.
+- There is no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the root, and `@/*` maps to `./*`.
+- The seam: pages call `useHope()` / `useOpportunities()` only. Backends plug in through `lib/hope/sync/<name>.ts`
+  (profile H1, opportunities H2, decisions H3) without changing hook signatures or pages.
+- H4/H5 are browser state plus `POST /api/hope/draft`. The OpenAI key is server-only (`OPENAI_API_KEY`).
+- Web checks: `pnpm --filter @hope/web typecheck && pnpm --filter @hope/web lint && pnpm --filter @hope/web test`.
+  Don't commit the generated `apps/web/AGENTS.md` / `CLAUDE.md`.
+
 ## Commands
 
 ```bash

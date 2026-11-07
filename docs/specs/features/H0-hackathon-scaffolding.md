@@ -8,6 +8,20 @@
 | Migrations | `0002_hackathon.sql` |
 | Status | Ready |
 
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **App shell (SC00):** built. It is `app/hope/layout.tsx` + `HopeNav` / `HopeFooter` in `components/hope/ui.tsx`, with the EN/ES toggle. `/` redirects to `/hope/discover`.
+> - **Still to build (H0):**
+>   - auth backend (invite code, `/v1/auth/*`, `/v1/me`)
+>   - `api/http.ts` (shared fetch with `credentials: "include"` and `ProblemError`) and `api/session/`
+>   - a session guard in `app/hope/layout.tsx` that sends signed-out users to `/login` and un-onboarded users to `/onboarding`
+>   - an empty `lib/hope/sync/` with one no-op adapter per name (`profile.ts` H1, `opportunities.ts` H2, `decisions.ts` H3), already called from `store.ts` / `opportunities.ts`
+>   - the backend pieces below (OpenAI provider, jobs, web tools, `make demo`)
+> - **Dropped:** `nav.ts`, the `ComingSoon` pages, `/grants*` routes, `services/briefs` and `services/drafting`.
+
 ## Goal
 
 Put every shared piece in place so H1-H5 can run in parallel without editing the same file:
@@ -45,7 +59,7 @@ logic beyond auth.
   There are no roles in the hackathon: every signed-in user can do everything.
 - `GET /v1/me` (`api/me.py`) returns `{user_id, email, display_name, agency_id, onboarding_complete}`.
   `onboarding_complete` is true when the profile has a mission statement and at least one program.
-- Web: `apps/web/src/api/session/` (`me()`, `login()`, `signup()`, `logout()`). All requests use
+- Web: `apps/web/api/session/` (`me()`, `login()`, `signup()`, `logout()`). All requests use
   `credentials: "include"`. A `RequireSession` wrapper in the app layout sends a 401 to `/login`, and
   sends a signed-in user with `onboarding_complete: false` to `/onboarding`. Next.js rewrites
   `/v1/*` to the API, so the cookie is first-party.
@@ -251,8 +265,8 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 
 `packages/core/**`, `packages/schemas/**`, `db/migrations/0002_hackathon.sql`, `services/pillar/**`
 (app wiring, `auth.py`, `me.py`, empty routers, snapshots), `services/{discovery,briefs,drafting}/**`
-(skeletons), import-only edits in `services/profile`, `apps/web/src/{api/session,components,lib,nav.ts}`,
-`apps/web/src/app/**` (layout and placeholder pages only), `apps/web/next.config.*`, `apps/web/package.json`,
+(skeletons), import-only edits in `services/profile`, `apps/web/{api/session,components,lib,nav.ts}`,
+`apps/web/app/**` (layout and placeholder pages only), `apps/web/next.config.*`, `apps/web/package.json`,
 `pnpm-lock.yaml`, `Makefile`, `pyproject.toml`, `uv.lock`, `infra/docker-compose.yml`, `AGENTS.md`,
 `docs/specs/README.md` (status row).
 
@@ -280,7 +294,7 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 | AC5 | `packages/core/tests/test_openai_provider.py` |
 | AC6 | `packages/core/tests/test_jobs.py` (incl. `test_adopts_existing_job_id`) |
 | AC7 | `services/pillar/tests/test_openapi.py::test_router_snapshots` + full suite |
-| AC8 | `apps/web/src/components/RequireSession.test.tsx`, `nav.test.ts`, `components/ui/Citation.test.tsx` |
+| AC8 | `apps/web/components/RequireSession.test.tsx`, `nav.test.ts`, `components/ui/Citation.test.tsx` |
 | AC9 | manual, recorded in the PR |
 | AC10 | `components/ui/glass.test.tsx` + `AppShell.a11y.test.tsx` (vitest-axe) |
 

@@ -3,11 +3,18 @@
 | | |
 |---|---|
 | Route | `/onboarding` (query: `step=basics|mission|cause|budget|programs|review`) |
-| Feature folder | `apps/web/src/features/onboarding/` |
+| Feature folder | `apps/web/features/onboarding/` |
 | Built by | [H1](../features/H1-sign-in-and-profile.md) |
 | Primary users | The first staff member after sign-up (once, about 5 minutes); anyone redoing it from SC09 "Run setup again" |
 | Can act | Any signed-in user |
 | Status | Draft |
+
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **Built (PR #24) and kept as is.** It finishes at `/hope/discover?onboarded=1` and seeds the Hope profile (`seedHopeProfile`).
 
 ## 1. Purpose and user goals
 
@@ -209,7 +216,7 @@ Step titles and "why" lines:
 
 ## 11. Fixture data
 
-`apps/web/src/api/profile/fixture.ts` and `apps/web/src/api/onboarding/fixture.ts`:
+`apps/web/api/profile/fixture.ts` and `apps/web/api/onboarding/fixture.ts`:
 - `getProfile`: 404 by default for onboarding tests; `"existing"` switch returns the H1 demo form (Riverbend) with `ETag "3"`.
 - `saveProfile`: echoes the form as version 1; switches: `"invalid"` (422 with `basics.ein`/`invalid_ein_prefix` and `programs.0.description`/`too_short`), `"conflict"` (409), `"network"`.
 - `searchNtee`: 40 real codes (all of group E, F30, F32, B, O50, P, W) with the search ranking of H1 step 12; empty `q` returns 26 groups.
@@ -242,20 +249,20 @@ Success: median time to finish under 5 minutes; over 80% of started onboardings 
 
 | AC | Test (file::name) |
 |---|---|
-| AC1 | `apps/web/src/features/onboarding/OnboardingWizard.test.tsx::blocks continue until valid` |
+| AC1 | `apps/web/features/onboarding/OnboardingWizard.test.tsx::blocks continue until valid` |
 | AC2 | `OnboardingWizard.test.tsx::step url and back navigation` |
 | AC3 | `OnboardingWizard.test.tsx::restores draft from local storage` |
-| AC4 | `apps/web/src/features/onboarding/steps/BasicsStep.test.tsx::formats ein` |
-| AC5 | `apps/web/src/features/onboarding/NteePicker.test.tsx::search select limit reorder` |
+| AC4 | `apps/web/features/onboarding/steps/BasicsStep.test.tsx::formats ein` |
+| AC5 | `apps/web/features/onboarding/NteePicker.test.tsx::search select limit reorder` |
 | AC6 | `NteePicker.test.tsx::suggestions with citations and fallbacks` |
-| AC7 | `apps/web/src/features/onboarding/steps/BudgetStep.test.tsx::exact amount switches band` |
-| AC8 | `apps/web/src/features/onboarding/steps/ProgramsStep.test.tsx::add and remove programs` |
+| AC7 | `apps/web/features/onboarding/steps/BudgetStep.test.tsx::exact amount switches band` |
+| AC8 | `apps/web/features/onboarding/steps/ProgramsStep.test.tsx::add and remove programs` |
 | AC9 | `OnboardingWizard.test.tsx::review edit links` |
 | AC10 | `OnboardingWizard.test.tsx::finish saves and redirects` |
 | AC11 | `OnboardingWizard.test.tsx::server errors map to steps` |
 | AC12 | `OnboardingWizard.test.tsx::rerun prefills and handles conflict` |
 | AC13 | `OnboardingWizard.test.tsx::mobile layout` (matchMedia mock) |
-| AC14 | `apps/web/src/features/onboarding/OnboardingWizard.a11y.test.tsx` (vitest-axe) |
+| AC14 | `apps/web/features/onboarding/OnboardingWizard.a11y.test.tsx` (vitest-axe) |
 
 ## 15. Open questions
 

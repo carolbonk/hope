@@ -31,5 +31,5 @@ request/response per call. The endpoints are defined in [`API.md`](API.md).
 | SC23 Awards and reporting | `/awards`, `/awards/[awardId]` | `awards` | S23 | `GET /v1/awards`, `GET .../{id}`, `POST /v1/awards`, `PUT .../reports/{id}` | Draft |
 
 The app shell (nav, user menu, notification bell) calls `GET /v1/me` and
-`GET /v1/notifications?unread=true`. S00 pre-fills `apps/web/src/nav.ts` with every
+`GET /v1/notifications?unread=true`. S00 pre-fills `apps/web/nav.ts` with every
 route above; a route whose screen isn't built yet shows a "Coming soon" state.

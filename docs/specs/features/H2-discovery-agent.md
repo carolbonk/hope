@@ -9,6 +9,18 @@
 | Blueprint | 2.2 A1 (discovery), 8.3 (untrusted content), 8.5 (budgets) |
 | Status | Draft |
 
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **SC24 Discover:** now `/hope/discover`, the zip's swipe deck with filters and match reasons. It is built on the demo catalog (`lib/hope/demo.ts`).
+> - **Still to build (H2):** the discovery agent backend (`/v1/discovery/*`, results in `/v1/grants`).
+>   - Add `lib/hope/sync/opportunities.ts`, which maps `GrantCandidate` → `Opportunity`: `amount_minor / 100` → `amountMin/Max`, `deadline`, `source.kind = "verified"` with its `url` and `verifiedAt`, and `requirements`.
+>   - Keep the demo catalog as the offline fallback.
+>   - Add a small "Find new grants" run/progress panel in `components/hope/discovery/` and mount it once in the Discover page.
+> - **Owns (web):** `lib/hope/sync/opportunities.ts`, `lib/hope/opportunities.ts`, `components/hope/discovery/**`, `app/hope/discover/page.tsx`.
+
 ## Goal
 
 One click turns the nonprofit's profile into a list of real, open grants. A background job:
@@ -520,9 +532,9 @@ services/discovery/**                         (agent.py, prompts.py, models.py, 
 services/pillar/src/hope_pillar/api/discovery.py
 services/pillar/tests/test_discovery_api.py
 services/pillar/tests/snapshots/openapi/discovery.json
-apps/web/src/features/discover/**
-apps/web/src/api/discover/**
-apps/web/src/app/discover/**
+apps/web/features/discover/**
+apps/web/api/discover/**
+apps/web/app/discover/**
 db/migrations/0700_discovery.sql
 ```
 

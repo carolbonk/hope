@@ -9,6 +9,20 @@
 | Blueprint | 3 (system of record), 5.1 (Agency Profile) |
 | Status | Draft |
 
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **SC01 `/login`:** to build at `app/login/page.tsx` (liquid glass, invite code), using `components/ui`.
+> - **SC11 `/onboarding`:** built (PR #24). On save it also calls `seedHopeProfile` (`lib/hope/fromOnboarding.ts`).
+> - **SC09 profile:** now `/hope/profile`, the zip's 5-step profile with the document dossier. It is built; don't replace it with a new page.
+> - **Still to build (H1):** the profile backend (`GET/PUT/PATCH /v1/profile`, NTEE search and suggest).
+>   - Point `api/profile` and `api/onboarding` at it (`NEXT_PUBLIC_HOPE_API_URL`).
+>   - Add `lib/hope/sync/profile.ts`: load and save `OrgProfile` ↔ `ProfileForm`, with the mapping in `lib/hope/fromOnboarding.ts`.
+>   - Dossier fields with no `/v1` field stay in the browser.
+> - **Owns (web):** `app/login/**`, `features/onboarding/**`, `api/profile/**`, `api/onboarding/**`, `lib/hope/fromOnboarding.ts`, `lib/hope/sync/profile.ts`.
+
 ## Goal
 
 A nonprofit signs up (or in), tells Hope who it is in a 6-step wizard that takes under five
@@ -31,10 +45,10 @@ every save commits directly: there are no HITL-0 proposals and no roles.
   H0 adds `Mission.values: list[str]` and `AgencyProfile.service_area: list[str]`. There is no
   field for headquarters city/state or website.
 - H0 gives: `POST /v1/auth/signup|login|logout`, `GET /v1/me` (`onboarding_complete` = mission
-  statement and >= 1 program), `apps/web/src/api/session` (`me/login/signup/logout`),
+  statement and >= 1 program), `apps/web/api/session` (`me/login/signup/logout`),
   `RequireSession`, `default_gateway()` (MockProvider without a key), `components/ui`
   (`Drawer`, `Toast`, `Tabs`, `Progress`, ...), placeholder pages for `/login` and `/onboarding`.
-- Web today: `apps/web/src/features/profile/` (`ProfileEditor.tsx`, `SectionShell.tsx`,
+- Web today: `apps/web/features/profile/` (`ProfileEditor.tsx`, `SectionShell.tsx`,
   `sections.tsx`) edits the full enterprise profile with HITL-0 banners.
 
 ## Behaviour
@@ -230,9 +244,9 @@ class NteeSuggestionOut(BaseModel):
 
 ### Web
 
-22. `apps/web/src/api/profile/` (`types.ts` mirrors the JSON below, `http.ts`: `getProfile()`,
+22. `apps/web/api/profile/` (`types.ts` mirrors the JSON below, `http.ts`: `getProfile()`,
     `saveProfile(form, etag?)`, `patchProfile(sections, etag)`; `fixture.ts`; `index.ts`) and
-    `apps/web/src/api/onboarding/` (`searchNtee(q)`, `suggestNtee(input)`, `fixture.ts`).
+    `apps/web/api/onboarding/` (`searchNtee(q)`, `suggestNtee(input)`, `fixture.ts`).
     Sign-in uses H0's `api/session` unchanged.
 23. Screens: SC01 (`features/session`), SC11 (`features/onboarding`), SC09 (`features/profile`,
     replacing today's enterprise editor; the old `ProfileEditor`/`SectionShell`/`sections` files and
@@ -346,14 +360,14 @@ CREATE TABLE agency_profile_extras (
 services/profile/**          (hackathon additions: onboarding.py, ntee.py, data/ntee_codes.json, demo.py,
                               repository.save_direct, new routes in api.py, tests)
 db/migrations/0310_profile_extras.sql
-apps/web/src/features/session/**
-apps/web/src/features/onboarding/**
-apps/web/src/features/profile/**
-apps/web/src/api/onboarding/**
-apps/web/src/api/profile/**
-apps/web/src/app/login/**
-apps/web/src/app/onboarding/**
-apps/web/src/app/profile/**
+apps/web/features/session/**
+apps/web/features/onboarding/**
+apps/web/features/profile/**
+apps/web/api/onboarding/**
+apps/web/api/profile/**
+apps/web/app/login/**
+apps/web/app/onboarding/**
+apps/web/app/profile/**
 docs/specs/README.md (this spec's status row only)
 ```
 
@@ -427,5 +441,5 @@ version history UI, grant history and capacity editing, password reset, team man
 
 - `services/profile/src/hope_profile/api.py`, `repository.py` (`create_agency`, `propose`, `_normalize`, `_commit`), `validators.py` (`ein_errors`, `derive_budget_band`, `profile_errors`)
 - `packages/core/src/hope_core/schemas/agency_profile.py`, `common.py` (`Contract`, `Provenance`)
-- `apps/web/src/features/profile/*`, `apps/web/src/api/fixtures/profile.ts`
+- `apps/web/features/profile/*`, `apps/web/api/fixtures/profile.ts`
 - NTEE core codes: NCCS, https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes

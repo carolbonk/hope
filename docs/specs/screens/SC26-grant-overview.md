@@ -3,11 +3,18 @@
 | | |
 |---|---|
 | Route | `/grants/[grantId]` (query: `from=cards\|list` to return to SC25 at the same place) |
-| Feature folder | `apps/web/src/features/grants/` |
+| Feature folder | `apps/web/features/grants/` |
 | Built by | H3 |
 | Primary users | Executive director or development lead, deciding whether to invest in applying |
 | Can act | Any signed-in user: Save, Pass, Reset, Build application brief, Draft proposal |
 | Status | Draft |
+
+> **Aligned after PR #34/#35. This box is authoritative: where anything below disagrees (routes, `apps/web/src/...` paths, building a screen from scratch), this box wins.**
+> - The UI already exists: the Hope frontend under `/hope/*` (zip port, liquid glass) plus SC11 `/onboarding`. Don't rebuild or restyle screens; keep `app/globals.css` and `features/onboarding/**` as they are.
+> - `apps/web` has no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root, and `@/*` maps to `./*`.
+> - Pages only call `useHope()` (`lib/hope/store.ts`) and `useOpportunities()` (`lib/hope/opportunities.ts`). A backend plugs in through its own adapter in `lib/hope/sync/<name>.ts`. Keep the hook signatures and don't edit pages for wiring.
+> - The `/v1` contract in `contracts/` still holds for the backend. On the wire, money is `amount_minor` (integer) + ISO currency; the adapters convert to the UI's whole units.
+> - **No separate page.** The content lives on the Discover card and the workspace header (`/hope/applications/[oppId]`). Don't build `/grants/[grantId]`.
 
 ## 1. Purpose and user goals
 
