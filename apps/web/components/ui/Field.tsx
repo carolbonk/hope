@@ -71,7 +71,7 @@ export function SelectField({
   return (
     <FieldShell label={label} hint={hint} error={error} className={wrapperClassName}>
       {(id, describedBy) => (
-        <select id={id} aria-describedby={describedBy} className={cx(CONTROL, "appearance-none pr-8", className)} {...rest}>
+        <select id={id} aria-describedby={describedBy} className={cx(CONTROL, className)} {...rest}>
           {options.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
