@@ -8,7 +8,7 @@ export function ScoreBar({ label, value, max = 100, compact }: { label: string; 
     <div className={cx("flex items-center gap-2", compact ? "text-xs" : "text-sm")}>
       <span className={cx("shrink-0 text-ink-muted", compact ? "w-20" : "w-40")}>{label}</span>
       <div
-        className="neu-inset h-2.5 flex-1 rounded-full"
+        className="glass-inset h-2.5 flex-1 rounded-full"
         role="meter"
         aria-label={label}
         aria-valuemin={0}

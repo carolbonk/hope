@@ -3,7 +3,7 @@ import { cx } from "@/lib/cx";
 
 export function Table({ className, caption, children, ...rest }: HTMLAttributes<HTMLTableElement> & { caption: string }) {
   return (
-    <div className="neu-inset relative overflow-x-auto rounded-2xl p-2">
+    <div className="glass-inset relative overflow-x-auto rounded-2xl p-2">
       <table className={cx("w-full min-w-[56rem] border-separate border-spacing-y-2 text-left text-sm", className)} {...rest}>
         <caption className="sr-only">{caption}</caption>
         {children}
@@ -21,5 +21,5 @@ export function Td({ className, ...rest }: TdHTMLAttributes<HTMLTableCellElement
 }
 
 export function Tr({ className, ...rest }: HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cx("neu-raised-sm", className)} {...rest} />;
+  return <tr className={cx("glass-control", className)} {...rest} />;
 }

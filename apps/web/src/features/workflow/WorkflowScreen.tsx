@@ -37,7 +37,7 @@ export function WorkflowList() {
             {data.map((w) => (
               <Tr key={w.workflow_id}>
                 <Td>
-                  <Link href={`/workflows/${w.workflow_id}`} className="neu-focus font-semibold text-ink hover:underline">
+                  <Link href={`/workflows/${w.workflow_id}`} className="glass-focus font-semibold text-ink hover:underline">
                     {w.title}
                   </Link>
                 </Td>
@@ -75,7 +75,7 @@ export function WorkflowDetail({ workflowId }: { workflowId: string }) {
         title={data.title}
         description={`Workflow ${data.workflow_id} · currently ${humanizeState(data.state)}`}
         actions={
-          <Link href="/workflows" className="neu-focus neu-raised-sm rounded-xl px-4 py-2 text-sm font-semibold text-ink">
+          <Link href="/workflows" className="glass-focus glass-control rounded-xl px-4 py-2 text-sm font-semibold text-ink">
             All workflows
           </Link>
         }
@@ -95,7 +95,7 @@ export function WorkflowDetail({ workflowId }: { workflowId: string }) {
                     <Well>
                       <GateBadge gate={g.gate} />
                       <p className="mt-2 text-sm">{g.summary}</p>
-                      <Link href="/approvals" className="neu-focus mt-2 inline-block text-sm font-semibold text-accent-strong underline underline-offset-4">
+                      <Link href="/approvals" className="glass-focus mt-2 inline-block text-sm font-semibold text-accent-strong underline underline-offset-4">
                         Open in Approval Inbox
                       </Link>
                     </Well>

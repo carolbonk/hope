@@ -79,7 +79,7 @@ export function SectionShell({ section, title, description, dirty, buildPatch, s
                 <>
                   Proposal <code>{result.proposal_id}</code> for {result.sections.map(sectionLabel).join(", ")} is waiting for HITL-0 approval. The
                   current profile stays in effect until it is approved.{" "}
-                  <Link href="/approvals" className="neu-focus font-semibold text-accent-strong underline underline-offset-4">
+                  <Link href="/approvals" className="glass-focus font-semibold text-accent-strong underline underline-offset-4">
                     View in Approval Inbox
                   </Link>
                 </>

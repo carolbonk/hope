@@ -34,9 +34,9 @@ export function Timeline({ workflow }: { workflow: WorkflowView }) {
             <span
               className={cx(
                 "absolute -left-[0.95rem] flex size-7 items-center justify-center rounded-full border-2",
-                status === "done" && "neu-raised-sm border-good text-good",
-                status === "current" && "neu-pressed border-accent text-accent-strong",
-                status === "upcoming" && "neu-inset border-base-dark text-ink-muted",
+                status === "done" && "glass-control border-good text-good",
+                status === "current" && "glass-active border-accent text-accent-strong",
+                status === "upcoming" && "glass-inset border-base-dark text-ink-muted",
               )}
             >
               <Icon name={status === "done" ? "check" : status === "current" ? "dot" : "chevron"} className="size-3.5" />
@@ -44,7 +44,7 @@ export function Timeline({ workflow }: { workflow: WorkflowView }) {
             <div
               className={cx(
                 "rounded-xl px-4 py-2",
-                status === "current" ? "neu-raised-sm" : "",
+                status === "current" ? "glass-control" : "",
                 status === "upcoming" ? "text-ink-muted" : "text-ink",
               )}
             >

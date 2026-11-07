@@ -154,7 +154,7 @@ export function OpportunityDrawer({ row, opportunity, workflowId, summaryOnly, n
 
           {workflowId && (
             <p className="mt-6">
-              <Link href={`/workflows/${workflowId}`} className="neu-focus font-semibold text-accent-strong underline underline-offset-4">
+              <Link href={`/workflows/${workflowId}`} className="glass-focus font-semibold text-accent-strong underline underline-offset-4">
                 View workflow timeline
               </Link>
             </p>
