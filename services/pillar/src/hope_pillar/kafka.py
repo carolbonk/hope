@@ -40,21 +40,53 @@ class KafkaConfig:
             "auto.offset.reset": "earliest",
         }
 
-    def ensure_topics(self, names: Iterable[str]) -> None:
-        missing = [self.topic(n) for n in names if self.topic(n) not in self._known_topics]
+    def ensure_topics(self, names: Iterable[str], timeout: float = 30.0) -> None:
+        """Create missing topics and wait until the broker serves metadata for all of them.
+
+        `create_topics` can return before partition leaders are elected, and producing or
+        subscribing in that window fails with UNKNOWN_TOPIC_OR_PART.
+        """
+        missing = sorted({self.topic(n) for n in names if self.topic(n) not in self._known_topics})
         if not missing:
             return
         admin = AdminClient({"bootstrap.servers": self.bootstrap})
         futures = admin.create_topics(
             [NewTopic(t, num_partitions=1, replication_factor=1) for t in missing]
         )
-        for name, future in futures.items():
+        for future in futures.values():
             try:
-                future.result(timeout=10)
+                future.result(timeout=timeout)
             except KafkaException as exc:
                 if exc.args[0].code() != KafkaError.TOPIC_ALREADY_EXISTS:
                     raise
-            self._known_topics.add(name)
+        deadline = time.monotonic() + timeout
+        pending = set(missing)
+        while pending:
+            topics = admin.list_topics(timeout=5).topics
+            pending = {
+                name
+                for name in pending
+                if name not in topics
+                or topics[name].error is not None
+                or not topics[name].partitions
+                or any(p.leader < 0 for p in topics[name].partitions.values())
+            }
+            if pending and time.monotonic() > deadline:
+                raise TimeoutError(f"topics not ready after {timeout}s: {sorted(pending)}")
+            if pending:
+                time.sleep(0.1)
+        self._known_topics.update(missing)
+
+    def delete_prefixed_topics(self, timeout: float = 30.0) -> None:
+        """Drop every topic under this config's prefix (test teardown)."""
+        if not self.topic_prefix:
+            raise ValueError("refusing to delete topics without a prefix")
+        admin = AdminClient({"bootstrap.servers": self.bootstrap})
+        names = [t for t in admin.list_topics(timeout=5).topics if t.startswith(self.topic_prefix)]
+        if names:
+            for future in admin.delete_topics(names, operation_timeout=timeout).values():
+                future.result(timeout=timeout)
+        self._known_topics.clear()
 
     def group_id(self, group: str) -> str:
         return self.topic_prefix + group
@@ -116,6 +148,10 @@ class KafkaConfig:
                 err = msg.error()
                 if err is not None:
                     if err.code() == KafkaError._PARTITION_EOF:
+                        continue
+                    if err.code() == KafkaError.UNKNOWN_TOPIC_OR_PART and not assigned_at:
+                        if now - started > assign_timeout:
+                            raise KafkaException(err)
                         continue
                     raise KafkaException(err)
                 last = now
