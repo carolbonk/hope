@@ -1,4 +1,7 @@
 # Hope: Multi-Agent Grant Automation Platform
+
+> **Long-term architecture, not the hackathon build.** Its pipeline agents (A0-A12), Temporal lifecycle, HITL gates, budget engine and Kafka flows are out of scope for H0-H5. Hackathon agents follow `docs/specs/README.md` (H0-H5) and `AGENTS.md` "Hackathon scope".
+
 ## Technical Blueprint & Architecture Specification
 
 | Field | Value |

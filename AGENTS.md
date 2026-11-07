@@ -3,9 +3,21 @@
 Working rules for humans and AI agents in this repo. The architecture is in
 `docs/architecture/blueprint.md`; section numbers below refer to it.
 
+## Hackathon scope (read first)
+
+Build only the H0-H5 specs in `docs/specs/README.md`. Everything from the earlier design is out of scope, so
+don't build, extend or wire it:
+
+- **Specs:** `docs/specs/features/M*.md`, all `S*.md` specs, and every screen spec other than SC00, SC01, SC09, SC11 and SC24-SC28.
+- **Architecture:** the pipeline agents A0-A12, Temporal lifecycle workflow, HITL gates, Kafka flows and budget engine in `docs/architecture/blueprint.md`.
+- **Services:** `services/ingestion` (import its parsing validators only, as H2 says), `services/matching`, `services/budget` and
+  `services/workflow` stay as they are. The services in scope are `services/pillar` (API host), `services/profile` (H1) and
+  `services/discovery` (H2).
+- **Web:** no screens outside `/hope/*`, `/onboarding` and `/login`.
+
 ## Layout and ownership
 
-Each area has one owner per phase. Stay inside your folders; anything outside needs the
+Each area has one owner per phase (the table below is the Phase 1 split; during the hackathon the H0-H5 specs' `Owns` lists decide). Stay inside your folders; anything outside needs the
 orchestrator.
 
 | Path | Owner | Blueprint |

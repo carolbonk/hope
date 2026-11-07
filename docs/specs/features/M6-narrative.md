@@ -1,5 +1,7 @@
 # M6: Narrative drafting (OpenAI, budget placeholders, editable draft)
 
+> **Out of scope for the hackathon. Don't build this.** This spec belongs to the earlier design (the Phase 1 pipeline and the M0-M7 / S-spec roadmap). Hackathon agents build only H0-H5 (see [`README.md`](../README.md)). Keep this file for after the hackathon.
+
 | | |
 |---|---|
 | Wave | MVP (parallel with M1-M5, M7, after M0) |

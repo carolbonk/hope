@@ -1,5 +1,7 @@
 # S08: Persistent matching state and rule approval
 
+> **Out of scope for the hackathon. Don't build this.** This spec belongs to the earlier design (the Phase 1 pipeline and the M0-M7 / S-spec roadmap). Hackathon agents build only H0-H5 (see [`README.md`](../README.md)). Keep this file for after the hackathon.
+
 | | |
 |---|---|
 | Wave | 2 |
