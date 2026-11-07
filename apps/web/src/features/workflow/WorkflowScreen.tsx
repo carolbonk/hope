@@ -125,7 +125,16 @@ export function WorkflowDetail({ workflowId }: { workflowId: string }) {
           <Card>
             <h2 className="mb-3 text-lg font-semibold">History</h2>
             <ul className="flex flex-col gap-2 text-sm">
-              {data.history.toReversed().map((t, i) => (
+              {data.events?.toReversed().map((e, i) => (
+                <li key={`e-${i}`} className="flex flex-col">
+                  <span className="font-medium">{e.label}</span>
+                  <span className="text-xs text-ink-muted">
+                    {formatDateTime(e.at)}
+                    {e.actor ? ` · ${e.actor}` : ""}
+                  </span>
+                </li>
+              ))}
+              {!data.events && data.history.toReversed().map((t, i) => (
                 <li key={i} className="flex flex-col">
                   <span className="font-medium">
                     {t.from ? `${humanizeState(t.from)} → ` : ""}

@@ -14,6 +14,8 @@ interface Props {
   row: MatrixRow | null;
   opportunity: GrantOpportunity | undefined;
   workflowId?: string;
+  /** Hide dimension scores when the backend only returns ranking. */
+  summaryOnly?: boolean;
   now: Date;
   onClose: () => void;
 }
@@ -36,7 +38,7 @@ function evidenceOf(opp: GrantOpportunity): { label: string; evidence: Evidence;
   return items;
 }
 
-export function OpportunityDrawer({ row, opportunity, workflowId, now, onClose }: Props) {
+export function OpportunityDrawer({ row, opportunity, workflowId, summaryOnly, now, onClose }: Props) {
   const due = dueDate(opportunity);
   return (
     <Modal
@@ -64,13 +66,15 @@ export function OpportunityDrawer({ row, opportunity, workflowId, now, onClose }
             <p className="text-sm leading-relaxed text-ink">{row.explanation ?? "No explanation was generated for this row."}</p>
           </Section>
 
-          <Section title="Dimension scores">
-            <div className="flex flex-col gap-2">
-              {DIMENSIONS.map((d) => (
-                <ScoreBar key={d.key} label={d.label} value={row.scores[d.key] ?? 0} max={d.max} />
-              ))}
-            </div>
-          </Section>
+          {!summaryOnly && (
+            <Section title="Dimension scores">
+              <div className="flex flex-col gap-2">
+                {DIMENSIONS.map((d) => (
+                  <ScoreBar key={d.key} label={d.label} value={row.scores[d.key] ?? 0} max={d.max} />
+                ))}
+              </div>
+            </Section>
+          )}
 
           {opportunity && (
             <Section title="Funding">

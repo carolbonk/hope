@@ -42,7 +42,7 @@ export function RequestCard({ request, workflowTitle, hasWorkflow, now, onDecide
         request.workflow_id,
         request.gate,
         { decision: option.decision, artifact_hash: request.artifact_hash, comment: comment.trim() || null },
-        { stepUpToken },
+        { stepUpToken, requestId: request.request_id },
       );
       onDecided(`${option.label} recorded for ${request.gate} · ${workflowTitle ?? request.workflow_id}.`);
     } catch (err) {

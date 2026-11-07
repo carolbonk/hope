@@ -80,6 +80,11 @@ export function MatrixScreen() {
         <Loading label="Loading opportunities…" />
       ) : (
         <>
+          {data?.matrix.detail === "summary" && (
+            <p className="mb-3 rounded-xl border border-warn bg-base px-4 py-3 text-sm text-ink" role="note">
+              This backend returns ranking only. Dimension scores, eligibility and capacity fit appear once the matrix detail is available.
+            </p>
+          )}
           <p className="mb-3 text-sm text-ink-muted" aria-live="polite">
             Showing {rows.length} of {data?.matrix.rows.length ?? 0} opportunities
           </p>
@@ -114,9 +119,13 @@ export function MatrixScreen() {
                       <Td className="text-right text-xl font-bold tabular-nums text-accent-strong">{row.composite_score.toFixed(1)}</Td>
                       <Td>
                         <div className="flex flex-col gap-1">
-                          {DIMENSIONS.slice(0, 5).map((d) => (
-                            <ScoreBar key={d.key} compact label={d.short} value={row.scores[d.key] ?? 0} max={d.max} />
-                          ))}
+                          {data?.matrix.detail === "summary" ? (
+                            <span className="text-xs text-ink-muted">Not scored yet</span>
+                          ) : (
+                            DIMENSIONS.slice(0, 5).map((d) => (
+                              <ScoreBar key={d.key} compact label={d.short} value={row.scores[d.key] ?? 0} max={d.max} />
+                            ))
+                          )}
                         </div>
                       </Td>
                       <Td>
@@ -156,6 +165,7 @@ export function MatrixScreen() {
         row={selected}
         opportunity={selected ? data?.opportunities.get(selected.opportunity_id) : undefined}
         workflowId={selected ? data?.workflowByOpp.get(selected.opportunity_id) : undefined}
+        summaryOnly={data?.matrix.detail === "summary"}
         now={now}
         onClose={() => setSelected(null)}
       />

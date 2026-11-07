@@ -83,6 +83,10 @@ export function SectionShell({ section, title, description, dirty, buildPatch, s
                     View in Approval Inbox
                   </Link>
                 </>
+              ) : result.status === "accepted" ? (
+                <>
+                  Change <code>{result.proposal_id}</code> accepted. The profile steward applies it shortly; reload to see the new version.
+                </>
               ) : (
                 <>Saved. Profile is now version {result.profile.version}.</>
               )}

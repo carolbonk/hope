@@ -5,11 +5,29 @@ import { FixtureApi } from "./fixture";
 import { HttpApi } from "./http";
 import type { HopeApi } from "./types";
 
-export function createApi(env: { apiUrl?: string; tenantId?: string } = {}): HopeApi {
+interface ApiEnv {
+  apiUrl?: string;
+  tenantId?: string;
+  agencyId?: string;
+  userId?: string;
+  roles?: string;
+}
+
+/** HTTP client when the API URL, tenant and agency are configured; otherwise the offline fixtures. */
+export function createApi(env: ApiEnv = {}): HopeApi {
   const apiUrl = env.apiUrl ?? process.env.NEXT_PUBLIC_HOPE_API_URL;
   const tenantId = env.tenantId ?? process.env.NEXT_PUBLIC_HOPE_TENANT_ID;
-  if (apiUrl && tenantId) return new HttpApi({ baseUrl: apiUrl, tenantId });
-  return new FixtureApi();
+  const agencyId = env.agencyId ?? process.env.NEXT_PUBLIC_HOPE_AGENCY_ID;
+  if (!apiUrl || !tenantId || !agencyId) return new FixtureApi();
+  const roles = (env.roles ?? process.env.NEXT_PUBLIC_HOPE_ROLES ?? "").split(",").map((r) => r.trim()).filter(Boolean);
+  return new HttpApi({
+    baseUrl: apiUrl,
+    tenantId,
+    agencyId,
+    userId: env.userId ?? process.env.NEXT_PUBLIC_HOPE_USER_ID,
+    roles,
+    submissionChannel: process.env.NEXT_PUBLIC_HOPE_SUBMISSION_CHANNEL,
+  });
 }
 
 const ApiContext = createContext<HopeApi | null>(null);

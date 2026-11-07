@@ -12,10 +12,15 @@ export type MatrixRow = OpportunityMatrix["rows"][number];
 export interface MatrixQuery {
   cursor?: string;
   limit?: number;
+  state?: OpportunityState;
+  min_score?: number;
+  due_before?: string;
 }
 
 export interface MatrixPage extends OpportunityMatrix {
   next_cursor?: string | null;
+  /** "summary" when the backend returns ranking only (no dimension scores or eligibility yet). */
+  detail?: "full" | "summary";
 }
 
 export interface Session {
@@ -31,6 +36,10 @@ export type SignalBody = Pick<HitlDecision, "decision" | "artifact_hash" | "comm
 export interface SignalOptions {
   /** Step-up MFA assertion for HITL-2/3/5 (placeholder until the IdP flow exists). */
   stepUpToken?: string;
+  /** HITL request id; HITL-5 approvals authorize the package with it. */
+  requestId?: string;
+  /** Submission channel for HITL-5 authorization (e.g. "grants_gov"). */
+  channel?: string;
 }
 
 export interface SignalReceipt {
@@ -38,6 +47,7 @@ export interface SignalReceipt {
   gate: Gate;
   decision: HitlDecision["decision"];
   accepted_at: string;
+  tracking_id?: string;
 }
 
 export interface WorkflowTransition {
@@ -57,9 +67,17 @@ export interface WorkflowSummary {
   internal_deadline?: string | null;
 }
 
+export interface WorkflowEvent {
+  at: string;
+  label: string;
+  actor?: string | null;
+}
+
 export interface WorkflowView extends WorkflowSummary {
   history: WorkflowTransition[];
   open_gates: HitlRequest[];
+  /** Raw event log when the backend has no state-transition history. */
+  events?: WorkflowEvent[];
 }
 
 export interface VersionedProfile {
@@ -71,7 +89,8 @@ export type ProfilePatch = Partial<Omit<AgencyProfile, "agency_id" | "tenant_id"
 
 export type ProfilePatchResult =
   | ({ status: "applied" } & VersionedProfile)
-  | { status: "pending_approval"; proposal_id: string; gate: "HITL-0"; sections: string[] };
+  | { status: "pending_approval"; proposal_id: string; gate: "HITL-0"; sections: string[] }
+  | { status: "accepted"; proposal_id: string };
 
 export interface HopeApi {
   getSession(): Promise<Session>;
