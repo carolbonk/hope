@@ -103,9 +103,9 @@ becomes compact rows (fit, title, due), and each row has a "…" menu with Save 
 
 ## 5. Components
 
-- **Header:** `Tabs` (H0) with count badges, a mode toggle (a `Button` pair, active `neu-pressed`, `aria-pressed`), and a "Find more grants" `Button` linking to `/discover`.
-- **Filter bar:** `Card` (`neu-inset`) with an `Input` search, a `SelectField` for sort ("Best fit", "Deadline soonest", "Largest amount", "Newest") and a `Segmented` control for due.
-- **Card stack:** `GrantCard` (feature component) on `Card` `neu-raised`, with two offset "peek" cards behind it (decorative, `aria-hidden`). Swipe uses pointer events with a 96 px threshold; the card rotates up to 8° and tints ✕ red or ★ green while dragging.
+- **Header:** `Tabs` (H0) with count badges, a mode toggle (a `Button` pair, active `glass-active`, `aria-pressed`), and a "Find more grants" `Button` linking to `/discover`.
+- **Filter bar:** `Card` (`glass-inset`) with an `Input` search, a `SelectField` for sort ("Best fit", "Deadline soonest", "Largest amount", "Newest") and a `Segmented` control for due.
+- **Card stack:** `GrantCard` (feature component) on `Card` `glass-panel`, with two offset "peek" cards behind it (decorative, `aria-hidden`). Swipe uses pointer events with a 96 px threshold; the card rotates up to 8° and tints ✕ red or ★ green while dragging.
 - **Action bar:** three `Button`s (Pass `danger`, Undo `neutral`, Save `primary`).
 - **Citations:** `CitationChip` + `CitationPopover` (H0).
 - **List mode:** `Table` with row actions.

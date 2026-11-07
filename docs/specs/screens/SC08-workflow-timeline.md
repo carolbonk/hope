@@ -122,8 +122,8 @@ HITL-5 "authorize submission".
 
 ## 5. Components
 
-- Header: `PageHeader` (title, description, actions = step `Badge`), back `Link` styled `neu-raised-sm`.
-- Next step: `Card` (`neu-raised`) with a 4 px left accent border; `Button` (`primary`) as a `Link`.
+- Header: `PageHeader` (title, description, actions = step `Badge`), back `Link` styled `glass-panel-sm`.
+- Next step: `Card` (`glass-panel`) with a 4 px left accent border; `Button` (`primary`) as a `Link`.
 - Stepper: existing `Timeline` component (`features/workflow/Timeline.tsx`), extended with an inline
   decision label and rollback rows.
 - Deadline and Artifacts: `Card` with a definition list (`<dl>`); milestones in `<details>` inside a `Well`.

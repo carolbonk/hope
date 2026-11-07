@@ -88,7 +88,7 @@ All from `GET /v1/approvals/{request_id}` (M3).
 
 ## 5. Components
 
-- Header, preview, decision: `Card` (`neu-raised`); history: `Card` (`neu-inset`).
+- Header, preview, decision: `Card` (`glass-panel`); history: `Card` (`glass-inset`).
 - Totals: `Table` (caption "Budget totals"); `ScoreBar`; `GateBadge`, `UrgencyBadge`, `RecommendationBadge`, `Badge`.
 - Decision: feature-local `DecisionPanel.tsx` (comment `TextArea`, option `Button`s, binding line) and today's `StepUpDialog.tsx` (moved/renamed only inside the feature).
 - Mobile sheet: M0 `Drawer` (bottom variant). Success: M0 `Toast` on SC05.

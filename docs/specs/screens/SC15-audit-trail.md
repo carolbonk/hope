@@ -130,7 +130,7 @@ Mobile (<= 640 px):
 
 - Header: `PageHeader` with the integrity `Badge` (`good`/`check`, `bad`/`x`, or `neutral`/`clock` while checking) and a `ghost` "Verify" `Button`.
 - Export: `Button` (neutral) opening an export `Modal`.
-- Filter bar: `Card` (`neu-inset`) with `SelectField` (record type), `TextField` (record id, person id), `SelectField` (action group: All, Approvals `hitl.*`, Submissions `submission.*` + `application.*`, Team `user.*`, Documents `artifact.*`, Exports `audit.*`), and two date `TextField`s (`type="date"`).
+- Filter bar: `Card` (`glass-inset`) with `SelectField` (record type), `TextField` (record id, person id), `SelectField` (action group: All, Approvals `hitl.*`, Submissions `submission.*` + `application.*`, Team `user.*`, Documents `artifact.*`, Exports `audit.*`), and two date `TextField`s (`type="date"`).
 - Timeline: `Table` (caption "Audit entries") with day dividers as full-width `Tr` rows (`role="rowgroup"` heading).
 - Detail: `Modal` `variant="drawer"` (until the shared `Drawer` primitive from SC03 lands).
 - Copy buttons: new small `CopyButton` primitive -> **Shared contract addition** (`components/ui/CopyButton.tsx`); until it exists, a local `ghost` `Button` calling `navigator.clipboard.writeText`.

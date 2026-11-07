@@ -112,8 +112,8 @@ is building the package…", AwaitingSubmissionAuth (gate decided, waiting for M
 ## 5. Components
 
 - Page header: `PageHeader` with a refresh `Button` (`neutral`, icon only, `aria-label="Refresh"`).
-- Summary strip: `Card` (`neu-raised`) with count `Button`s styled as links.
-- Filter: `Segmented` (`components/ui/Field.tsx`), active segment `neu-pressed`.
+- Summary strip: `Card` (`glass-panel`) with count `Button`s styled as links.
+- Filter: `Segmented` (`components/ui/Field.tsx`), active segment `glass-active`.
 - Table: `Table`, `Th`, `Tr`, `Td`; the title cell holds the only row link; `[Review →]` is a `Button`
   rendered as a `Link`.
 - Badges: `GateBadge` (`features/status.tsx`) in the Waiting-on cell, `UrgencyBadge` for countdowns,
@@ -178,7 +178,7 @@ Client: `apps/web/src/api/workflow/` exports `listWorkflows({status})`, `getWork
 - The summary counts and "Updated …" are in an `aria-live="polite"` region; polling updates don't move focus.
 - The segmented control is a `radiogroup` with `aria-checked`.
 - Busy spinners respect `prefers-reduced-motion` (static icon).
-- Borders at 3:1 contrast in addition to neumorphic shadows.
+- Borders at 3:1 contrast in addition to liquid-glass shadows.
 
 ## 11. Fixture data
 

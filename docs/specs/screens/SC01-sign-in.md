@@ -17,13 +17,13 @@ trying to reach. The screen also explains why sign-in failed (not invited, deact
 
 The app shell header is hidden on this route (`nav.ts` marks `/login` as `public`, A8).
 
-1. Centred `Card` (`neu-raised`, max width 28rem) containing:
-   - Hope logo mark (the `neu-inset` "H" from `AppShell`) and heading "Sign in to Hope".
+1. Centred `Card` (`glass-panel`, max width 28rem) containing:
+   - Hope logo mark (the `glass-inset` "H" from `AppShell`) and heading "Sign in to Hope".
    - The organization name if known (`NEXT_PUBLIC_HOPE_ORG_NAME`, optional), else no subtitle.
    - Primary `Button` "Continue with {NEXT_PUBLIC_HOPE_OIDC_PROVIDER_NAME}" (default label "Continue with your organization account").
    - A notice region (`ErrorNotice`, or `SuccessNotice` after sign-out) below the button.
    - Small print: "Hope is free for nonprofits. Trouble signing in? Ask your Hope administrator."
-2. In dev mode (`NEXT_PUBLIC_HOPE_AUTH_MODE=dev`) the button is replaced by a `Well` (`neu-inset`)
+2. In dev mode (`NEXT_PUBLIC_HOPE_AUTH_MODE=dev`) the button is replaced by a `Well` (`glass-inset`)
    that reads "Development mode: you are signed in as {NEXT_PUBLIC_HOPE_USER_ID}", with a
    "Continue" button.
 

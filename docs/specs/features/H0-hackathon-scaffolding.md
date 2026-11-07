@@ -196,6 +196,9 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
     `/grants/[grantId]`, `/grants/[grantId]/brief` and `/grants/[grantId]/proposal`;
   - empty `features/<f>/` and `api/<f>/` folders for `session`, `onboarding`, `profile`, `discover`,
     `grants`, `brief` and `proposal`;
+  - restyle all of `components/ui` to the liquid-glass system (README "Design system"): replace the
+    neumorphic CSS in `globals.css` with the `glass-*` tokens, including the reduced-transparency
+    and no-`backdrop-filter` fallbacks;
   - shared primitives in `components/ui`: `Drawer`, `Toast`, `Tabs`, `Progress`, `MarkdownView`
     (react-markdown), and `CitationChip` plus `CitationPopover`. A citation chip shows `[c1]`; the
     popover shows the quote, the page title, the domain and an "Open source" link, or the profile field
@@ -232,6 +235,7 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 - [ ] AC6 `start_job` runs inline in tests, reports progress and stores the result; restarted jobs are marked failed.
 - [ ] AC7 All routers are mounted and each has its own snapshot; existing tests still pass.
 - [ ] AC8 Web: unauthenticated users are sent to `/login`; users who haven't onboarded go to `/onboarding`; the nav and all placeholders render; the citation chip and popover render both web and profile citations.
+- [ ] AC10 Every primitive renders with `glass-*` classes; under `prefers-reduced-transparency` panels are solid; axe finds no contrast violations on the shell over the backdrop.
 - [ ] AC9 `make demo` on a clean checkout works twice in a row, with no key, and `demo@hope.org` can sign in.
 
 ## Test plan
@@ -247,6 +251,7 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 | AC7 | `services/pillar/tests/test_openapi.py::test_router_snapshots` + full suite |
 | AC8 | `apps/web/src/components/RequireSession.test.tsx`, `nav.test.ts`, `components/ui/Citation.test.tsx` |
 | AC9 | manual, recorded in the PR |
+| AC10 | `components/ui/glass.test.tsx` + `AppShell.a11y.test.tsx` (vitest-axe) |
 
 ## Out of scope
 

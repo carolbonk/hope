@@ -161,13 +161,13 @@ Mobile (<= 640 px):
 ## 5. Components
 
 - **Page header:** `PageHeader` with `Button` actions (secondary).
-- **Health strip:** three `Card` (`neu-raised`).
+- **Health strip:** three `Card` (`glass-panel`).
   - The completeness ring is a local `ProgressRing` (SVG, with a text label inside).
   - The alerts list uses `Badge` + text.
   - The SAM card uses `Badge`, a `Button` with an icon for refresh, and a `Button` primary for
     "Propose update from SAM.gov".
-- **Pending banner:** `Card` (`neu-inset`) with an amber `Badge` "lock" icon and a link `Button`.
-- **Sections:** today's `SectionShell` (`Card` `neu-raised`, form, Reset/Save) with
+- **Pending banner:** `Card` (`glass-inset`) with an amber `Badge` "lock" icon and a link `Button`.
+- **Sections:** today's `SectionShell` (`Card` `glass-panel`, form, Reset/Save) with
   `TextField`, `TextArea`, `SelectField` and `Segmented`. Tag inputs (focus areas, NTEE, DBA)
   are a local `TagInput` built from `TextField` + `Badge` chips.
 - **Approval hierarchy:** `Table`/`Th`/`Td`/`Tr`; the rule editor opens in a `Modal`.
@@ -263,7 +263,7 @@ Mobile (<= 640 px):
 | No UEI | The SAM card: "Add your UEI to check your SAM.gov registration." with "Go to Legal" |
 | SAM stale | Amber line: "Showing the last check from {relative time}. SAM.gov didn't respond." |
 | Documents empty | "No documents yet. Upload your latest Form 990, audit or indirect rate agreement and Hope will suggest updates for you to approve." |
-| As-of view | A banner (`neu-inset`): "Viewing the profile as it was on {date} (version {n}). Changes are turned off." with "Back to current" |
+| As-of view | A banner (`glass-inset`): "Viewing the profile as it was on {date} (version {n}). Changes are turned off." with "Back to current" |
 | Version conflict | In the section: "Someone else updated the profile since you opened it." with "Reload and keep my edits" |
 | Permission (view-only role) | Every section shows "View only" instead of Save; the Upload and Propose buttons are hidden; one line under the header: "You can view the profile. Ask an administrator or development director to make changes." |
 | Offline | A top banner: "You're offline. Changes can't be saved until you reconnect." Save is disabled |

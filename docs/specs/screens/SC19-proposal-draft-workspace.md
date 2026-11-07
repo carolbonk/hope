@@ -124,16 +124,16 @@ Mobile (<= 640 px):
 ## 5. Components
 
 - **Page header:** `PageHeader` with secondary `Button`s ("Preview full draft", "Budget →").
-- **Status bar:** `Card` (`neu-raised`) with `Badge`s.
+- **Status bar:** `Card` (`glass-panel`) with `Badge`s.
   - "Redraft all" is a primary `Button` with an icon (it reads "Draft with AI" when nothing
     is drafted yet).
-  - The run popover is a local `Popover` built from `Card` (`neu-raised`) with focus
+  - The run popover is a local `Popover` built from `Card` (`glass-panel`) with focus
     management. A shared `Popover` primitive comes later (see Open questions).
-- **Section rail:** a `nav` list of `Button`s (`neu-pressed` when selected) with `Badge`
+- **Section rail:** a `nav` list of `Button`s (`glass-active` when selected) with `Badge`
   status icons.
-- **Requirement card:** `Card` (`neu-inset`).
+- **Requirement card:** `Card` (`glass-inset`).
 - **Edit/Preview toggle:** `Segmented`.
-- **Editor:** `TextArea` (`neu-inset`, monospace, auto-grows to 70 vh, then scrolls).
+- **Editor:** `TextArea` (`glass-inset`, monospace, auto-grows to 70 vh, then scrolls).
 - **Preview:** the `MarkdownView` primitive requested from M0, or a local fallback with
   `react-markdown` and `skipHtml`. Placeholder spans and finding `<mark>`s are injected after
   rendering by matching text nodes.
@@ -230,7 +230,7 @@ Mobile (<= 640 px):
 | Failed: `timeout` | Notice (red): "The draft took too long and was stopped. Try again, or redraft one section at a time." |
 | Failed: `internal` | Notice (red): "Something went wrong while drafting. Your existing text is unchanged." |
 | Ready | Status bar: "✓ Ready for executive review" (green, check icon). In `AwaitingExecApproval`: "Waiting for executive approval. Editing now will require a new approval." |
-| Locked | Banner (`neu-inset`): "This draft is locked because the application is being packaged ({state}). View only." |
+| Locked | Banner (`glass-inset`): "This draft is locked because the application is being packaged ({state}). View only." |
 | View-only role | Under the header: "You can read this draft. Program and development directors can edit it." No Draft, Redraft, Save or Budget-figure controls |
 | Stale artifact | The modal described in Interactions 4 |
 | Error loading (network / 5xx) | `ErrorNotice` "We couldn't load the draft." with "Try again". The last loaded data stays visible if there is any |

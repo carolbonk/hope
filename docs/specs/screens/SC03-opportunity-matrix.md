@@ -116,8 +116,8 @@ action bar.
 
 ## 5. Components
 
-- Summary strip: `Card` (`neu-raised`), with `Badge`-style count links.
-- Filter bar: `Card` (`neu-inset`) with `Input` (search), segmented control (`Button` group, active = `neu-pressed`), `Select`.
+- Summary strip: `Card` (`glass-panel`), with `Badge`-style count links.
+- Filter bar: `Card` (`glass-inset`) with `Input` (search), segmented control (`Button` group, active = `glass-active`), `Select`.
 - Table: `Table` primitive, sticky header, row hover = slight raise; the whole row is clickable and opens the drawer (as well as the `[…]` button).
 - Score bars: existing `ScoreBar` (compact variant in the table, full variant in the drawer).
 - Drawer: **new shared primitive `Drawer`** (side sheet on desktop, full-screen sheet on mobile, focus trap, Esc closes). Request it under the wave's contracts spec. Until then, use `Modal`.
@@ -187,7 +187,7 @@ action bar.
 - Recommendation, eligibility, capacity and deadline urgency each use an icon and text, never colour alone.
 - The drawer is `role="dialog"` with `aria-labelledby` set to the title; focus moves into it on open and returns to the row on close.
 - Result counts and "Re-scoring…" are announced via an `aria-live="polite"` region.
-- Neumorphic shadows aren't the only boundary cue: every card and input also has a 1 px border with at least 3:1 contrast.
+- Liquid-glass shadows aren't the only boundary cue: every card and input also has a 1 px border with at least 3:1 contrast.
 - With `prefers-reduced-motion`, the drawer appears without sliding and spinners become static icons.
 
 ## 11. Fixture data

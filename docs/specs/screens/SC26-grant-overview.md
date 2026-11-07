@@ -89,10 +89,10 @@ sources). The Next steps panel becomes a sticky bottom bar with the primary CTA,
 ## 5. Components
 
 - Page header: a text "Back" link, an H1, `Badge`s, and a `Button` variant "link" for View original.
-- Key facts: `Card` (`neu-raised`) with a definition list (`dl`).
+- Key facts: `Card` (`glass-panel`) with a definition list (`dl`).
 - Reasons, concerns and summary: lists with `CitationChip` + `CitationPopover` (H0).
-- Sources: a list. Each item is a `Card` `neu-inset` row. Web sources have an external link; profile sources link to `/profile`.
-- Next steps: `Card` (`neu-raised`) with two numbered step rows, each with a status `Badge` and a primary or secondary `Button`. Save/Pass/Reset `Button`s sit below.
+- Sources: a list. Each item is a `Card` `glass-inset` row. Web sources have an external link; profile sources link to `/profile`.
+- Next steps: `Card` (`glass-panel`) with two numbered step rows, each with a status `Badge` and a primary or secondary `Button`. Save/Pass/Reset `Button`s sit below.
 - `Toast` for action results, and `Drawer` for the mobile steps sheet.
 
 ## 6. Interactions

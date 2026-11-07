@@ -44,7 +44,7 @@ Desktop (>= 1024 px):
 │ Decisions waiting on your role, most urgent first. Each decision is bound to the exact   │
 │ version you review.                                                                       │
 ├──────────────────────────────────────────────────────────────────────────────────────────┤
-│ Acting as: Finance Director (change in your user menu)                                    │  <- role hint (Well, neu-inset)
+│ Acting as: Finance Director (change in your user menu)                                    │  <- role hint (Well, glass-inset)
 │ [✓ Assigned to me]  Status: (Open|Decided)                                                │  <- filter bar (Card inset)
 │ Gates: [Go/No-Go 1] [Budget 1] [Executive 1] [Submission 1]                [Clear filters]│
 ├──────────────────────────────────────────────────────────────────────────────────────────┤
@@ -96,8 +96,8 @@ All from `GET /v1/approvals` (M3) unless noted.
 
 ## 5. Components
 
-- `PageHeader` with `Badge`s; role hint in `Well` (`neu-inset`).
-- Filter bar `Card` (`neu-inset`): "Assigned to me" toggle `Button` (`aria-pressed`, `neu-pressed` when on); `Segmented` Open/Decided; gate chips as toggle buttons in a `fieldset`.
+- `PageHeader` with `Badge`s; role hint in `Well` (`glass-inset`).
+- Filter bar `Card` (`glass-inset`): "Assigned to me" toggle `Button` (`aria-pressed`, `glass-active` when on); `Segmented` Open/Decided; gate chips as toggle buttons in a `fieldset`.
 - `Table` (caption "Approval requests"); mobile `Card` list.
 - `GateBadge`, `UrgencyBadge`, `roleLabel` from today's `features/status.tsx` (unchanged).
 - `Loading`, `EmptyState`, `ErrorNotice`, `SuccessNotice`; `Toast` (M0) for the "Decision recorded" message.

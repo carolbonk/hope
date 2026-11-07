@@ -165,16 +165,16 @@ All data comes from `GET /v1/frameworks/{framework_id}/budget` (`BudgetView`) un
 
 - Header: `PageHeader`, with `Button` (neutral) "Recompute" and "Edit lines".
 - Status and check chips: `Badge` (tones good, info, warn, bad, neutral), each with an `Icon` and text.
-- Limits strip: `Card` (`neu-raised`). The request uses the large numeric style; the chips sit in a wrapping row.
-- Solver callout and banners: `Card` (`neu-inset`) with an info or warn icon. Errors use `ErrorNotice`.
+- Limits strip: `Card` (`glass-panel`). The request uses the large numeric style; the chips sit in a wrapping row.
+- Solver callout and banners: `Card` (`glass-inset`) with an info or warn icon. Errors use `ErrorNotice`.
 - Line items: `Table` / `Th` / `Td` / `Tr`, with category rows as `<tr>` headers
   (`scope="rowgroup"`) and nested fringe rows indented 24 px.
 - Edit controls: `TextField` (quantity, effort), `SelectField` (funding source, category,
   cost basis), `TextArea` (justification, comment). The lock toggle and the "Fit" checkbox
-  are `Button`s with `neu-pressed` when on (`aria-pressed`).
+  are `Button`s with `glass-active` when on (`aria-pressed`).
 - Add line: `Modal` with a search `TextField` and a list.
 - Source details: the shared `Drawer` from M0 (side sheet; full screen on mobile).
-- Decision bar: sticky `Card` (`neu-raised`), `TextArea`, `Button` neutral "Request
+- Decision bar: sticky `Card` (`glass-panel`), `TextArea`, `Button` neutral "Request
   changes", `Button` primary "Approve and lock". Step-up uses `StepUpDialog` (see M5
   Requests to M0, item 8).
 - Toasts: M0's `Toast`.
@@ -312,7 +312,7 @@ The web client is `apps/web/src/api/budget/`:
   Amounts have `aria-label`s with the full value ("65,000 dollars").
 - **Not colour alone.** Every check chip, status, unallowable and rate-changed marker has an
   icon and text.
-- **Contrast.** Red and green are AA on the neumorphic surface. Cards and inputs have a
+- **Contrast.** Red and green are AA on the liquid-glass surface. Cards and inputs have a
   1 px border at 3:1 or more.
 - **Tab order:** back link → title links → Recompute → Edit → limits chips (each focusable,
   with its tooltip shown on focus) → solver callout → table rows and source buttons →

@@ -101,8 +101,8 @@ All data comes from `GET /v1/dashboard` unless noted.
 ## 5. Components
 
 - Header: `PageHeader`, with a refresh `Button` (ghost, `aria-label="Refresh dashboard"`).
-- Pipeline strip: 7 tiles, each an `<a>` styled as `Card` (`neu-raised`, `neu-pressed` on press), with the count, label and an optional "!" `Badge` (tone warn).
-- Lists: `Card` (`neu-raised`) with a heading and "View all" link, holding a `<ul>` of rows. Each row is one link (the whole row is clickable) with a visible "Open ›" affordance.
+- Pipeline strip: 7 tiles, each an `<a>` styled as `Card` (`glass-panel`, `glass-active` on press), with the count, label and an optional "!" `Badge` (tone warn).
+- Lists: `Card` (`glass-panel`) with a heading and "View all" link, holding a `<ul>` of rows. Each row is one link (the whole row is clickable) with a visible "Open ›" affordance.
 - Badges: `RecommendationBadge` (`features/status.tsx`), `GateBadge`, `UrgencyBadge`.
 - States: `Loading`, `EmptyState`, `ErrorNotice` from `States.tsx`.
 - No new shared primitives.

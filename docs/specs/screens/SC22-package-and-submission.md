@@ -139,13 +139,13 @@ Mobile (<= 640 px):
 ## 5. Components
 
 - Header: `PageHeader` with a back link to `/workflows/{workflow_id}` when `workflow_id` is set, otherwise to `/`.
-- Stepper: a new feature-local `PackageStepper` on a `Card` (`neu-raised`), as an `<ol>` with an icon and label per step.
-- Next-step card: `Card` (`neu-raised`, 2 px accent border) with `TextArea` and `Button` (primary).
+- Stepper: a new feature-local `PackageStepper` on a `Card` (`glass-panel`), as an `<ol>` with an icon and label per step.
+- Next-step card: `Card` (`glass-panel`, 2 px accent border) with `TextArea` and `Button` (primary).
 - Step-up dialog: `Modal` with a 6-digit `TextField` (demo: any 6 digits). This is a copy of the approvals `StepUpDialog` until M0 moves it into `components/ui` (M7, Requests to M0, 6).
 - Mark-submitted dialog: `Modal` with `TextField`, `SelectField`, a date and a time `TextField`, and `TextArea`.
-- File list: `Card` (`neu-inset`) with a list of rows. Each row has a `Button` (ghost) "Preview".
+- File list: `Card` (`glass-inset`) with a list of rows. Each row has a `Button` (ghost) "Preview".
 - Preview: the `Drawer` (M0, `components/ui`) holding an `<iframe title="{file title}">`, plus "Open in new tab".
-- Amounts and details: `Card` (`neu-inset`), with `<details>` for the technical details.
+- Amounts and details: `Card` (`glass-inset`), with `<details>` for the technical details.
 - Notices: `Toast` (M0) for success; `ErrorNotice` / `SuccessNotice` / `Loading` / `EmptyState` from `States.tsx`.
 - Badges: `Badge` with tone and icon for the status labels.
 

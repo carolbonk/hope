@@ -143,7 +143,7 @@ List page `/opportunities` (desktop):
 ## 5. Components
 
 - Header: `PageHeader` (title, description = funder and source lines, actions = recommendation `Badge` + `Button`).
-- Key facts: `Card` (`neu-raised`) with five `Well` (`neu-inset`) cells.
+- Key facts: `Card` (`glass-panel`) with five `Well` (`glass-inset`) cells.
 - Sections: one `Card` each; requirements uses `Table` (caption "Application sections").
 - Clause and quality badges: `Badge` with icon.
 - Documents and source: `Card` in a sticky right column on desktop.
@@ -223,7 +223,7 @@ List page `/opportunities` (desktop):
 - Evidence links have names like "Open page 5 of ojjdp-2026-172743.pdf, evidence for: Applicants must…".
 - External links include visually hidden "(opens in a new tab)".
 - The Pursue modal traps focus and returns it to the Pursue button; toasts use `role="status"`.
-- Every card has a 1 px border with at least 3:1 contrast in addition to the neumorphic shadow.
+- Every card has a 1 px border with at least 3:1 contrast in addition to the liquid-glass shadow.
 - `prefers-reduced-motion`: the deep-link outline appears without animation and scrolling is instant.
 
 ## 11. Fixture data

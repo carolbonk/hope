@@ -46,14 +46,14 @@ Mobile (<= 640 px): top bar with the logo and avatar; nav as a bottom tab bar (G
 | Element | Source | Format | Rules |
 |---|---|---|---|
 | Logo | static | "Hope" wordmark | Links to `/grants` |
-| Nav items | `nav.ts` | icon + label | Active item uses `neu-pressed` and `aria-current="page"` |
+| Nav items | `nav.ts` | icon + label | Active item uses `glass-active` and `aria-current="page"` |
 | Grants count badge | `GET /v1/grants?status=new&limit=0` -> `total` | "3" | Hidden at 0; caps at "99+" |
 | User name + initials | `GET /v1/me` -> `display_name` | "Dana Smith", avatar "DS" | Truncated at 24 characters |
 | Organization name | `GET /v1/agencies/{agency_id}/profile` -> `legal.legal_name` | secondary text | Hidden until onboarding is done |
 
 ## 5. Components
 
-The sidebar is a `Card` (`neu-raised`); nav items are `Button` variant `nav`; the user menu is a
+The sidebar is a `Card` (`glass-panel`); nav items are `Button` variant `nav`; the user menu is a
 `Drawer` on mobile and a popover menu on desktop; signing out shows a `Toast`.
 
 ## 6. Interactions

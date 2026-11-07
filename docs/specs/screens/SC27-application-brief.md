@@ -131,11 +131,11 @@ CTA bar is sticky at the bottom, full width. Regenerate and Print move into a "â
 ## 5. Components
 
 - Header: `PageHeader` with actions: `Button` neutral "Regenerate" (icon â†»), `Button` neutral "Print", `Button` primary "Draft proposal" (as a `Link`).
-- Glance strip: `Card` (`neu-raised`) with three cells, each `Badge`-style icon + text.
-- Section nav: anchor links in a `Well` (`neu-inset`); on mobile, horizontally scrolling chips.
+- Glance strip: `Card` (`glass-panel`) with three cells, each `Badge`-style icon + text.
+- Section nav: anchor links in a `Well` (`glass-inset`); on mobile, horizontally scrolling chips.
 - Sections: one `Card` per section with an `h2`; lists are `<ol>`/`<ul>`.
 - Citations: `CitationChip` + `CitationPopover` (H0).
-- Documents: native `<input type="checkbox">` styled `neu-inset` (checked `neu-pressed`), plus `Progress`.
+- Documents: native `<input type="checkbox">` styled `glass-inset` (checked `glass-active`), plus `Progress`.
 - Sources: `Card` sticky on desktop (top 1.5 rem); `Drawer` on mobile.
 - Generation: `Progress` (H0) inside a `Card`; `Toast` for checklist errors and "Brief updated".
 - Regenerate confirmation: `Modal`.
@@ -223,7 +223,7 @@ CTA bar is sticky at the bottom, full width. Regenerate and Print move into a "â
 - Progress: `role="progressbar"` with `aria-valuenow`, and the `current` text in a polite live region (announced at most every 5 s).
 - External links say "(opens in a new tab)" to screen readers.
 - `prefers-reduced-motion`: no progress animation; static spinner icons.
-- Contrast AA; 1 px borders on cards besides the neumorphic shadows.
+- Contrast AA; 1 px borders on cards besides the liquid-glass shadows.
 
 ## 11. Fixture data
 

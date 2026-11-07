@@ -18,7 +18,7 @@ shows which gate roles nobody holds.
 
 1. `PageHeader` "Team and roles", description "Invite people and choose what they can approve.",
    actions: primary `Button` "Invite person".
-2. **Coverage strip:** `Card` (`neu-raised`) listing each gate role with the gates it unlocks:
+2. **Coverage strip:** `Card` (`glass-panel`) listing each gate role with the gates it unlocks:
    `development_director` (HITL-1, eligibility review), `finance_director` (HITL-2, HITL-0),
    `compliance_officer` (HITL-3), `executive_director` (HITL-4), `aor` (HITL-5), `org_admin` (HITL-0).
    Each role shows a `Badge`: `good`/`check` "{n} people", or `warn`/`alert` "Nobody". Gate names come

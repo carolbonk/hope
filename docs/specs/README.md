@@ -35,11 +35,30 @@ one PR that touches only the paths the spec owns.
    `uv lock` / `pnpm install`.
 7. **Every acceptance criterion maps to a test** named in the spec's test plan. All CI commands
    in `AGENTS.md` must pass. Tests run offline with mocks (no API keys).
-8. **Screens follow the design system.** Use the neumorphic primitives in
-   `apps/web/src/components/ui` (`neu-raised`, `neu-inset`, `neu-pressed`), with WCAG AA
+8. **Screens follow the design system.** Use the liquid-glass primitives in
+   `apps/web/src/components/ui` (`glass-panel`, `glass-inset`, `glass-active`), with WCAG AA
    contrast, visible focus rings, status shown by icon or text and not only by colour, and
    `prefers-reduced-motion` support.
 9. **Done means:** the PR is merged, CI is green, and the spec's status row is set to `Done` in the same PR.
+
+## Design system: liquid glass
+
+Every screen uses the liquid-glass primitives in `apps/web/src/components/ui` (H0 restyles them):
+
+| Token / class | Use | Look |
+|---|---|---|
+| `glass-backdrop` | app background | soft, slowly shifting colour gradient (static under reduced motion) |
+| `glass-chrome` | sidebar, top bar, tab bar | the strongest blur (`backdrop-filter: blur(24px) saturate(180%)`), 72% white tint |
+| `glass-panel` | cards, sections | `blur(16px) saturate(160%)`, 60% tint, 1 px inner highlight on the top edge, soft drop shadow, 20 px radius |
+| `glass-inset` | inputs, wells, search | 40% tint with an inner shadow; the focus ring is a 2 px accent glow plus an outline |
+| `glass-active` | selected nav item, active segment, pressed button | brighter tint, an accent edge, and slight scale-down when pressed |
+| `glass-overlay` | drawers, modals, popovers | strongest tint (80%), a dimmed backdrop behind |
+
+Rules:
+- **Readable first.** Body text sits only on `glass-panel` or stronger, and contrast is checked against the worst-case background (WCAG AA 4.5:1). Never put text directly on `glass-backdrop`.
+- **Fallbacks.** `@media (prefers-reduced-transparency: reduce)` and browsers without `backdrop-filter` get solid panels with the same layout. `prefers-reduced-motion` stops the background motion and the highlight shimmer.
+- **Status is never shown by colour alone.** Use an icon and text, and give every boundary a 1 px border at 3:1 or better.
+- Dark mode is optional for the hackathon (tokens only; not tested).
 
 ## Product decisions that apply to every spec
 

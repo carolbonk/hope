@@ -166,17 +166,17 @@ Mobile (<= 640 px):
 ## 5. Components
 
 - Page header: `PageHeader`. The status uses `Badge` (tone by status: open = warn, resolving = info, resolved = good, discarded or superseded = neutral).
-- Status tabs: `Segmented` (active = `neu-pressed`).
-- Filter bar: `Card` (`neu-inset`) with `TextField` (search, debounced 300 ms) and `SelectField` × 3.
+- Status tabs: `Segmented` (active = `glass-active`).
+- Filter bar: `Card` (`glass-inset`) with `TextField` (search, debounced 300 ms) and `SelectField` × 3.
 - Queue table: `Table` / `Th` / `Tr` / `Td`, with the caption "Documents needing a parse review". The whole row is a link (`<a>` in the title cell, and the row is clickable).
-- Field cards: `Card` (`neu-raised`), one per blocking issue, as a `<fieldset>` with a `<legend>`. Candidates are radio inputs styled as `Well` options (`neu-inset`, `neu-pressed` when checked).
+- Field cards: `Card` (`glass-panel`), one per blocking issue, as a `<fieldset>` with a `<legend>`. Candidates are radio inputs styled as `Well` options (`glass-inset`, `glass-active` when checked).
 - Inputs: `TextField`, `SelectField`, `Segmented`. Errors use each field's `error` prop.
-- Side panel: `Card` (`neu-inset`). On mobile it's an accordion (`<details>`).
+- Side panel: `Card` (`glass-inset`). On mobile it's an accordion (`<details>`).
 - Action bar: sticky `Card` with `Button` (primary "Resolve and score", neutral "Discard…").
 - Discard confirmation: `Modal` (dialog) containing `SelectField` (reason) and `TextArea` (note).
 - Notices: `SuccessNotice`, `ErrorNotice`, `EmptyState` and `Loading` from `components/ui/States.tsx`.
 - New shared primitives, requested under Shared contract additions in S10 / C2:
-  - `RadioCard` (a radio rendered as a neumorphic option card)
+  - `RadioCard` (a radio rendered as a liquid-glass option card)
   - `Toast` (also needed by SC03)
 
   Until they exist, use a styled `<label>` + `<input type=radio>` inside the feature, and `SuccessNotice`.
@@ -324,7 +324,7 @@ which S03 owns. Its expected response is `{url, expires_at}`; see the catalog ch
 - The discard modal traps focus, starts on the Reason select, and returns focus to
   "Discard…" on close.
 - Every card and input has a 1 px border with at least 3:1 contrast in addition to the
-  neumorphic shadow.
+  liquid-glass shadow.
 - With `prefers-reduced-motion`: no skeleton shimmer, no smooth scroll to `?field=`, and
   the spinner becomes a static icon.
 
