@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* Neumorphic design tokens. Shadows, colours and focus ring are defined once here. */
+@theme {
+  --color-base: #e6ebf2;
+  --color-base-dark: #c4cad3;
+  --color-base-light: #ffffff;
+  --color-ink: #1c2330;
+  --color-ink-muted: #48505e;
+  --color-accent: #2f4fc7;
+  --color-accent-strong: #233c9e;
+  --color-focus: #1d4ed8;
+
+  --color-good: #166534;
+  --color-info: #1e40af;
+  --color-warn: #8a4b00;
+  --color-bad: #a31919;
+  --color-neutral: #3f4756;
+
+  --shadow-neu-raised: 6px 6px 14px var(--color-base-dark), -6px -6px 14px var(--color-base-light);
+  --shadow-neu-raised-sm: 3px 3px 7px var(--color-base-dark), -3px -3px 7px var(--color-base-light);
+  --shadow-neu-inset: inset 4px 4px 8px var(--color-base-dark), inset -4px -4px 8px var(--color-base-light);
+  --shadow-neu-pressed: inset 2px 2px 5px var(--color-base-dark), inset -2px -2px 5px var(--color-base-light);
+
+  --radius-neu: 1.25rem;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@utility neu-raised {
+  background-color: var(--color-base);
+  box-shadow: var(--shadow-neu-raised);
+}
+@utility neu-raised-sm {
+  background-color: var(--color-base);
+  box-shadow: var(--shadow-neu-raised-sm);
+}
+@utility neu-inset {
+  background-color: var(--color-base);
+  box-shadow: var(--shadow-neu-inset);
+}
+@utility neu-pressed {
+  background-color: var(--color-base);
+  box-shadow: var(--shadow-neu-pressed);
+}
+@utility neu-focus {
+  &:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--color-base);
+    color: var(--color-ink);
+  }
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
