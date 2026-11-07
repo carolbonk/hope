@@ -1,5 +1,7 @@
 # Screens
 
+> **Hackathon agents (H0-H5): this map is the long-term ("Later") product, not your build target.** Use the H0-H5 table in [`README.md`](README.md), your feature spec, [`contracts/`](../../contracts/) and `apps/web/docs/hope/file-ownership.md`. The hackathon web app lives under `/hope/*` and `/onboarding`, with no `src/`.
+
 Every screen in the web app (`apps/web`), the spec that builds it, and the endpoints it calls.
 Each screen has its own spec in `screens/` with layout, states, interactions and an exact
 request/response per call. The endpoints are defined in [`API.md`](API.md).
