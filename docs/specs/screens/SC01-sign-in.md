@@ -6,7 +6,7 @@
 | Feature folder | `apps/web/src/features/session/` |
 | Built by | [H1](../features/H1-sign-in-and-profile.md) (uses H0's `api/session`) |
 | Primary users | Nonprofit staff, once per 14 days (cookie lifetime); the presenter at the start of the demo |
-| Can act | Anyone can open it (public route). Sign-up needs an allowed email or the team's invite code (H0), and joins the single organization |
+| Can act | Anyone can open it (public route). Sign-up needs the team's invite code (H0), and joins the single organization |
 | Status | Draft |
 
 ## 1. Purpose and user goals
@@ -58,7 +58,7 @@ Desktop (>= 1024 px): centred card, 440 px wide, on the base colour; no app nav.
 ```
 
 Create-account tab adds "Your name" above Email, a password hint
-"At least 8 characters." under Password, and an optional "Invite code" field under Password with the
+"At least 8 characters." under Password, and a required "Invite code" field under Password with the
 hint "Ask your team for the invite code."; the button reads "Create account".
 
 Mobile (<= 640 px): the card is full width with 16 px margins, no outer shadow frame; same order.
@@ -72,7 +72,7 @@ Mobile (<= 640 px): the card is full width with 16 px margins, no outer shadow f
 | Your name | input -> `display_name` | "Dana Okafor" | Sign-up only; required, 2-80 chars, trimmed |
 | Email | input -> `email` | "dana@riverbendhealth.org" | Required; `type="email"`; trimmed and lower-cased before sending |
 | Password | input -> `password` | masked; "Show"/"Hide" toggle | Required; sign-up needs >= 8 chars (client check mirrors H0's `weak_password`) |
-| Invite code | input -> `invite_code` | "riverbend-2026" | Sign-up only; optional; trimmed; sent only when filled; `autocomplete="off"` |
+| Invite code | input -> `invite_code` | "Xq7m-3Kp9-Lw2v-8Tz4" | Sign-up only; required; trimmed; `autocomplete="off"` |
 | Field errors | client checks or problem `code` | "Enter your email address." | Under the field, `role="alert"` on submit |
 | Form error | problem `code` | "That email or password isn't right." | Above the button |
 | Signed-out notice | URL `signedOut=1` | "You're signed out." | `SuccessNotice`; removed from the URL after render |
@@ -96,7 +96,7 @@ Feature files: `features/session/LoginScreen.tsx`, `SignInForm.tsx`, `SignUpForm
    - 422 `validation_error` -> field errors from `errors[]`.
    - 429 (if H0 rate-limits) -> "Too many attempts. Wait a minute and try again."
    - Network / 5xx -> form error "We couldn't reach Hope. Check your connection and try again."
-3. **Create account.** Client checks (name, email, password >= 8). `signup({email, password, display_name})`
+3. **Create account.** Client checks (name, email, password >= 8, invite code). `signup({email, password, display_name})`
    (H0: `POST /v1/auth/signup`). Button "Creating account…".
    - 201 -> `me()` -> `/onboarding` when not onboarded (normal for the first user), else `returnTo ?? "/grants"`.
    - 409 `email_taken` -> field error on Email with a link "Sign in instead" (switches tab, keeps email).
@@ -121,10 +121,11 @@ Feature files: `features/session/LoginScreen.tsx`, `SignInForm.tsx`, `SignUpForm
 | Empty password | "Enter your password." |
 | Short password (sign-up) | "Use at least 8 characters." |
 | Empty name (sign-up) | "Enter your name." |
+| Empty invite code (sign-up) | "Enter your team's invite code." |
 | `invalid_credentials` | "That email or password isn't right." |
 | `email_taken` | "There's already an account with this email. Sign in instead?" |
 | `weak_password` | "Use at least 8 characters." |
-| `signup_closed` | "Sign-up is invite-only. Enter your team's invite code, or ask your team to add your email." |
+| `signup_closed` | "That invite code isn't right. Ask your team for the current code." |
 | Rate limited | "Too many attempts. Wait a minute and try again." |
 | Network / 5xx | "We couldn't reach Hope. Check your connection and try again." |
 | Signed out | "You're signed out." |
@@ -136,7 +137,7 @@ Feature files: `features/session/LoginScreen.tsx`, `SignInForm.tsx`, `SignUpForm
 |---|---|---|---|
 | Mount | H0 `me()` -> `GET /v1/me` | 200: `onboarding_complete`; 401 -> show form | none |
 | Sign in | H0 `login()` -> `POST /v1/auth/login` `{"email":"demo@hope.org","password":"hope-demo"}` | 200 `{user}`; problem `code` | sets cookie |
-| Create account | H0 `signup()` -> `POST /v1/auth/signup` `{"email":"dana@riverbendhealth.org","password":"…","display_name":"Dana Okafor","invite_code":"riverbend-2026"}` | 201 `{user}`; problem `code`, `errors[]` | sets cookie |
+| Create account | H0 `signup()` -> `POST /v1/auth/signup` `{"email":"dana@riverbendhealth.org","password":"…","display_name":"Dana Okafor","invite_code":"Xq7m-3Kp9-Lw2v-8Tz4"}` | 201 `{user}`; problem `code`, `errors[]` | sets cookie |
 | After either | `GET /v1/me` | `onboarding_complete` | session cache in H0's provider is invalidated |
 
 ## 9. Responsive behaviour
@@ -157,7 +158,7 @@ Feature files: `features/session/LoginScreen.tsx`, `SignInForm.tsx`, `SignUpForm
 
 `features/session` tests mock H0's `api/session` module:
 - `login`: `demo@hope.org` / `hope-demo` -> user Demo Admin; anything else -> `ApiError(401, …, "invalid_credentials")`.
-- `signup`: `taken@hope.org` -> 409 `email_taken`; password `short` -> 422 `weak_password`; `closed@hope.org` without an invite code -> 403 `signup_closed`; otherwise 201.
+- `signup`: `taken@hope.org` -> 409 `email_taken`; password `short` -> 422 `weak_password`; any invite code other than `hope-demo-invite-code` -> 403 `signup_closed`; otherwise 201.
 - `me`: switchable: 401, `{onboarding_complete: false}`, `{onboarding_complete: true}`.
 - A `network` switch throws `TypeError("Failed to fetch")`.
 
@@ -180,7 +181,7 @@ Success: sign-up to finished onboarding in under 5 minutes; fewer than 10% of si
 - [ ] AC10 `?signedOut=1` shows "You're signed out."
 - [ ] AC11 Network failure shows the network copy.
 - [ ] AC12 axe: no violations on both tabs and the error state.
-- [ ] AC13 `signup_closed` shows the exact copy and focuses Invite code; a filled invite code is sent as `invite_code`.
+- [ ] AC13 `signup_closed` shows the exact copy and focuses Invite code; the invite code is required and sent as `invite_code`.
 
 ## 14. Test plan
 

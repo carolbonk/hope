@@ -107,15 +107,23 @@ into a checklist the user can work through, and it is the input H5 drafts the pr
    and writes `why` (`hope_briefs.eligibility.decide`):
    - **Requirement found?** The requirement needs at least one verified web citation, and every `expected`
      value must appear (normalized) in one of its verified quotes. Otherwise `meets = "unknown"`, with
-     `why` = "Hope couldn't find this requirement on the funder's pages."
+     `why` = "Hope couldn't find this requirement on the funder's pages." For every check except `budget`
+     and `other`, an empty `expected` also gives `unknown`, never `no`.
    - **`tax_status`:** `expected` maps to `TaxStatus` values through a fixed table (for example
      "501(c)(3)" -> both 501(c)(3) statuses). `yes` if `legal.tax_status` is in that set, otherwise `no`.
-   - **`location`:** `expected` holds US state codes or names, mapped through a fixed table; any other
-     value gives `unknown`. `yes` if the profile's `legal.hq_state` or the state of any `service_area`
-     entry is in the set, or the service area is "Nationwide"; otherwise `no`.
+   - **Location:** `expected` holds US state codes or names, mapped through a fixed table; any other
+     value gives `unknown`. The model picks which kind of location the quote asks for:
+     - `location_hq` ("based in", "headquartered in"): `yes` if `legal.hq_state` is in the set, else `no`.
+       The service area never counts.
+     - `location_served` ("serve residents of"): `yes` if the state of any `service_area` entry is in the
+       set, or the service area is "Nationwide"; otherwise `no`.
+     - `location` (the quote doesn't say which): `yes` only if both the HQ state and a served state are in
+       the set, `no` if neither is, otherwise `unknown`.
    - **`budget`:** code parses the minimum and maximum from the verified quote with the `$` amount
-     regex (never from `expected`), and compares them in integer cents with
-     `financials.annual_operating_budget`. A quote it can't parse gives `unknown`.
+     regex (never from `expected`), and compares them in integer cents. It compares the exact budget the
+     user entered (`annual_operating_budget_usd`), never an estimate. When the profile has only a budget
+     band, code uses the band's bounds: `yes` if the whole band is inside the funder's range, `no` if the
+     whole band is outside it, otherwise `unknown`. A quote it can't parse gives `unknown`.
    - **`ntee`:** `yes` if any profile NTEE code starts with an expected code or major-group letter,
      otherwise `no`.
    - **`other`:** always `unknown`, with `why` = "Hope can't check this automatically. Review it yourself."
@@ -202,9 +210,9 @@ class EligibilityVerdict(BaseModel):
     # The model classifies; hope_briefs.eligibility.decide sets `meets` and `why` (step 8).
     requirement_id: str = Field(description="Id of the requirement, e.g. 'r3'")
     requirement: str = Field(max_length=200, description="Plain-English requirement")
-    check: Literal["tax_status", "location", "budget", "ntee", "other"] = Field(
-        description="Which profile fact this requirement is about"
-    )
+    check: Literal[
+        "tax_status", "location_hq", "location_served", "location", "budget", "ntee", "other"
+    ] = Field(description="Which profile fact this requirement is about")
     expected: list[str] = Field(
         default=[],
         max_length=10,
@@ -429,7 +437,7 @@ API tests live in `services/briefs/tests/test_briefs_api.py` (they build the pil
 - [ ] AC2 Link selection keeps same-site and same-registrable-domain links and PDFs with a keyword score >= 1, excludes the listed paths and the start URL, ranks by score then page order, and caps at 6.
 - [ ] AC3 With the recorded fixtures and offline responders, a run produces a brief with all sections, saves it with `save_brief`, stores the sources, and reports progress for each step.
 - [ ] AC4 A quote that is not in its page's text (after normalization) is dropped and its item has `citation_ids = []`; ellipsis quotes verify part by part; quotes under 12 chars are rejected; duplicate quotes share one citation id.
-- [ ] AC5 Code decides `meets` from profile values, never the LLM: `tax_status`, `location`, `budget` and `ntee` give `yes`/`no` (an Ohio requirement with a Washington profile is `no`); `other` and missing profile data give `unknown`; a requirement without a verified quote, or with an `expected` value not in its quote, is `unknown`; profile citations quote the compared value exactly.
+- [ ] AC5 Code decides `meets` from profile values, never the LLM: `tax_status`, `location`, `budget` and `ntee` give `yes`/`no` (an Ohio requirement with a Washington profile is `no`; an Ohio-headquarters requirement is `no` for a Washington nonprofit that serves Ohio); a band-only budget that straddles the funder's range, an empty `expected`, `other` and missing profile data give `unknown`; a requirement without a verified quote, or with an `expected` value not in its quote, is `unknown`; profile citations quote the compared value exactly.
 - [ ] AC6 The overview's `[fN]` markers become citation ids; markers for unverified facts are removed.
 - [ ] AC7 Word limits and dates are parsed by code from quotes; ambiguous dates stay null in `key_dates`.
 - [ ] AC8 `source_unreachable`, `blocked_by_robots`, `nothing_found`, `budget_exceeded` and `timeout` fail the job with that code and keep the previous brief.
