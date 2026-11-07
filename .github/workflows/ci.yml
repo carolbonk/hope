@@ -20,6 +20,14 @@ jobs:
           --health-cmd "pg_isready -U hope -d hope" --health-interval 3s --health-retries 20
     steps:
       - uses: actions/checkout@v4
+      - name: Start Redpanda
+        run: |
+          docker run -d --name redpanda -p 19092:19092 redpandadata/redpanda:v24.2.7 \
+            redpanda start --mode=dev-container --smp=1 \
+            --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092 \
+            --advertise-kafka-addr=internal://localhost:9092,external://localhost:19092
+          for i in $(seq 1 30); do docker exec redpanda rpk cluster health | grep -q 'Healthy:.*true' && exit 0; sleep 2; done
+          docker logs redpanda; exit 1
       - uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
