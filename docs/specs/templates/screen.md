@@ -37,8 +37,8 @@ Every piece of information on the screen:
 
 ## 5. Components
 
-Each region, mapped to the design-system primitive (`Card` `neu-raised`, `Table`, `Input`
-`neu-inset`, `Button` with `neu-pressed` when active, `Badge`, `Modal`, `Drawer`) and its
+Each region, mapped to the design-system primitive (`Card` `glass-panel`, `Table`, `Input`
+`glass-inset`, `Button` with `glass-active` when active, `Badge`, `Modal`, `Drawer`) and its
 variants. Name any new shared primitive under "Shared contract additions" instead of
 building it inside the feature.
 

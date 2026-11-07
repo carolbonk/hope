@@ -60,7 +60,7 @@ hope/
 │   ├── features/<feature>/           one folder per screen group (see SCREENS.md)
 │   ├── api/client.ts                 composes the per-feature clients (S00)
 │   ├── api/<feature>/                types.ts, http.ts, fixture.ts, *.test.ts per feature (S00 splits today's api/)
-│   ├── components/ui/                shared neumorphic primitives (contracts specs only)
+│   ├── components/ui/                shared liquid-glass primitives (contracts specs only)
 │   ├── nav.ts                        every nav entry, pre-filled by S00; features don't edit it
 │   └── lib/                          shared helpers (contracts specs only)
 └── infra/
