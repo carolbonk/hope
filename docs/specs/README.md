@@ -58,34 +58,50 @@ one PR that touches only the paths the spec owns.
 
 ## Hackathon MVP (2 days, single tenant): build these first
 
-Goal: one end-to-end demo for one organization: **profile -> real Grants.gov opportunities ->
-ranked matrix -> Pursue -> go/no-go approval -> budget -> AI-drafted narrative (OpenAI) ->
-downloadable application package.** It runs locally with `make demo`; nothing is deployed.
+Discovery was never the hard part; **applying is.** The demo flow:
 
-Schedule: **M0** runs alone on day 1 morning (about 3 h). **M1-M7** then run in parallel, one agent
+1. **Sign in** with email and password (one organization).
+2. **Tell Hope about the nonprofit:** mission, values, EIN, NTEE codes, location, budget size, programs, people served.
+3. **Discover:** an agent turns the profile into web searches (OpenAI web search), reads each result,
+   extracts the grant (funder, amount, deadline, eligibility, link), and scores the fit against the
+   profile, with reasons. This runs as a background job with a progress screen.
+4. **Curate:** the user reviews grant cards (fit score, reasons, concerns) and saves or passes. Saved grants make the shortlist.
+5. **Application brief:** for a shortlisted grant, an agent fetches the grant's pages live and explains
+   in plain English how to apply: portal, steps, required documents, questions, deadlines and eligibility.
+   Every item cites its source (link + quote).
+6. **Proposal review:** the agent drafts answers to the grant's questions from the profile and the grant
+   pages, with an inline citation on every claim, so the user can verify each one. The user edits it, then
+   exports the final brief to apply with.
+
+**Data rule:** raw pages are never stored; they are fetched live each time. Hope stores only what it
+produced: the candidate summary, the brief, the drafts and their citations (URL, title, quote, time retrieved).
+
+Schedule: **H0** runs alone on day 1 morning (about 3-4 h). **H1-H5** then run in parallel, one agent
 each, and finish by day 2 noon. Day 2 afternoon is integration and demo rehearsal (orchestrator).
 
-| Spec | Delivers | Screens | Depends on | Migrations | Status |
+| Spec | Delivers | Screens (route) | Depends on | Migrations | Status |
 |---|---|---|---|---|---|
-| [M0](features/M0-mvp-scaffolding.md) | Single tenant from config, demo user + role switcher, OpenAI provider, router/client/nav split, service ports, `make demo` | shell | - | 0002 | Ready |
-| [M1](features/M1-opportunities.md) | Live Grants.gov pull + parse, opportunity list/search API, detail page | SC04 | M0 | 0210-0219 | Draft |
-| [M2](features/M2-matrix.md) | Score breakdown + evidence, Watch/Skip | SC03 | M0 | 0410-0419 | Draft |
-| [M3](features/M3-approvals.md) | Approval inbox + decision for HITL-1, HITL-2, HITL-4, HITL-5 | SC05, SC06 | M0 | 0110-0119 | Draft |
-| [M4](features/M4-workflow.md) | Pursue, real services wired into the lifecycle, workflow list + timeline | SC07, SC08 | M0 | 0610-0619 | Draft |
-| [M5](features/M5-budget.md) | Budget API, demo cost basis, budget review screen | SC13 | M0 | 0510-0519 | Draft |
-| [M6](features/M6-narrative.md) | OpenAI narrative drafting with budget placeholders, editable draft screen | SC19 | M0 | 0800-0809 | Draft |
-| [M7](features/M7-package-and-dashboard.md) | SF-424 + narrative PDFs as a zip, "Mark submitted" (manual), home dashboard | SC22, SC02 | M0 | 1100-1109 | Draft |
+| [H0](features/H0-hackathon-scaffolding.md) | Email/password auth, `/v1/me`, all shared contracts + tables + store, web search/fetch tools, OpenAI provider, job runner, routers/clients/nav split, `make demo` | app shell | - | 0002 | Ready |
+| H1 | Sign-in/sign-up screens, onboarding wizard, simplified profile page | SC01 `/login`, SC11 `/onboarding`, SC09 `/profile` | H0 | 0310-0319 | Draft |
+| H2 | Discovery agent and job progress screen | SC24 `/discover` | H0 | 0700-0709 | Draft |
+| H3 | Curated list (cards + list), save/pass/undo, shortlist, grant overview | SC25 `/grants`, SC26 `/grants/[grantId]` | H0 | 0710-0719 | Draft |
+| H4 | Application brief agent and brief screen | SC27 `/grants/[grantId]/brief` | H0 | 0720-0729 | Draft |
+| H5 | Cited proposal drafting, review/edit, export | SC28 `/grants/[grantId]/proposal` | H0 | 0800-0809 | Draft |
 
-The existing profile screen (SC09) stays as is. MVP rules on top of the rules above:
+MVP rules on top of the rules above:
 
-- **Single tenant, one agency, no real login.** M0 provides a demo user and a role switcher.
-- **No real submission.** HITL-5 approval unlocks a download and a "Mark submitted" button only.
-- **The real LLM is OpenAI**, behind `ModelGateway`, and only when `HOPE_OPENAI_API_KEY` is set.
-  Tests and CI always use `MockProvider`.
-- **Cross-spec calls go through the ports M0 creates** (stub functions with final signatures in
-  `hope_drafting`, `hope_packaging`, and so on). M4 calls the ports; M5/M6/M7 fill them in.
-- **Seed data is per spec:** each spec owns `src/hope_<service>/demo.py:seed()`; M0's runner calls them all.
-- Nav lists every MVP route from M0; a spec replaces only its own `page.tsx` placeholder.
+- **Single tenant.** One organization; all users belong to it. There's no tenant anywhere in the API or UI.
+- **No submission.** Hope produces the brief and the proposal; the user applies on the funder's site.
+- **OpenAI only** (one key, `HOPE_OPENAI_API_KEY`) for the LLM and for web search. Tests and CI use
+  `MockProvider` and the recorded web fixtures from H0; there's no network in CI.
+- **Every factual claim shown to the user has a citation**, either a web `Citation` or a profile
+  reference. A claim without one is shown as "Unverified" and is never silently dropped.
+- **Amounts and dates come from quotes.** The LLM returns the quoted text, and code parses it into
+  `Money`/`date`. An amount the code can't parse is shown as the quoted text.
+- **All shared tables, contracts and store functions come from H0.** H1-H5 never create a table that
+  another H spec reads.
+- **Seed data is per spec:** each spec owns `demo.py:seed()` in its own package; H0's runner calls them in the order H1, H2, H3, H4, H5.
+- The M0-M7 specs below are superseded for the hackathon; keep them for later.
 
 ## Later (after the hackathon)
 
