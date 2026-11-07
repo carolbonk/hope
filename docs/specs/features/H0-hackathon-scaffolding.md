@@ -21,17 +21,17 @@ logic beyond auth.
 
 - `HopeSettings` gains `tenant_id: UUID` (`HOPE_TENANT_ID`), `agency_id: UUID` (`HOPE_AGENCY_ID`),
   `session_secret` (`HOPE_SESSION_SECRET`), `openai_api_key`, `openai_model` (default `gpt-4o-mini`)
-  `openai_search_model` (default `gpt-4o-mini`), `signup_allowed_emails` (`HOPE_SIGNUP_ALLOWED_EMAILS`),
+  `openai_search_model` (default `gpt-4o-mini`),
   `invite_code` (`HOPE_INVITE_CODE`) and `cookie_secure` (`HOPE_COOKIE_SECURE`, default `true`).
 - Table `users` (`user_id uuid pk`, `tenant_id`, `email citext unique`, `password_hash`, `display_name`,
   `created_at`), with RLS like every other tenant table. Passwords are hashed with `argon2-cffi`.
 - `services/pillar/src/hope_pillar/api/auth.py`:
   - `POST /v1/auth/signup` `{email, password, display_name, invite_code?}` returns 201 `{user}` and sets
     the session cookie. Sign-up is closed by default, so a stranger who can reach the app can't join the
-    nonprofit. It succeeds only when the email is in `HOPE_SIGNUP_ALLOWED_EMAILS` (comma-separated; an
-    entry starting with `@` allows the whole domain) or `invite_code` matches `HOPE_INVITE_CODE`
-    (compared with `hmac.compare_digest`). Otherwise it returns 403 `signup_closed`. With neither setting,
-    sign-up is off and only seeded users (`make demo`) can sign in. Passwords must be at least 8
+    nonprofit. It succeeds only when `invite_code` matches `HOPE_INVITE_CODE` (at least 16 random
+    characters, compared with `hmac.compare_digest`). Otherwise it returns 403 `signup_closed`. There is
+    no email or domain allowlist: Hope doesn't verify that you own a mailbox, so an email address proves
+    nothing. Without `HOPE_INVITE_CODE`, sign-up is off and only seeded users (`make demo`) can sign in. Passwords must be at least 8
     characters (422 `weak_password`); a taken email returns 409
     `email_taken`.
   - `POST /v1/auth/login` `{email, password}` returns 200 `{user}` and sets the cookie. A bad email or
@@ -243,8 +243,9 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
   Each seed is idempotent.
 - With no `HOPE_OPENAI_API_KEY`, everything runs on the mock and the recorded web tools, so the demo
   always works.
-- It sets `HOPE_COOKIE_SECURE=false` (plain `http://localhost`) and `HOPE_SIGNUP_ALLOWED_EMAILS=@hope.org`,
-  so teammates can add `@hope.org` accounts on demo day and nobody else can sign up.
+- It sets `HOPE_COOKIE_SECURE=false` (plain `http://localhost`). If `.env` has no `HOPE_INVITE_CODE`, it
+  writes a random one (`secrets.token_urlsafe(16)`) to `.env` and prints it once, so teammates can sign
+  up and nobody else can.
 
 ## Owns
 
@@ -257,7 +258,7 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 
 ## Acceptance criteria
 
-- [ ] AC1 Sign up, log in, `/v1/me` and log out work; a bad email or password both return 401 `invalid_credentials`; protected routes return 401 `not_signed_in` without the cookie; sign-up without an allowed email or the right invite code returns 403 `signup_closed`, and is always closed when neither setting is set; the cookie is `Secure` unless `HOPE_COOKIE_SECURE=false`.
+- [ ] AC1 Sign up, log in, `/v1/me` and log out work; a bad email or password both return 401 `invalid_credentials`; protected routes return 401 `not_signed_in` without the cookie; sign-up without the right invite code returns 403 `signup_closed`, whatever the email, and is always closed when `HOPE_INVITE_CODE` is unset; the cookie is `Secure` unless `HOPE_COOKIE_SECURE=false`.
 - [ ] AC2 Every contract in section 2 validates, exports to JSON Schema and TS, and the generated outputs are fresh.
 - [ ] AC3 The store functions round-trip every table; `save_section` with a stale hash raises `StaleArtifactError`; RLS blocks another tenant's rows.
 - [ ] AC4 `RecordedWebTools` replays the search and fetch fixtures; `fetch` extracts text and links from HTML and PDF fixtures; `fetch` rejects loopback, private, link-local and metadata addresses, other schemes and ports, and redirects to any of them, with `blocked_address`; no test touches the network.
@@ -272,7 +273,7 @@ Also add `Mission.values: list[str] = []` and, if missing, `AgencyProfile.servic
 
 | AC | Test |
 |---|---|
-| AC1 | `services/pillar/tests/test_auth.py` (signup, login, logout, invalid, not_signed_in, signup_closed, invite code, allowed domain, cookie flags) |
+| AC1 | `services/pillar/tests/test_auth.py` (signup, login, logout, invalid, not_signed_in, signup_closed, invite code, no code configured, cookie flags) |
 | AC2 | `packages/core/tests/test_hackathon_schemas.py` + schema freshness check |
 | AC3 | `packages/core/tests/test_store.py` (`@pytest.mark.db`) |
 | AC4 | `packages/core/tests/test_web_tools.py` (incl. `test_fetch_blocks_internal_addresses`, parametrized over addresses and a redirect, using a fake resolver) |
