@@ -32,7 +32,7 @@ from hope_discovery.urls import canonicalize, same_site
 
 log = logging.getLogger(__name__)
 
-PROMPT_VERSION = "requirements-2"
+PROMPT_VERSION = "requirements-3"
 PASTED = "pasted"
 PASTE_CHUNKS = 4
 MAX_PAGES = 6
@@ -78,6 +78,9 @@ SYSTEM = (
     " match requirement and any indirect-cost rule. `submission_method`: how and where to"
     " submit (portal, email, mail). `deadline`: the application deadline quote."
     " `eligibility`: quotes saying who may apply."
+    " `conditions`: rules that apply only to some applicants, word for word (e.g. 'Applicants"
+    " requesting more than $50,000 must submit an audit', 'If you use a fiscal sponsor, attach"
+    " their letter')."
     " `terms`: jargon, acronyms or form names on the page a small nonprofit may not know (e.g."
     " 'UEI', 'SF-424A', 'MTDC', or the funder's own program names), each with the page sentence"
     " that uses it, the page's own definition word for word if it gives one, and `meaning`: one"
@@ -154,6 +157,7 @@ class RequirementsExtraction(BaseModel):
     submission_method: OptQuote = None
     deadline: OptQuote = None
     eligibility: Annotated[list[OptQuote], _clip_list(8)] = Field(default=[], max_length=8)
+    conditions: Annotated[list[OptQuote], _clip_list(8)] = Field(default=[], max_length=8)
     terms: Annotated[list[TermItem], _valid_items(TermItem, 20)] = Field(default=[], max_length=20)
 
 
@@ -216,6 +220,7 @@ class Requirements(BaseModel):
     budget: BudgetRequirements = BudgetRequirements()
     submission: Submission = Submission()
     eligibility: list[Sourced] = []
+    conditions: list[Sourced] = []
     terms: list[TermUse] = []
     pages: list[PageRead] = []
 
@@ -425,13 +430,14 @@ class RequirementsReader:
         cleaned = clean_text(text)
         chunks = [cleaned[i : i + PAGE_CHARS] for i in range(0, len(cleaned), PAGE_CHARS)]
         found = False
+        replaced: set[str] = set()  # the pasted form is the current one: its deadline etc. win
         for chunk in chunks[:PASTE_CHUNKS]:
             try:
                 ext = self._extract(PASTED, "Application form pasted by staff", chunk, [])
             except BudgetExceededError:
                 break
             if ext is not None:
-                found = self._merge(out, ext, chunk, PASTED) or found
+                found = self._merge(out, ext, chunk, PASTED, replaced) or found
         out.pages.append(
             PageRead(url=PASTED, status="read" if found else "no_info")
             if chunks
@@ -456,8 +462,25 @@ class RequirementsReader:
                 log.warning("requirements extract failed url=%s (%s)", url, type(exc).__name__)
         return None
 
-    def _merge(self, out: Requirements, ext: RequirementsExtraction, text: str, url: str) -> bool:
+    def _merge(
+        self,
+        out: Requirements,
+        ext: RequirementsExtraction,
+        text: str,
+        url: str,
+        replaced: set[str] | None = None,
+    ) -> bool:
+        """Add what this page says. Single values (deadline, max request, ...) keep the first one
+        found; with `replaced`, the first one from this read replaces the old one."""
         normed = _norm(text)
+
+        def take(name: str, current: object) -> bool:
+            if replaced is None:
+                return current is None
+            if name in replaced:
+                return False
+            replaced.add(name)
+            return True
 
         def ok(q: str | None) -> str | None:
             return q if q and _norm(q) in normed else None
@@ -517,16 +540,18 @@ class RequirementsReader:
             s = sourced(getattr(ext, source_field))
             if s and field == "format" and "budget" not in s.text.lower():
                 s = None
-            if getattr(b, field) is None and s:
+            if s and take(field, getattr(b, field)):
+                if field == "max_request":
+                    b.max_request_amount = None
                 setattr(b, field, s)
                 found = True
         if b.max_request and b.max_request_amount is None:
             amount = parse_amount(b.max_request.text)
             b.max_request_amount = amount.max if amount else None
         sub = out.submission
-        if sub.method is None and (s := sourced(ext.submission_method)):
+        if (s := sourced(ext.submission_method)) and take("method", sub.method):
             sub.method, found = s, True
-        if sub.deadline is None and (s := sourced(ext.deadline)):
+        if (s := sourced(ext.deadline)) and take("deadline", sub.deadline):
             sub.deadline, found = s, True
             sub.deadline_date = parse_deadline(s.text, self.today()).date
         known_elig = {_norm(e.text) for e in out.eligibility}
@@ -534,6 +559,12 @@ class RequirementsReader:
             if (s := sourced(q)) and _norm(s.text) not in known_elig:
                 known_elig.add(_norm(s.text))
                 out.eligibility.append(s)
+                found = True
+        known_cond = {_norm(c.text) for c in out.conditions}
+        for q in ext.conditions:
+            if (s := sourced(q)) and _norm(s.text) not in known_cond:
+                known_cond.add(_norm(s.text))
+                out.conditions.append(s)
                 found = True
         self._merge_terms(out, ext, text, url)
         return found
@@ -596,10 +627,99 @@ def mock_responder(messages: list[Message], _schema: dict[str, object]) -> dict[
     ]
     deadline = re.search(r"[^.]*(?:due|deadline)[^.]*\.", text, re.I)
     request = re.search(r"[^.]*(?:request up to|maximum request)[^.]*\.", text, re.I)
+    eligible = [
+        m[0].strip() for m in re.finditer(r"[^.\n]*\b(?:must be|eligible)\b[^.\n]*\.", text)
+    ]
+    conditions = [
+        m[0].strip()
+        for m in re.finditer(r"[^.\n]*\b(?:If you|Applicants requesting)\b[^.\n]*\.", text)
+    ]
     return {
         "is_application_info": bool(questions or attachments or deadline),
         "questions": questions,
         "attachments": attachments,
         "deadline": deadline[0].strip() if deadline else None,
         "max_request": request[0].strip() if request else None,
+        "eligibility": eligible,
+        "conditions": conditions,
     }
+
+
+class Change(BaseModel):
+    """What differs between two reads of the same grant's requirements."""
+
+    what: Literal["question", "limit", "upload", "deadline", "max_request", "eligibility", "rule"]
+    change: Literal["added", "removed", "changed"]
+    text: str
+    before: str | None = None
+
+
+def diff_requirements(old: Requirements, new: Requirements) -> list[Change]:
+    out: list[Change] = []
+    before = {q.key: q for q in old.questions}
+    after = {q.key: q for q in new.questions}
+    out += [
+        Change(what="question", change="added", text=q.prompt)
+        for k, q in after.items()
+        if k not in before
+    ]
+    out += [
+        Change(what="question", change="removed", text=q.prompt)
+        for k, q in before.items()
+        if k not in after
+    ]
+    for k, q in after.items():
+        if k in before and before[k].limit != q.limit:
+            out.append(
+                Change(
+                    what="limit",
+                    change="changed",
+                    text=f"{q.prompt[:80]}: {_limit_text(q.limit)}",
+                    before=_limit_text(before[k].limit),
+                )
+            )
+    old_up, new_up = (
+        {_norm(a.name) for a in old.attachments},
+        {_norm(a.name) for a in new.attachments},
+    )
+    out += [
+        Change(what="upload", change="added", text=a.name)
+        for a in new.attachments
+        if _norm(a.name) not in old_up
+    ]
+    out += [
+        Change(what="upload", change="removed", text=a.name)
+        for a in old.attachments
+        if _norm(a.name) not in new_up
+    ]
+    od, nd = old.submission.deadline_date, new.submission.deadline_date
+    if od != nd and nd is not None:
+        out.append(
+            Change(what="deadline", change="changed" if od else "added", text=f"{nd:%B %-d, %Y}",
+                   before=f"{od:%B %-d, %Y}" if od else None)
+        )  # fmt: skip
+    om, nm = old.budget.max_request_amount, new.budget.max_request_amount
+    if om != nm and nm is not None:
+        out.append(
+            Change(what="max_request", change="changed" if om else "added",
+                   text=f"${nm.amount_minor / 100:,.0f}",
+                   before=f"${om.amount_minor / 100:,.0f}" if om else None)
+        )  # fmt: skip
+    for field, what in (("eligibility", "eligibility"), ("conditions", "rule")):
+        o = {_norm(x.text) for x in getattr(old, field)}
+        n = {_norm(x.text) for x in getattr(new, field)}
+        out += [
+            Change(what=what, change="added", text=x.text)
+            for x in getattr(new, field)
+            if _norm(x.text) not in o
+        ]
+        out += [
+            Change(what=what, change="removed", text=x.text)
+            for x in getattr(old, field)
+            if _norm(x.text) not in n
+        ]
+    return out
+
+
+def _limit_text(limit: Limit | None) -> str:
+    return f"{limit.max:,} {limit.unit}" if limit else "no limit"

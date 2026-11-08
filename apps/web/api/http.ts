@@ -1,6 +1,8 @@
 // One HTTP client for the hackathon API (`/v1`). Offline (no API URL) nothing here is called.
-export const API_URL = process.env.NEXT_PUBLIC_HOPE_API_URL ?? "";
-export const online = API_URL !== "";
+// "/" means same origin: next.config.ts proxies `/v1/*` to HOPE_API_ORIGIN, so the session cookie is first-party.
+const configured = process.env.NEXT_PUBLIC_HOPE_API_URL ?? "";
+export const API_URL = configured.replace(/\/+$/, "");
+export const online = configured !== "";
 
 export const UNAUTHORIZED_EVENT = "hope:unauthorized";
 

@@ -17,6 +17,7 @@ from hope_core import jobs, store
 from hope_core.auth import Principal, ProblemException, get_principal
 from hope_core.db import connect, tenant_tx
 from hope_core.money import Money
+from hope_core.schemas.agency_profile import AgencyProfile
 from hope_core.settings import get_settings
 from hope_core.store import Tx
 from hope_core.web import parse_pdf
@@ -29,9 +30,17 @@ from hope_discovery.answers import (
     build_checklist,
     effective_questions,
     export_markdown,
+    same_need,
 )
 from hope_discovery.glossary import TermExplained, explain
-from hope_discovery.requirements import Question, Requirements, RequirementsReader
+from hope_discovery.requirements import (
+    Change,
+    Question,
+    Requirements,
+    RequirementsReader,
+    diff_requirements,
+)
+from hope_discovery.rules import RuleCheck, apply_staff, check_rules
 from hope_discovery.runner import default_tools
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, ConfigDict, Field
@@ -53,6 +62,7 @@ EventKind = Literal[
     "draft",
     "edit",
     "fact",
+    "ask",
 ]
 
 EVENTS_SHOWN = 50
@@ -128,6 +138,7 @@ class FactView(BaseModel):
     answer: str
     updated_by: UUID | None
     updated_at: datetime
+    shared: bool = Field(False, description="Given on another application and reused here")
 
 
 class ApplicationView(ApplicationSummary):
@@ -141,6 +152,11 @@ class ApplicationView(ApplicationSummary):
         description="Funder jargon in plain language, most urgent first, each with its source"
     )
     answers_job: RequirementsJob | None
+    rules: list[RuleCheck] = Field(
+        description="This grant's eligibility, budget and conditional rules, checked by code"
+    )
+    changes: list[Change] = Field(description="What the last read changed from the one before")
+    requirements_revision: int | None
     checklist: Checklist
     ask: Money | None
     approvals: dict[Step, Approval]
@@ -180,6 +196,12 @@ class FactBody(BaseModel):
 class AnswerBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
     text: str = Field(max_length=20_000)
+
+
+class AskBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    amount_minor: int = Field(gt=0, le=100_000_000_000)
+    currency: Literal["USD"] = "USD"
 
 
 class EvidenceBody(BaseModel):
@@ -252,24 +274,28 @@ def _view(tx: Tx, row: dict[str, Any]) -> ApplicationView:
         (row["application_id"], EVENTS_SHOWN),
     )
     events = [EventView.model_validate(e) for e in tx.fetchall()]
-    requirements = latest_requirements(tx, row["application_id"])
+    revisions = requirement_revisions(tx, row["application_id"])
+    requirements = revisions[0][1] if revisions else None
+    changes = diff_requirements(revisions[1][1], revisions[0][1]) if len(revisions) > 1 else []
     answers = load_answers(tx, row["application_id"])
     facts = load_facts(tx, row["application_id"])
+    profile = store.get_profile(tx)
     terms = explain(
         requirements.terms if requirements else [],
-        store.get_profile(tx),
+        profile,
         requirements.submission.deadline_date if requirements else None,
         datetime.now().astimezone().date(),
     )
+    rules = rules_for(row, requirements, profile)
     job = store.latest_job(tx, REQUIREMENTS_KIND, str(row["application_id"]))
     answers_job = store.latest_job(tx, ANSWERS_KIND, str(row["application_id"]))
-    ask = (
-        Money(amount_minor=row["ask_minor"], currency=row["currency"]) if row["ask_minor"] else None
-    )
     return ApplicationView.model_validate(
         row
         | {
-            "ask": ask,
+            "ask": _ask(row),
+            "rules": rules,
+            "changes": changes,
+            "requirements_revision": revisions[0][0] if revisions else None,
             "events": events,
             "requirements": requirements,
             "requirements_job": job.model_dump() if job else None,
@@ -278,20 +304,38 @@ def _view(tx: Tx, row: dict[str, Any]) -> ApplicationView:
             "facts": list(facts.values()),
             "terms": terms,
             "answers_job": answers_job.model_dump() if answers_job else None,
-            "checklist": checklist_for(requirements, answers, facts, terms),
+            "checklist": checklist_for(requirements, answers, facts, terms, rules),
         }
     )
 
 
-def latest_requirements(tx: Tx, application_id: UUID) -> Requirements | None:
+def _ask(row: dict[str, Any]) -> Money | None:
+    if not row["ask_minor"]:
+        return None
+    return Money(amount_minor=row["ask_minor"], currency=row["currency"])
+
+
+def rules_for(
+    row: dict[str, Any], req: Requirements | None, profile: AgencyProfile | None
+) -> list[RuleCheck]:
+    return apply_staff(check_rules(req, profile, _ask(row)), row["evidence"])
+
+
+def requirement_revisions(
+    tx: Tx, application_id: UUID, n: int = 2
+) -> list[tuple[int, Requirements]]:
+    """The newest `n` reads of this grant's requirements, newest first."""
     tx.execute(
-        "SELECT questions, attachments, budget, submission, eligibility, terms, pages"
-        " FROM application_requirements WHERE application_id = %s"
-        " ORDER BY revision DESC LIMIT 1",
-        (application_id,),
+        f"SELECT revision, {', '.join(REQ_FIELDS)} FROM application_requirements"
+        " WHERE application_id = %s ORDER BY revision DESC LIMIT %s",
+        (application_id, n),
     )
-    req = tx.fetchone()
-    return Requirements.model_validate(req) if req else None
+    return [(r.pop("revision"), Requirements.model_validate(r)) for r in tx.fetchall()]
+
+
+def latest_requirements(tx: Tx, application_id: UUID) -> Requirements | None:
+    revisions = requirement_revisions(tx, application_id, 1)
+    return revisions[0][1] if revisions else None
 
 
 def load_answers(tx: Tx, application_id: UUID) -> dict[str, AnswerView]:
@@ -305,12 +349,21 @@ def load_answers(tx: Tx, application_id: UUID) -> dict[str, AnswerView]:
 
 
 def load_facts(tx: Tx, application_id: UUID) -> dict[str, FactView]:
+    """This application's facts, plus answers staff gave on other applications (the timeline,
+    who leads the work, ...) so each is asked once across all grants."""
     tx.execute(
         "SELECT need, answer, updated_by, updated_at FROM application_facts"
         " WHERE application_id = %s ORDER BY updated_at",
         (application_id,),
     )
-    return {r["need"]: FactView.model_validate(r) for r in tx.fetchall()}
+    own = {r["need"]: FactView.model_validate(r) for r in tx.fetchall()}
+    tx.execute("SELECT need, answer, updated_by, updated_at FROM org_facts ORDER BY updated_at")
+    shared = {
+        r["need"]: FactView.model_validate(r | {"shared": True})
+        for r in tx.fetchall()
+        if not any(same_need(r["need"], k) for k in own)
+    }
+    return own | shared
 
 
 def checklist_for(
@@ -318,10 +371,11 @@ def checklist_for(
     answers: dict[str, AnswerView],
     facts: dict[str, FactView] | None = None,
     terms: list[TermExplained] | None = None,
+    rules: list[RuleCheck] | None = None,
 ) -> Checklist:
     plain = {k: Answer.model_validate(a.model_dump()) for k, a in answers.items()}
     given = {k: f.answer for k, f in (facts or {}).items()}
-    return build_checklist(req, plain, datetime.now().astimezone().date(), given, terms)
+    return build_checklist(req, plain, datetime.now().astimezone().date(), given, terms, rules)
 
 
 def _update(tx: Tx, application_id: UUID, version: int, **fields: Any) -> None:
@@ -340,13 +394,19 @@ def _update(tx: Tx, application_id: UUID, version: int, **fields: Any) -> None:
 # --- rules (code decides) ---------------------------------------------------------------------
 
 
-def move_problem(row: dict[str, Any], to: str) -> str | None:
-    """Why `row` can't move to stage `to`, or None when it can."""
+def move_problem(row: dict[str, Any], to: str, rules: list[RuleCheck] | None = None) -> str | None:
+    """Why `row` can't move to stage `to`, or None when it can. Moving to review needs every
+    eligibility rule met, by the profile or confirmed by staff."""
     key = (row["stage"], to)
     if key not in MOVES:
         return f"Can't move from {row['stage']} to {to}."
-    if to == "approval" and any(e["status"] != "yes" for e in row["evidence"].values()):
-        return MOVES[key]
+    if to == "approval":
+        open_rules = [r.label for r in rules or [] if r.kind == "eligibility" and r.status != "met"]
+        if open_rules:
+            return "Check who can apply first: " + "; ".join(x[:60] for x in open_rules[:5])
+        legacy = {k: e for k, e in row["evidence"].items() if not k.startswith("rule:")}
+        if any(e["status"] != "yes" for e in legacy.values()):
+            return MOVES[key]
     if to == "ready" and set(row["approvals"]) != {"program", "director"}:
         return MOVES[key]
     return None
@@ -437,12 +497,14 @@ def move_stage(
     aid, version = _app_uuid(application_id), _version(if_match)
     with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
         row = _row(tx, aid)
-        if reason := move_problem(row, body.to):
+        req = latest_requirements(tx, aid)
+        rules = rules_for(row, req, store.get_profile(tx))
+        if reason := move_problem(row, body.to, rules):
             _blocked(reason)
         override = None
         if body.to == "ready":
-            req = latest_requirements(tx, aid)
-            gap = ready_problem(checklist_for(req, load_answers(tx, aid)))
+            view = _view(tx, row)
+            gap = ready_problem(view.checklist)
             if gap and not body.override_reason:
                 _blocked(gap)
             override = body.override_reason if gap else None
@@ -451,6 +513,23 @@ def move_stage(
         if override:
             payload["override_reason"] = override
         add_event(tx, aid, "stage", principal.user_id, **payload)
+        return _respond(tx, aid, response)
+
+
+@router.post("/applications/{application_id}/ask")
+def set_ask(
+    application_id: str,
+    body: AskBody,
+    principal: PrincipalDep,
+    response: Response,
+    if_match: IfMatch = None,
+) -> ApplicationView:
+    """How much the nonprofit is requesting; the budget and conditional rules use it."""
+    aid, version = _app_uuid(application_id), _version(if_match)
+    with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
+        _row(tx, aid)
+        _update(tx, aid, version, ask_minor=body.amount_minor, currency=body.currency)
+        add_event(tx, aid, "ask", principal.user_id, amount_minor=body.amount_minor)
         return _respond(tx, aid, response)
 
 
@@ -557,8 +636,9 @@ def save_requirements(tx: Tx, application_id: UUID, req: Requirements) -> None:
     data = req.model_dump(mode="json")
     tx.execute(
         "INSERT INTO application_requirements (application_id, tenant_id, revision, questions,"
-        " attachments, budget, submission, eligibility, terms, pages)"
-        " SELECT %s, current_tenant(), coalesce(max(revision), 0) + 1, %s, %s, %s, %s, %s, %s, %s"
+        f" {', '.join(REQ_FIELDS[1:])})"
+        " SELECT %s, current_tenant(), coalesce(max(revision), 0) + 1,"
+        f" {', '.join(['%s'] * len(REQ_FIELDS))}"
         " FROM application_requirements WHERE application_id = %s",
         (
             application_id,
@@ -572,7 +652,16 @@ def save_requirements(tx: Tx, application_id: UUID, req: Requirements) -> None:
     )
 
 
-REQ_FIELDS = ("questions", "attachments", "budget", "submission", "eligibility", "terms", "pages")
+REQ_FIELDS = (
+    "questions",
+    "attachments",
+    "budget",
+    "submission",
+    "eligibility",
+    "conditions",
+    "terms",
+    "pages",
+)
 
 
 @router.post("/applications/{application_id}/requirements/jobs", status_code=202)
@@ -817,11 +906,19 @@ def supply_fact(
                 " updated_by = EXCLUDED.updated_by, updated_at = clock_timestamp()",
                 (aid, need, answer, principal.user_id),
             )
+            tx.execute(
+                "INSERT INTO org_facts (tenant_id, need, answer, updated_by)"
+                " VALUES (current_tenant(), %s, %s, %s)"
+                " ON CONFLICT (tenant_id, need) DO UPDATE SET answer = EXCLUDED.answer,"
+                " updated_by = EXCLUDED.updated_by, updated_at = clock_timestamp()",
+                (need, answer, principal.user_id),
+            )
         else:
             tx.execute(
                 "DELETE FROM application_facts WHERE application_id = %s AND need = %s",
                 (aid, need),
             )
+            tx.execute("DELETE FROM org_facts WHERE need = %s", (need,))
         add_event(tx, aid, "fact", principal.user_id, need=need, removed=not answer)
         return _respond(tx, aid, response)
 

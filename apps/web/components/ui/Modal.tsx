@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cx } from "@/lib/cx";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
@@ -22,13 +23,19 @@ export function Modal({ open, title, onClose, children, footer, variant = "dialo
   const panel = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const descId = useId();
+  const close = useRef(onClose);
+  useEffect(() => {
+    close.current = onClose;
+  }, [onClose]);
 
+  // Depends on `open` only: an inline `onClose` must not re-run this on every parent render,
+  // or focus jumps back to the first control while the user types.
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
     panel.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") close.current();
       if (e.key !== "Tab" || !panel.current) return;
       const items = [...panel.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
       const first = items[0];
@@ -44,11 +51,13 @@ export function Modal({ open, title, onClose, children, footer, variant = "dialo
       document.removeEventListener("keydown", onKey);
       previous?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
   const drawer = variant === "drawer";
-  return (
+  // Portalled to <body>: a backdrop-filter ancestor (any glass panel) would otherwise become the
+  // containing block for `fixed` and clip the dialog.
+  return createPortal(
     <div className={cx("fixed inset-0 z-50 flex", drawer ? "justify-end" : "items-center justify-center p-4")}>
       <div className="absolute inset-0 glass-overlay" aria-hidden="true" onClick={onClose} />
       <div
@@ -80,6 +89,7 @@ export function Modal({ open, title, onClose, children, footer, variant = "dialo
         <div className="flex-1 overflow-y-auto px-5 pb-5">{children}</div>
         {footer && <div className="flex flex-wrap justify-end gap-3 border-t border-base-dark/60 p-5">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
