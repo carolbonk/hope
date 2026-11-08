@@ -33,14 +33,15 @@ def canonicalize(url: str) -> str | None:
     """https, lowercase host without `www.`, no fragment, tracking params or trailing `/`."""
     try:
         parts = urlsplit(url.strip())
+        port = parts.port
     except ValueError:
         return None
     if parts.scheme.lower() not in ("http", "https") or not parts.hostname:
         return None
     host = parts.hostname.lower().rstrip(".")
     host = host.removeprefix("www.")
-    if parts.port and parts.port not in (80, 443):
-        host = f"{host}:{parts.port}"
+    if port and port not in (80, 443):
+        host = f"{host}:{port}"
     query = urlencode(
         [
             (k, v)
