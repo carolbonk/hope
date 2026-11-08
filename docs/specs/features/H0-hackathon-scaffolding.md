@@ -6,7 +6,7 @@
 | Depends on | - (the Hope frontend from PR #34 is already on `main`) |
 | Screens | [SC00](../screens/SC00-app-shell.md) app shell: adds the session guard and Sign out to the built shell; `/` already redirects |
 | Migrations | `0002_hackathon.sql` |
-| Status | Ready |
+| Status | Built (PR #38) |
 
 ## Goal
 

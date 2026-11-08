@@ -43,21 +43,25 @@ one PR that touches only the paths the spec owns.
 
 ## Design system: liquid glass
 
-Every screen uses the liquid-glass primitives in `apps/web/components/ui` (H0 restyles them):
+Every screen uses the liquid-glass utilities defined in `apps/web/app/globals.css`:
 
 | Token / class | Use | Look |
 |---|---|---|
 | `glass-backdrop` | app background | soft, slowly shifting colour gradient (static under reduced motion) |
-| `glass-chrome` | sidebar, top bar, tab bar | the strongest blur (`backdrop-filter: blur(24px) saturate(180%)`), 72% white tint |
-| `glass-panel` | cards, sections | `blur(16px) saturate(160%)`, 60% tint, 1 px inner highlight on the top edge, soft drop shadow, 20 px radius |
-| `glass-inset` | inputs, wells, search | 40% tint with an inner shadow; the focus ring is a 2 px accent glow plus an outline |
+| `glass-panel` | cards, sections, table rows, calendar cells | 62% white tint (`--glass-fill`), `--glass-blur` (`blur(18px) saturate(170%)`), 1 px top highlight, soft shadow |
+| `glass-control` | buttons, toggles, tabs, chips | 78% tint (`--glass-fill-strong`), same blur |
+| `glass-chrome` | wizard top/bottom bars, listboxes | 78% tint, same blur |
+| `glass-nav` | the `HopeNav` bar, Saved's "Open workspace" action | 35% tint (`--glass-fill-nav`), same blur |
+| `glass-inset` | inputs, wells, notices | 40% tint (`--glass-fill-inset`) with an inner shadow |
 | `glass-active` | selected nav item, active segment, pressed button | brighter tint, an accent edge, and slight scale-down when pressed |
-| `glass-overlay` | drawers, modals, popovers | strongest tint (80%), a dimmed backdrop behind |
+| `glass-overlay` | modals | strongest tint with a dimmed backdrop |
 
 Rules:
 - **Readable first.** Body text sits only on `glass-panel` or stronger, and contrast is checked against the worst-case background (WCAG AA 4.5:1). Never put text directly on `glass-backdrop`.
 - **Fallbacks.** `@media (prefers-reduced-transparency: reduce)` and browsers without `backdrop-filter` get solid panels with the same layout. `prefers-reduced-motion` stops the background motion and the highlight shimmer.
 - **Status is never shown by colour alone.** Use an icon and text, and give every boundary a 1 px border at 3:1 or better.
+- **Blur must compile.** Declare `-webkit-backdrop-filter` before `backdrop-filter`; the CSS build keeps only the last one, and Chrome needs the standard property. Verify with the computed `backdropFilter`, not by eye.
+- **Notices are brief.** Notifications, alerts and validation messages disappear within 5 s (`components/ui/AutoDismiss`, `NOTICE_MS`); dismissible bars also have a × button.
 - Dark mode is optional for the hackathon (tokens only; not tested).
 
 ## Product decisions that apply to every spec

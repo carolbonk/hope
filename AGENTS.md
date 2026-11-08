@@ -70,6 +70,10 @@ Hackathon migration ranges: H0 `0002`, H1 profile `0310-0319`, discovery `0700-0
   (profile H1, opportunities H2, decisions H3) without changing hook signatures or pages.
   H0 creates the three no-op stubs and wires them once, before H1-H5 start. H1-H3 replace only their stub's body
   (signatures are in H0, section 3).
+- Notices, alerts and validation messages leave the screen within 5 s: wrap them in `components/ui/AutoDismiss`
+  (`NOTICE_MS`), keyed to the message. Page-level states (loading, not found, load failure) stay.
+- Glass utilities in `app/globals.css` declare `-webkit-backdrop-filter` before `backdrop-filter`: the CSS build keeps
+  only the last of the two, and Chrome needs the standard one.
 - H4/H5 are browser state plus `POST /api/hope/draft`. The OpenAI key is server-only (`OPENAI_API_KEY`).
 - Web checks: `pnpm --filter @hope/web typecheck && pnpm --filter @hope/web lint && pnpm --filter @hope/web test`.
   Don't commit the generated `apps/web/AGENTS.md` / `CLAUDE.md`.
