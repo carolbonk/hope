@@ -135,4 +135,20 @@ describe("fetchOpportunities", () => {
     expect(opps.every((o) => o.source.kind === "verified")).toBe(true);
     expect(opps.find((o) => o.name.includes("Youth Mental"))).toBeUndefined();
   });
+
+  it("pages past 100 grants", async () => {
+    const { fetchOpportunities } = await load(true);
+    const many = Array.from({ length: 130 }, (_, i) => card({ grant_id: `g-${i}` }));
+    const fetch = vi.fn(async (url: string) => {
+      const q = new URL(url).searchParams;
+      if (q.get("status") !== "new") return json({ items: [], total: 0 });
+      const offset = Number(q.get("offset") ?? 0);
+      return json({ items: many.slice(offset, offset + 100), total: many.length });
+    });
+    vi.stubGlobal("fetch", fetch);
+    expect(await fetchOpportunities()).toHaveLength(130);
+    expect(fetch.mock.calls.map(([url]) => url)).toContain(
+      "http://api.test/v1/grants?status=new&sort=fit&include_past=true&limit=100&offset=100",
+    );
+  });
 });

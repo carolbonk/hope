@@ -57,3 +57,7 @@ def test_blocklist_known_and_round_robin() -> None:
     capped, _, _ = order_candidates(many, set(), cap=30)
     assert len(capped) == 30 and capped[0][0] == "https://site0.org/0"
     assert capped[1][0] == "https://site1.org/0"
+
+
+def test_bad_port_is_skipped() -> None:
+    assert canonicalize("https://example.org:abc/grants") is None

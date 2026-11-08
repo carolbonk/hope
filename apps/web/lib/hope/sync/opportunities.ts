@@ -91,16 +91,26 @@ export function toOpportunity(card: GrantCard): Opportunity | null {
   };
 }
 
-type GrantList = { items: GrantCard[] };
+type GrantList = { items: GrantCard[]; total?: number };
+const PAGE = 100;
+
+async function listAll(status: (typeof STATUSES)[number]): Promise<GrantCard[]> {
+  const cards: GrantCard[] = [];
+  for (let offset = 0; ; offset += PAGE) {
+    const page = await apiFetch<GrantList>(
+      `/v1/grants?status=${status}&sort=fit&include_past=true&limit=${PAGE}${offset ? `&offset=${offset}` : ""}`,
+    );
+    cards.push(...page.items);
+    if (page.items.length < PAGE || cards.length >= (page.total ?? 0)) return cards;
+  }
+}
 
 /** H0's contract: never rejects; `null` = use the demo catalog (sync off, nothing found yet, or any error). */
 export async function fetchOpportunities(): Promise<Opportunity[] | null> {
   if (!online) return null;
   try {
-    const lists = await Promise.all(
-      STATUSES.map((s) => apiFetch<GrantList>(`/v1/grants?status=${s}&sort=fit&include_past=true&limit=100`)),
-    );
-    const cards = lists.flatMap((l) => l.items.map(toOpportunity)).filter((o): o is Opportunity => o !== null);
+    const lists = await Promise.all(STATUSES.map(listAll));
+    const cards = lists.flatMap((l) => l.map(toOpportunity)).filter((o): o is Opportunity => o !== null);
     return cards.length ? cards : null;
   } catch (err) {
     console.warn("hope sync: opportunities", err);
