@@ -213,8 +213,7 @@ def test_shapes_match_contract_mocks(api: TestClient, migrated_db: str) -> None:
     failed_id = queue_job(migrated_db)
     with psycopg.connect(migrated_db) as conn:
         conn.execute(
-            "UPDATE jobs SET status = 'failed', error = 'x', finished_at = now()"
-            " WHERE job_id = %s",
+            "UPDATE jobs SET status = 'failed', error = 'x', finished_at = now() WHERE job_id = %s",
             (failed_id,),
         )
     same(api.get(f"/v1/discovery/jobs/{failed_id}"), "discovery.get/failed")
