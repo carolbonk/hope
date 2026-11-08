@@ -9,10 +9,12 @@ const APP = "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d";
 const ME = "11111111-2222-4333-8444-555555555555";
 const TODAY = new Date("2026-11-07T12:00:00");
 
+const unknowns = vi.hoisted(() => ({ on: false }));
 vi.mock("@/lib/hope/opportunities", async () => {
   const { demoOpportunities } = await import("@/lib/hope/demo");
   const opp = demoOpportunities(new Date("2026-11-07T12:00:00")).find((o) => o.id === "opp-sunrise-ops")!;
-  return { useOpportunities: () => [{ ...opp, id: "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10", source: { kind: "grants_gov", url: "https://funder.example" } }] };
+  const grant = { ...opp, id: "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10", source: { kind: "grants_gov", url: "https://funder.example" } };
+  return { useOpportunities: () => [unknowns.on ? { ...grant, amountMin: null, amountMax: null, deadline: null, deadlineText: "Rolling" } : grant] };
 });
 
 function serverView(over: Partial<ApplicationView> = {}): ApplicationView {
@@ -129,6 +131,7 @@ const c3 = () => screen.getByText("501(c)(3)", { selector: "legend" }).closest("
 
 beforeEach(() => {
   window.localStorage.clear();
+  unknowns.on = false;
 });
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -247,4 +250,17 @@ test("demo mode keeps the browser-only workspace", async () => {
   expect(stored(id).evidence.c3).toEqual({ status: "yes", note: "" });
   expect(screen.getByText(/Simulated roles/)).toBeInTheDocument();
   expect(fetch).not.toHaveBeenCalled();
+});
+
+test("a saved check card shows its unknown amount and date honestly, never as passed", async () => {
+  vi.stubGlobal("fetch", vi.fn());
+  unknowns.on = true;
+  seed();
+  await renderPage(false);
+  const header = (await screen.findByRole("heading", { level: 1 })).closest("header")!;
+  expect(header).toHaveTextContent("Amount not found");
+  expect(header).toHaveTextContent("Deadline: Rolling, no fixed date");
+  expect(header).not.toHaveTextContent("$");
+  expect(header).not.toHaveTextContent(/Invalid|NaN/);
+  expect(within(header).getByText(/Rolling/)).not.toHaveClass("text-red-800");
 });

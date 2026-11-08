@@ -113,3 +113,14 @@ it("makes no network calls", () => {
   const source = readFileSync(join(__dirname, "page.tsx"), "utf8");
   expect(source).not.toMatch(/@\/api\/|\bfetch\(/);
 });
+
+it("a saved grant with no amount or date shows both as not found and sorts last", () => {
+  const unknown: Opportunity = { ...byId("opp-sunrise-ops"), id: "g-check", name: "Unread Funder Grant", amountMin: null, amountMax: null, deadline: null, source: { kind: "verified", url: "https://funder.example.org" } };
+  catalog.override = [unknown, ...demo()];
+  seed([app("g-check"), app("opp-tidal-sponsor")], { "g-check": "saved", "opp-tidal-sponsor": "saved" });
+  render(<SavedPage />);
+  expect(hrefs()).toEqual(["/hope/applications/opp-tidal-sponsor", "/hope/applications/g-check"]);
+  const card = screen.getByRole("link", { name: /Unread Funder Grant/ });
+  expect(card).toHaveTextContent("Amount not found · Deadline not found");
+  expect(card).not.toHaveTextContent(/\$|Invalid|NaN/);
+});

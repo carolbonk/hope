@@ -236,13 +236,13 @@ function DeadlineReminder() {
   const soon = Object.values(state.applications)
     .filter((a) => a.stage !== "ready")
     .map((a) => opps.find((o) => o.id === a.opportunityId))
-    .filter((o) => o && daysUntil(o.deadline, today) <= 14);
+    .filter((o) => o?.deadline && daysUntil(o.deadline, today) <= 14);
   if (!soon.length) return null;
   return (
     <AutoDismiss className="mb-3" onDismiss={() => setClosed(true)}>
       <div role="status" className="flex items-center gap-2 rounded-lg border border-gold/60 bg-[#f1ead8]/85 py-1 pl-3 pr-1 text-sm text-navy backdrop-blur-md">
         <Link href="/hope/deadlines" className={`min-w-0 flex-1 rounded py-1 ${focusRing}`}>
-          <span aria-hidden className="mr-1 inline-block h-2 w-2 rounded-full bg-gold align-middle" /> {h.deadlines.soon}: {soon.map((o) => `${o!.name} (${daysUntil(o!.deadline, today)}d)`).join(" · ")}
+          <span aria-hidden className="mr-1 inline-block h-2 w-2 rounded-full bg-gold align-middle" /> {h.deadlines.soon}: {soon.map((o) => `${o!.name} (${daysUntil(o!.deadline!, today)}d)`).join(" · ")}
         </Link>
         <button type="button" onClick={() => setClosed(true)} aria-label={h.dismiss} title={h.dismiss} className={`grid size-8 shrink-0 place-items-center rounded-full text-lg leading-none text-navy/70 transition-colors hover:bg-white/70 hover:text-navy ${focusRing}`}>
           <span aria-hidden>×</span>

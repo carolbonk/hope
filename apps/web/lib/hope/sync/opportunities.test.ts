@@ -58,15 +58,12 @@ describe("toOpportunity", () => {
   });
 
   it("needs check rules", async () => {
-    const { needsCheck, toOpportunity } = await load(false);
+    const { needsCheck } = await load(false);
     const usd = { amount_minor: 100, currency: "USD" };
     expect(needsCheck({ amount_max: null, deadline: "2027-01-01" })).toBe("no_amount");
     expect(needsCheck({ amount_max: usd, deadline: null })).toBe("no_deadline");
     expect(needsCheck({ amount_max: { amount_minor: 1, currency: "CAD" }, deadline: "2027-01-01" })).toBe("currency");
     expect(needsCheck({ amount_max: usd, deadline: "2027-01-01" })).toBeNull();
-    expect(toOpportunity(card({ deadline: null }))).toBeNull();
-    expect(toOpportunity(card({ amount_max: null }))).toBeNull();
-    expect(toOpportunity(card({ amount_max: { amount_minor: 1, currency: "GBP" } }))).toBeNull();
   });
 
   it("requirements never meet by default", async () => {
@@ -91,46 +88,43 @@ describe("toOpportunity", () => {
   });
 });
 
-describe("toCheckCard", () => {
-  it("keeps what is known and leaves the rest unknown", async () => {
-    const { toCheckCard } = await load(false);
-    expect(toCheckCard(card())).toBeNull();
-    expect(toCheckCard(card({ deadline: null, deadline_text: "by 5 p.m. PDT on Sept. 18" }))).toMatchObject({
+describe("incomplete grants", () => {
+  it("keep what is known and leave the rest null, never a guess", async () => {
+    const { isCheck, isRolling, toOpportunity } = await load(false);
+    expect(isCheck(toOpportunity(card()))).toBe(false);
+    const noDate = toOpportunity(card({ deadline: null, deadline_text: "by 5 p.m. PDT on Sept. 18" }));
+    expect(noDate).toMatchObject({
       id: "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
-      title: "Rural Oral Health Access Grant 2027",
-      amount: { min: 75000, max: 75000, currency: "USD" },
+      name: "Rural Oral Health Access Grant 2027",
+      amountMin: 75000,
+      amountMax: 75000,
       amountText: "up to $75,000 per year",
       otherCurrency: null,
       deadline: null,
       deadlineText: "by 5 p.m. PDT on Sept. 18",
-      verifiedAt: "2026-11-07",
+      source: { verifiedAt: "2026-11-07" },
     });
-    expect(toCheckCard(card({ amount_max: null, amount_text: null }))).toMatchObject({ amount: null, amountText: null, deadline: "2027-03-03" });
-    expect(toCheckCard(card({ amount_max: { amount_minor: 5_000_000, currency: "CAD" } }))).toMatchObject({ amount: null, otherCurrency: "CAD" });
-  });
-});
-
-describe("fetchCheckCards", () => {
-  it("sync off or error gives none", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-    const fetch = vi.fn(async () => Promise.reject(new TypeError("offline")));
-    vi.stubGlobal("fetch", fetch);
-    expect(await (await load(false)).fetchCheckCards()).toEqual([]);
-    expect(fetch).not.toHaveBeenCalled();
-    expect(await (await load(true)).fetchCheckCards()).toEqual([]);
+    expect(isCheck(noDate)).toBe(true);
+    expect(isRolling(noDate)).toBe(false);
+    expect(isRolling(toOpportunity(card({ deadline: null, deadline_text: "Rolling" })))).toBe(true);
+    expect(toOpportunity(card({ amount_max: null, amount_text: null }))).toMatchObject({ amountMin: null, amountMax: null, amountText: null, deadline: "2027-03-03" });
+    expect(toOpportunity(card({ amount_max: { amount_minor: 5_000_000, currency: "CAD" } }))).toMatchObject({ amountMin: null, amountMax: null, otherCurrency: "CAD" });
   });
 
-  it("lists only undecided incomplete grants and shares the reads with the deck", async () => {
-    const { fetchCheckCards, fetchOpportunities } = await load(true);
+  it("join the catalog with the complete ones, saved and passed included", async () => {
+    const { fetchOpportunities, isCheck } = await load(true);
     const fetch = vi.fn(async (url: string) => {
       const status = new URL(url).searchParams.get("status");
       if (status === "new") return json({ items: [card(), card({ grant_id: "g-check", amount_max: null })] });
-      return json({ items: status === "passed" ? [card({ grant_id: "g-passed", deadline: null })] : [] });
+      return json({ items: status === "saved" ? [card({ grant_id: "g-saved", deadline: null })] : [] });
     });
     vi.stubGlobal("fetch", fetch);
-    const [opps, checks] = await Promise.all([fetchOpportunities(), fetchCheckCards()]);
-    expect(opps!.map((o) => o.id)).toEqual(["3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10"]);
-    expect(checks.map((c) => c.id)).toEqual(["g-check"]);
+    const opps = (await fetchOpportunities())!;
+    expect(opps.map((o) => [o.id, isCheck(o)])).toEqual([
+      ["3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10", false],
+      ["g-check", true],
+      ["g-saved", true],
+    ]);
     expect(fetch).toHaveBeenCalledTimes(3);
   });
 });
@@ -155,8 +149,6 @@ describe("fetchOpportunities", () => {
     await expect(fetchOpportunities()).resolves.toBeNull();
     vi.stubGlobal("fetch", vi.fn(async () => new Response("not json", { status: 200 })));
     await expect(fetchOpportunities()).resolves.toBeNull();
-    vi.stubGlobal("fetch", vi.fn(async () => json({ items: [card({ deadline: null })] })));
-    await expect(fetchOpportunities()).resolves.toBeNull();
   });
 
   it("reads new saved and passed", async () => {
@@ -177,7 +169,8 @@ describe("fetchOpportunities", () => {
     expect(ids).toContain("3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10");
     expect(ids).toContain("g-passed");
     expect(opps.every((o) => o.source.kind === "verified")).toBe(true);
-    expect(opps.find((o) => o.name.includes("Youth Mental"))).toBeUndefined();
+    // The mock's youth grant has no deadline: it stays in the catalog with the date unknown.
+    expect(opps.find((o) => o.name.includes("Youth Mental"))).toMatchObject({ deadline: null });
   });
 
   it("pages past 100 grants", async () => {

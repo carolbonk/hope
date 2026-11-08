@@ -184,7 +184,7 @@ export function matchReasons(opp: Opportunity, p: OrgProfile): { score: number; 
   if (shared.length) reasons.push({ key: "focus", detail: shared.join(", ") });
   if (geographyFits(opp, p) === "yes") reasons.push({ key: "geo", detail: opp.geography.join(", ") });
   if (p.intendedUse.includes(opp.purpose)) reasons.push({ key: "purpose", detail: opp.purpose });
-  if (p.annualBudget && opp.amountMax <= p.annualBudget * 0.4) reasons.push({ key: "size", detail: String(opp.amountMax) });
+  if (p.annualBudget && opp.amountMax !== null && opp.amountMax <= p.annualBudget * 0.4) reasons.push({ key: "size", detail: String(opp.amountMax) });
   return { score: reasons.length, reasons };
 }
 

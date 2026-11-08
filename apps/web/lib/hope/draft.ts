@@ -1,6 +1,6 @@
 import type { Opportunity, OrgProfile, SectionId } from "./types";
 
-export type HopeDraftRequest = { locale: "en" | "es"; profile: OrgProfile; opportunity: Opportunity; ask: number; mode: "agent" | "template" };
+export type HopeDraftRequest = { locale: "en" | "es"; profile: OrgProfile; opportunity: Opportunity; ask: number | null; mode: "agent" | "template" };
 export type HopeDraftResult = { source: "agent" | "template"; model?: string; sections: Record<SectionId, string>; reviewerNotes: string[] };
 export type HopeDraftError = "missing_openai_key" | "agent_failed" | "invalid_request";
 
@@ -17,7 +17,7 @@ export function hopeTemplate({ locale, profile: p, opportunity: o, ask }: HopeDr
     [es ? "Evaluación y datos" : "Evaluation and data", 0.1],
     [es ? "Costos indirectos" : "Indirect costs", 0.15],
   ] as const;
-  const budget = lines.map(([l, s]) => `• ${l}: ${fmt(ask * s, c)}`).join("\n") + `\n${es ? "Total" : "Total"}: ${fmt(ask, c)}`;
+  const budget = lines.map(([l, s]) => `• ${l}: ${fmt(ask === null ? null : ask * s, c)}`).join("\n") + `\n${es ? "Total" : "Total"}: ${fmt(ask, c)}`;
   return {
     source: "template",
     sections: {

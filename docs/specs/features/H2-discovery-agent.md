@@ -384,18 +384,16 @@ export function fetchOpportunities(): Promise<Opportunity[] | null>; // never re
 // H2's pure helpers (same file, exported for tests and the run panel):
 export type NeedsCheckReason = "no_amount" | "no_deadline" | "currency";
 export function needsCheck(g: { amount_max: Money | null; deadline: string | null }): NeedsCheckReason | null;
-export function toOpportunity(card: GrantCard): Opportunity | null; // null when needsCheck(card) is set
-export type CheckCard = { id; title; funder; url; summary; amount: { min; max; currency } | null; amountText;
-  otherCurrency; deadline; deadlineText; verifiedAt }; // unknowns stay null
-export function toCheckCard(card: GrantCard): CheckCard | null; // null when toOpportunity takes the card
-export function fetchCheckCards(): Promise<CheckCard[]>; // status=new only; never rejects; [] when sync is off
+export function toOpportunity(card: GrantCard): Opportunity; // every card; unknown amount/deadline stay null
+export function isCheck(o: Opportunity): boolean;   // amountMax or deadline is null → a "check" card
+export function isRolling(o: Opportunity): boolean; // no date and the page said rolling/ongoing
 ```
 
 `fetchOpportunities()` (code only, no model):
 1. `syncEnabled` is false (`NEXT_PUBLIC_HOPE_API_URL` unset) → resolve `null` at once, no request.
 2. `GET /v1/grants?status={s}&sort=fit&include_past=true&limit=100` for `s` in `new`, `saved`, `passed`
    (all three, so Saved, Deadlines and saved workspaces keep finding their grants), with H0's `apiFetch`.
-3. Map every card with `toOpportunity`; drop the `null`s.
+3. Map every card with `toOpportunity` (incomplete grants included, with their unknowns `null`).
 4. Resolve the list, or `null` when it is empty (no run yet → the demo deck stays) or on **any** error
    (`ProblemError`, 401, network, bad JSON): wrapped in `try/catch`, `console.warn`, never rejects. Remote and
    demo cards are never mixed.
@@ -408,8 +406,9 @@ export function fetchCheckCards(): Promise<CheckCard[]>; // status=new only; nev
 | `funder`, `name` | `funder`, `title` | as-is |
 | `amountMax` | `amount_max.amount_minor` | `amount_minor / 100` (whole units, UI only; H0's rule) |
 | `amountMin` | `amount_min?.amount_minor` | same; until `amount_min` exists, `= amountMax` |
-| `currency` | `amount_max.currency` | must be a UI `Currency`; otherwise skipped (`needsCheck` = `"currency"`) |
-| `deadline` | `deadline` | `YYYY-MM-DD`; `null` (rolling or unknown) → skipped (`"no_deadline"`) |
+| `currency` | `amount_max.currency` | a UI `Currency`; otherwise `amountMin`/`amountMax` are `null` and `otherCurrency` names it |
+| `deadline` | `deadline` | `YYYY-MM-DD`, or `null` (rolling or unknown) |
+| `amountText`, `deadlineText`, `otherCurrency`, `summary` | `amount_text`, `deadline_text`, `summary` | only on incomplete grants (`needsCheck` set): the page's own words |
 | `geography` | — | `[]` (the deck's geography filter and reason don't apply) |
 | `fundingType` | — | `"grant"` |
 | `focusAreas` | `title` + `summary` | `FOCUS_KEYWORDS` table over the UI focus keys (`mentoring`: mentor; `youth`: youth, young people, teen; `family`: family, families; `mental_health`: mental health, behavioral; `safety`: safety, violence; `school_based`: school; `capacity`: capacity, operating; `arts`: arts, mural), word-boundary, case-insensitive |
@@ -420,12 +419,11 @@ export function fetchCheckCards(): Promise<CheckCard[]>; // status=new only; nev
 | `funderContext` | — | `null` |
 
 `needsCheck`: `amount_max` null → `"no_amount"`; `deadline` null (rolling or unknown) → `"no_deadline"`;
-currency not in the UI's `Currency` → `"currency"`. Those grants don't become `Opportunity` cards (Saved,
-Deadlines and the workspace need an amount and a date). `fetchCheckCards()` returns the undecided ones
-(`status=new`) as `CheckCard`s for Discover's "check amount/deadline" cards (SC24); it shares one set of
-`/v1/grants` reads with `fetchOpportunities()` when both run at the same moment. Amounts stay `null` unless
-the server gave one in a UI currency (`otherCurrency` names any other); `amountText` / `deadlineText` are
-the server's page quotes. The run panel still lists them from the job's `candidates` with `needsCheck`.
+currency not in the UI's `Currency` → `"currency"`. Those grants are still `Opportunity` cards with the
+unknown `amountMin`/`amountMax`/`deadline` left `null` (never 0 or a guessed date); `isCheck(o)` marks them for
+Discover's "check amount/deadline" cards (SC24), and Saved, Deadlines and the workspace show the unknown
+(SC25, SC27). `amountText` / `deadlineText` are the server's page quotes. The run panel still lists them
+from the job's `candidates` with `needsCheck`.
 
 - No field is added to `lib/hope/types.ts`. `source.kind = "verified"` is what keeps the demo chip
   ("Fictional opportunity · Demo data") and `DemoTag` on demo cards only. The LLM's `fit_score`, cited reasons
@@ -529,12 +527,12 @@ are. Don't touch `app/globals.css`, `components/ui/**`, `features/onboarding/**`
 - [ ] AC14 The injection fixture page scores the same as the same page without the injected line.
 - [ ] AC15 `POST/GET /v1/discovery/jobs*` return the codes above, and every response has the keys and types of its W3 mock; the OpenAPI snapshot matches.
 - [ ] AC16 The demo seed produces the 3 listed candidates offline, is idempotent and is dated 2 days back.
-- [ ] AC17 `toOpportunity` follows the mapping table (minor units → whole units, `NeedsCheck` for no amount / no deadline / other currency, `funder_eligibility` always present, `source.kind = "verified"` with `url` and `verifiedAt`) and adds no field to `Opportunity`.
+- [ ] AC17 `toOpportunity` follows the mapping table (minor units → whole units, unknown amount / deadline / other currency left `null`, `funder_eligibility` always present, `source.kind = "verified"` with `url` and `verifiedAt`).
 - [ ] AC18 `fetchOpportunities()` keeps H0's signature, never rejects, makes no request with sync off, and resolves `null` when the list is empty or on any error (so `useOpportunities()` shows the demo deck); it reads all three statuses.
 - [ ] AC19 The panel is mounted once; the deck, filters, Save/Pass/Undo and keyboard shortcuts behave as before; SC24's acceptance criteria pass.
 - [ ] AC20 The model key never reaches the browser; the web app only calls `/v1` endpoints.
 - [ ] AC21 Code settles amount and deadline: a per-award part of the quote beats program totals; when the model's quote is missing, unusable or a total, code finds the award or deadline clause on the pages (step 7); page dates found by code never mark a grant expired.
-- [ ] AC22 `toCheckCard` keeps known values and leaves unknowns `null`; `fetchCheckCards()` lists only undecided incomplete grants, never rejects, and shares its reads with `fetchOpportunities()`.
+- [ ] AC22 An incomplete grant keeps known values and leaves unknowns `null`; `fetchOpportunities()` returns it with the complete ones (all three statuses) and `isCheck` marks it.
 
 ## Test plan (offline: `MockProvider` + `mock.register`, `RecordedWebTools`, `HOPE_JOBS_INLINE=1`, Vitest + contract mocks)
 
@@ -561,7 +559,7 @@ are. Don't touch `app/globals.css`, `components/ui/**`, `features/onboarding/**`
 | AC19 | `apps/web/app/hope/discover/page.test.tsx::panel mounted once and deck unchanged`, `::verified cards show source url and no demo chip`; SC24 tests | web |
 | AC20 | `apps/web/components/hope/discovery/api.test.ts::parses every w3 mock` (no `OPENAI` / key in client bundle imports) | web unit |
 | AC21 | `services/discovery/tests/test_parse.py::test_pick_award_prefers_one_award_over_totals`, `::test_find_amount_and_deadline_on_page`, `::test_find_deadline_rolling_none_and_past_only`, `::test_context_of_finds_the_clause`; `test_agent.py::test_code_finds_amount_and_deadline_the_model_missed`, `::test_program_total_quote_replaced_by_award_on_page` | unit |
-| AC22 | `apps/web/lib/hope/sync/opportunities.test.ts::keeps what is known and leaves the rest unknown`, `::sync off or error gives none`, `::lists only undecided incomplete grants and shares the reads with the deck` | web unit |
+| AC22 | `apps/web/lib/hope/sync/opportunities.test.ts::keep what is known and leave the rest null, never a guess`, `::join the catalog with the complete ones, saved and passed included` | web unit |
 
 Commands: `uv run pytest -q services/discovery services/pillar`, the lint/mypy commands in `AGENTS.md`, and
 `pnpm --filter @hope/web typecheck && pnpm --filter @hope/web lint && pnpm --filter @hope/web test`.
@@ -596,8 +594,8 @@ grant page (`/grants/*`), and changing the deck's design.
 4. **Several deadlines (LOI vs full proposal):** show the earliest future date; `deadline_text` keeps the quote.
 5. **Re-reading passed grants:** not within 7 days (`known_url_days`); after that re-read, keeping `passed`.
 6. **Grants with no amount or deadline:** on the deck as "check amount/deadline" cards after the complete
-   ones (SC24), built from `CheckCard`, not `Opportunity`, so no shared type changes. They can be passed or
-   opened, not saved: saving needs an amount and a date in `Opportunity` (Saved, Deadlines, workspace).
+   ones (SC24). `Opportunity.amountMin`/`amountMax`/`deadline` may be `null`, so they can be saved like any
+   card; Saved, Deadlines and the workspace show "Amount not found" / "Deadline not found" / "Rolling".
 
 ## References
 

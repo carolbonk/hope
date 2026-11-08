@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { btnPrimary, ClientOnly, daysUntil, focusRing, money, PageIntro, Panel, StageBar } from "@/components/hope/ui";
-import { useToday } from "@/components/useToday";
+import { byDeadline, useGrantFacts } from "@/components/hope/discovery/facts";
+import { btnPrimary, ClientOnly, focusRing, PageIntro, Panel, StageBar } from "@/components/hope/ui";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
 import { useHope } from "@/lib/hope/store";
@@ -16,14 +16,14 @@ export default function SavedPage() {
 }
 
 function SavedList() {
-  const { h, locale } = useHopeT();
-  const today = useToday()!;
+  const { h } = useHopeT();
   const opps = useOpportunities();
+  const facts = useGrantFacts();
   const { state } = useHope();
   const apps = Object.values(state.applications)
     .map((a) => ({ a, o: opps.find((o) => o.id === a.opportunityId) }))
     .filter((x) => x.o && state.decisions[x.a.opportunityId]?.decision !== "passed")
-    .sort((x, y) => x.o!.deadline.localeCompare(y.o!.deadline));
+    .sort((x, y) => byDeadline(x.o!, y.o!));
 
   return (
     <div className="space-y-4">
@@ -49,7 +49,7 @@ function SavedList() {
                   {o!.source.kind === "demo" && <span className="rounded-full bg-[#f1ead8] px-2.5 py-1 text-xs font-semibold text-[#6b5520]">{h.demo}</span>}
                 </div>
                 <p className="mt-1 text-sm">
-                  {money(o!.amountMax, o!.currency, locale)} · {h.discover.due(o!.deadline, daysUntil(o!.deadline, today))}
+                  {facts.amount(o!, false)} · {facts.due(o!)}
                 </p>
                 <StageBar stage={a.stage} />
                 <span className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg glass-nav px-5 py-2.5 font-semibold text-teal-ink">{h.look.openWorkspace} ↗</span>
