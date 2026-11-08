@@ -63,7 +63,17 @@ const host = (url: string) => {
 };
 const ICON: Record<string, string> = { skip: "⊘", warning: "⚠", error: "✕" };
 
-export function DiscoveryPanel({ api = httpDiscoveryApi, online = syncOnline }: { api?: DiscoveryApi; online?: boolean }) {
+const reloadPage = () => window.location.reload();
+
+export function DiscoveryPanel({
+  api = httpDiscoveryApi,
+  online = syncOnline,
+  reload = reloadPage,
+}: {
+  api?: DiscoveryApi;
+  online?: boolean;
+  reload?: () => void;
+}) {
   const { h, locale } = useHopeT();
   const d = h.discovery;
   const { state } = useHope();
@@ -444,7 +454,7 @@ export function DiscoveryPanel({ api = httpDiscoveryApi, online = syncOnline }: 
       <p className="text-navy">{summary}</p>
       <div className="flex flex-wrap gap-2">
         {fresh > 0 && (
-          <button type="button" className={btnPrimary} onClick={() => window.location.reload()}>
+          <button type="button" className={btnPrimary} onClick={reload}>
             {d.showNew}
           </button>
         )}
