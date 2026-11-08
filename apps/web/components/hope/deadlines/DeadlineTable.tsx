@@ -7,7 +7,7 @@ import { DeadlineBadge } from "./DeadlineBadge";
 import { appHref, intlLocale, parseDay, urgency, type DeadlineItem } from "./items";
 
 const EDGE = { overdue: "border-l-red-400", soon: "border-l-gold", later: "border-l-transparent" } as const;
-const COLS = "sm:grid sm:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-4";
+const COLS = "sm:grid sm:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_11rem] sm:items-center sm:gap-4";
 
 export function DeadlineTable({ items }: { items: DeadlineItem[] }) {
   const { h, locale } = useHopeT();
@@ -38,7 +38,7 @@ export function DeadlineTable({ items }: { items: DeadlineItem[] }) {
               <span className="text-sm tabular-nums text-navy/80">
                 <time dateTime={item.deadline}>{fmt.format(parseDay(item.deadline))}</time>
               </span>
-              <span className="sm:text-right">
+              <span className="sm:justify-self-end">
                 <DeadlineBadge days={item.days} />
               </span>
             </Link>
