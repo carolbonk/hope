@@ -131,6 +131,8 @@ in `grants.py`).
 5. **Save, pass, reset.** `POST /v1/grants/{grant_id}/save|pass|reset` call
    `store.set_candidate_status(tx, grant_id, status, reason=..., reason_text=..., actor=principal.user_id)`.
    - `reset` sets `new`. It is what Undo sends.
+   - A grant with `amount_max` and/or `deadline` `null` saves like any other (SC24's check cards); the
+     list keeps them `null` with `urgency: "unknown"` (`test_save_accepts_unknown_amount_and_deadline`).
    - Idempotent: setting the current status returns 200 with `changed: false` and writes nothing.
    - Pass takes an optional body `{reason, reason_text}`. `reason` must be one of `not_a_fit`, `too_small`,
      `deadline_too_soon`, `not_eligible`, `other`. `reason_text` (≤ 300 chars) is allowed only with `other`.

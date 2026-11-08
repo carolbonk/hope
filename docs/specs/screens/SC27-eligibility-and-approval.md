@@ -44,7 +44,7 @@ Next action: Confirm every requirement with evidence, then send to internal appr
 
 | Element | Source | Rule |
 |---|---|---|
-| Header | `Opportunity` (`funder`, `name`, `amountMin/Max`, `currency`, `deadline`) | "(demo)" funders are fictional; `DemoTag` always shown |
+| Header | `Opportunity` (`funder`, `name`, `amountMin/Max`, `currency`, `deadline`) | "(demo)" funders are fictional; `DemoTag` always shown. An unknown amount reads "Amount not found" and an unknown date "Deadline not found" / "Rolling, no fixed date", never red (a saved check card, SC24) |
 | Stage bar | `app.stage` | Current stage highlighted; past stages ticked |
 | Requirement row | `opp.requirements[]`, `requirementStatus` | Evidence > profile fact > Unknown. Unknown is never shown as No |
 | Result | `eligibility(opp, profile, app)` | `meets` (all Yes), `not_qualified` (any No), `needs_review` (any Unknown) |

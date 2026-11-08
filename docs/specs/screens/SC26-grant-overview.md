@@ -23,8 +23,8 @@ This spec maps each overview element to where it lives now, so no agent builds a
 | Element | Where | Owner | Data | Rules |
 |---|---|---|---|---|
 | Name and funder | Card + workspace `h1` | H2 / H4 | `o.name`, `o.funder` | |
-| Amount | Card ("$25,000–$50,000", "Funding range") + header | H2 / H4 | `o.amountMin`, `o.amountMax`, `o.currency` | Whole units in the UI; integer `amount_minor` on the wire (H2's adapter divides by 100) |
-| Deadline | Card ("21 days", "Due … · 21 days") + header (red when ≤ 14 days) | H2 / H4 | `o.deadline`, `daysUntil` | |
+| Amount | Card ("$25,000–$50,000", "Funding range") + header | H2 / H4 | `o.amountMin`, `o.amountMax`, `o.currency` | Whole units in the UI; integer `amount_minor` on the wire (H2's adapter divides by 100). `null` → "Amount not found" |
+| Deadline | Card ("21 days", "Due … · 21 days") + header (red when ≤ 14 days) | H2 / H4 | `o.deadline`, `daysUntil` | `null` → "Deadline not found" / "Rolling, no fixed date", never red |
 | Why it could fit | Card | H2 (page), H4 (`matchReasons`) | `matchReasons(o, profile)` | Code, not a model: shared focus, geography, purpose, award ≤ 40 % of budget. "No clear match with your profile yet." when empty |
 | Eligibility | Card badge + details dialog rows | H2 (page), H4 (`eligibility`, `requirementStatus`) | `o.requirements`, profile, evidence | "Meets known requirements" / "Needs review" / "Does not qualify" |
 | Funder context | Details dialog | H2 | `o.funderContext` | Empty state "No sourced information on previous grantees…" |

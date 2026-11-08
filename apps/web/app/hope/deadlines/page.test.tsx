@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { I18nProvider } from "@/components/I18nProvider";
 import { demoOpportunities } from "@/lib/hope/demo";
 import { applicationId, emptyProfile, HOPE_KEY, ORG_ID } from "@/lib/hope/store";
@@ -81,4 +81,29 @@ it("spanish copy", () => {
   );
   expect(screen.getByText("Vencido")).toBeInTheDocument();
   expect(screen.getByText("Vence pronto · 9d")).toBeInTheDocument();
+});
+
+it("grants with no date go in a No date yet group after the dated ones, off the calendar", () => {
+  const rolling: Opportunity = { ...byId("opp-sunrise-ops"), id: "g-rolling", name: "Rolling Funder Grant", amountMax: null, amountMin: null, deadline: null, deadlineText: "Rolling", source: { kind: "verified", url: "https://funder.example.org" } };
+  const unknown: Opportunity = { ...rolling, id: "g-unknown", name: "Unread Funder Grant", deadlineText: null };
+  catalog.override = [rolling, unknown, ...demo()];
+  const apps = [app("g-rolling"), app("g-unknown"), app("opp-tidal-sponsor")];
+  const state: HopeState = {
+    version: 1,
+    profile: emptyProfile(),
+    decisions: Object.fromEntries(["g-rolling", "g-unknown", "opp-tidal-sponsor"].map((id) => [id, { decision: "saved" as const, at: TODAY.toISOString() }])),
+    history: [],
+    applications: Object.fromEntries(apps.map((a) => [a.id, a])),
+  };
+  window.localStorage.setItem(HOPE_KEY, JSON.stringify(state));
+  render(<DeadlinesPage />);
+  expect(hrefs()).toEqual(["/hope/applications/opp-tidal-sponsor", "/hope/applications/g-rolling", "/hope/applications/g-unknown"]);
+  const group = screen.getByTestId("no-date");
+  expect(screen.getByRole("heading", { name: "No date yet" })).toBeInTheDocument();
+  expect(group).toHaveTextContent("Rolling Funder Grant");
+  expect(group).toHaveTextContent("Rolling, no fixed date");
+  expect(group).toHaveTextContent("Deadline not found");
+  expect(document.body).not.toHaveTextContent(/Invalid Date|NaN/);
+  fireEvent.click(screen.getByRole("tab", { name: "Calendar" }));
+  expect(screen.getAllByText("Rolling Funder Grant")).toHaveLength(1);
 });

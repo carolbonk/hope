@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ClientOnly, Panel, StageBar, btnPrimary, btnSecondary, daysUntil, focusRing, input, money } from "@/components/hope/ui";
-import { useToday } from "@/components/useToday";
+import { ClientOnly, Panel, StageBar, btnPrimary, btnSecondary, focusRing, input } from "@/components/hope/ui";
+import { useGrantFacts } from "@/components/hope/discovery/facts";
 import { DraftPanel, type Up } from "@/components/hope/draft/DraftPanel";
 import { ApplyWorkspace, ServerNotice } from "@/components/hope/apply/ApplyWorkspace";
 import { ReadyGate } from "@/components/hope/apply/ReadyGate";
@@ -193,9 +193,9 @@ type BodyProps = { opp: Opportunity; app: Application; actions: Actions; eligibl
 function Body({ opp, app, actions, eligible, eligibility, draft, view, who, notice }: BodyProps) {
   const { h, locale } = useHopeT();
   const a = h.app;
-  const today = useToday()!;
   const { state } = useHope();
-  const days = daysUntil(opp.deadline, today);
+  const facts = useGrantFacts();
+  const days = facts.days(opp);
   const canAdvance = !actions.busy && (app.stage === "saved" || (app.stage === "eligibility" && eligible) || app.stage === "drafting");
 
   return (
@@ -215,9 +215,9 @@ function Body({ opp, app, actions, eligible, eligibility, draft, view, who, noti
         </p>
         <h1 className="font-display text-4xl leading-tight sm:text-5xl">{opp.name}</h1>
         <p className="text-sm">
-          {money(opp.amountMin, opp.currency, locale)}–{money(opp.amountMax, opp.currency, locale)} ·{" "}
-          <span className={days <= 14 ? "font-semibold text-red-800" : ""}>
-            {a.deadline}: {h.discover.due(opp.deadline, days)}
+          {facts.amount(opp)} ·{" "}
+          <span className={days !== null && days <= 14 ? "font-semibold text-red-800" : ""}>
+            {a.deadline}: {facts.due(opp)}
           </span>
         </p>
         <StageBar stage={app.stage} />

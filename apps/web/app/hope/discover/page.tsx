@@ -7,30 +7,14 @@ import { DiscoveryPanel } from "@/components/hope/discovery/DiscoveryPanel";
 import { useToday } from "@/components/useToday";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
-import { fetchCheckCards, type CheckCard } from "@/lib/hope/sync/opportunities";
-import { mirrorDecision } from "@/lib/hope/sync/decisions";
+import { isCheck, isRolling } from "@/lib/hope/sync/opportunities";
 import { pendingItems } from "@/lib/hope/dossier";
 import { eligibility, matchReasons, PROFILE_STEPS, requirementStatus, useHope } from "@/lib/hope/store";
 import type { Opportunity } from "@/lib/hope/types";
 import { NOTICE_MS } from "@/components/ui/AutoDismiss";
 import { useCheckCopy } from "./copy";
 
-type Item = { kind: "opp"; opp: Opportunity } | { kind: "check"; card: CheckCard };
-
-/** Found grants still missing an amount or deadline; they go to the back of the deck, clearly marked. */
-function useCheckCards(): CheckCard[] {
-  const [cards, setCards] = useState<CheckCard[]>([]);
-  useEffect(() => {
-    let live = true;
-    fetchCheckCards().then((c) => {
-      if (live) setCards(c);
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
-  return cards;
-}
+type Item = { kind: "opp" | "check"; opp: Opportunity };
 
 type Filters = { geo: string; amount: string; type: string; focus: string; deadline: string; purpose: string };
 const NO_FILTERS: Filters = { geo: "", amount: "", type: "", focus: "", deadline: "", purpose: "" };
@@ -49,10 +33,9 @@ function Deck() {
   const today = useToday()!;
   const c = useCheckCopy();
   const catalog = useOpportunities();
-  const checks = useCheckCards();
-  const [passedChecks, setPassedChecks] = useState<string[]>([]);
-  // Live finds that need a check replace the fictional demo cards instead of hiding behind them.
-  const all = useMemo(() => (checks.length ? catalog.filter((o) => o.source.kind !== "demo") : catalog), [catalog, checks.length]);
+  // Found grants still missing an amount or a date go to the back of the deck, clearly marked.
+  const all = useMemo(() => catalog.filter((o) => !isCheck(o)), [catalog]);
+  const checks = useMemo(() => catalog.filter(isCheck), [catalog]);
   const { state, decide, undo } = useHope();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [toast, setToast] = useState<{ text: string } | null>(null);
@@ -64,6 +47,7 @@ function Deck() {
       all
         .filter((o) => {
           const f = filters;
+          if (o.amountMax === null || o.amountMin === null || o.deadline === null) return false;
           if (f.geo && !o.geography.includes(f.geo)) return false;
           if (f.amount === "lt25" && o.amountMax >= 25000) return false;
           if (f.amount === "25to75" && (o.amountMax < 25000 || o.amountMin > 75000)) return false;
@@ -74,26 +58,23 @@ function Deck() {
           if (f.deadline && daysUntil(o.deadline, today) > Number(f.deadline.slice(1))) return false;
           return true;
         })
-        .sort((a, b) => matchReasons(b, profile).score - matchReasons(a, profile).score || a.deadline.localeCompare(b.deadline)),
+        .sort((a, b) => matchReasons(b, profile).score - matchReasons(a, profile).score || (a.deadline ?? "").localeCompare(b.deadline ?? "")),
     [all, filters, profile, today],
   );
   const active = Object.values(filters).some(Boolean);
   // Filters compare amounts, dates and tags these cards don't have, so they show only unfiltered.
-  const checkDeck = active ? [] : checks.filter((x) => !passedChecks.includes(x.id) && !state.decisions[x.id]);
+  const checkDeck = active ? [] : checks.filter((x) => !state.decisions[x.id]);
   const deck: Item[] = [
     ...matching.filter((o) => !state.decisions[o.id]).map((opp) => ({ kind: "opp" as const, opp })),
-    ...checkDeck.map((card) => ({ kind: "check" as const, card })),
+    ...checkDeck.map((opp) => ({ kind: "check" as const, opp })),
   ];
   const top = deck[0];
   const topOpp = top?.kind === "opp" ? top.opp : undefined;
+  const pageUrl = top?.opp.source.url;
 
   const act = (kind: "saved" | "passed") => {
     if (!top) return;
-    if (top.kind === "check") {
-      if (kind !== "passed") return;
-      setPassedChecks((ids) => [...ids, top.card.id]);
-      mirrorDecision(top.card.id, "passed");
-    } else decide(top.opp, kind);
+    decide(top.opp, kind);
     setToast({ text: kind === "saved" ? d.savedToast : d.passedToast });
   };
   const doUndo = () => {
@@ -188,7 +169,7 @@ function Deck() {
           {toast?.text}
         </p>
 
-        {matching.length === 0 && checkDeck.length === 0 ? (
+        {matching.length === 0 && (active || checks.length === 0) ? (
           <EmptyState title={d.empty} action={<button className={btnSecondary} onClick={() => setFilters(NO_FILTERS)}>{d.clear}</button>} />
         ) : !top ? (
           <EmptyState
@@ -210,8 +191,8 @@ function Deck() {
             <div className="mx-auto w-full max-w-[34rem]">
               {top.kind === "check" ? (
                 <>
-                  <SwipeCard key={top.card.id} onSwipe={act}>
-                    <CheckCardBody card={top.card} />
+                  <SwipeCard key={top.opp.id} onSwipe={act}>
+                    <CheckCardBody opp={top.opp} />
                   </SwipeCard>
                   <div className="mt-6 flex items-end justify-center gap-5 sm:gap-6" role="group" aria-label={c.keys}>
                     <RoundButton label={d.undo} onClick={doUndo} disabled={!state.history.length} size="sm">
@@ -220,9 +201,12 @@ function Deck() {
                     <RoundButton label={c.pass} onClick={() => act("passed")}>
                       ✕
                     </RoundButton>
-                    <a href={top.card.url} target="_blank" rel="noreferrer" className={`${btnPrimary} mb-6`}>
+                    <a href={pageUrl} target="_blank" rel="noreferrer" className={`${btnSecondary} mb-6`}>
                       {c.openPage} <span aria-hidden>↗</span>
                     </a>
+                    <RoundButton label={d.save} onClick={() => act("saved")} size="lg">
+                      ♥
+                    </RoundButton>
                   </div>
                   <p className="mt-5 text-center text-xs text-muted">{L.left(deck.length)}</p>
                   <p className="mt-1 hidden text-center text-xs text-muted sm:block">{c.keys}</p>
@@ -293,7 +277,7 @@ function CardBody({ opp, onDetails }: { opp: Opportunity; onDetails: () => void 
   const profile = state.profile;
   const { reasons } = matchReasons(opp, profile);
   const elig = eligibility(opp, profile, state.applications[`app:${profile.id}:${opp.id}`]);
-  const days = daysUntil(opp.deadline, today);
+  const days = daysUntil(opp.deadline!, today);
   const tone = elig === "meets" ? "bg-[#e8f1ea] text-sage-ink" : elig === "needs_review" ? "bg-[#f1ead8] text-[#6b5520]" : "bg-red-100 text-red-800";
   const art = ART[opp.focusAreas.find((f) => ART[f]) ?? ""] ?? { symbol: "✳", bg: "#dce6d8" };
   return (
@@ -317,7 +301,7 @@ function CardBody({ opp, onDetails }: { opp: Opportunity; onDetails: () => void 
         <div className="flex justify-between gap-4 border-y border-line py-4">
           <div>
             <p className="text-lg font-medium">
-              {money(opp.amountMin, opp.currency, locale)}–{money(opp.amountMax, opp.currency, locale)}
+              {money(opp.amountMin!, opp.currency, locale)}–{money(opp.amountMax!, opp.currency, locale)}
             </p>
             <p className="mt-1 text-[11px] text-muted">
               {opp.currency} · {L.range}
@@ -325,7 +309,7 @@ function CardBody({ opp, onDetails }: { opp: Opportunity; onDetails: () => void 
           </div>
           <div className="text-right">
             <p className={`text-lg font-medium ${days <= 14 ? "text-[#8a5a00]" : ""}`}>{L.days(days)}</p>
-            <p className="mt-1 text-[11px] text-muted">{d.due(opp.deadline, days)}</p>
+            <p className="mt-1 text-[11px] text-muted">{d.due(opp.deadline!, days)}</p>
           </div>
         </div>
         <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -360,54 +344,54 @@ function CardBody({ opp, onDetails }: { opp: Opportunity; onDetails: () => void 
   );
 }
 
-function CheckCardBody({ card }: { card: CheckCard }) {
+function CheckCardBody({ opp }: { opp: Opportunity }) {
   const { h, locale } = useHopeT();
   const c = useCheckCopy();
   const today = useToday()!;
-  const days = card.deadline ? daysUntil(card.deadline, today) : null;
-  const rolling = !card.deadline && /rolling|ongoing|open until/i.test(card.deadlineText ?? "");
-  const cur = card.amount?.currency ?? "USD";
-  const quote = (t: string | null) => t && t.toLowerCase() !== "rolling" && <p className="mt-1 text-[11px] text-muted">{c.pageSays(t)}</p>;
+  const days = opp.deadline ? daysUntil(opp.deadline, today) : null;
+  const rolling = isRolling(opp);
+  const cur = opp.currency;
+  const quote = (t: string | null | undefined) => t && t.toLowerCase() !== "rolling" && <p className="mt-1 text-[11px] text-muted">{c.pageSays(t)}</p>;
   const unknown = "font-medium text-[#6b5520]";
   return (
     <div className="space-y-4 p-6 sm:p-7" data-testid="check-card">
-      <p className="inline-block rounded-full border border-[#d6c590] bg-[#f1ead8] px-3 py-1 text-xs font-semibold text-[#6b5520]">⚠ {c.badge(!card.amount, !card.deadline)}</p>
+      <p className="inline-block rounded-full border border-[#d6c590] bg-[#f1ead8] px-3 py-1 text-xs font-semibold text-[#6b5520]">⚠ {c.badge(opp.amountMax === null, !opp.deadline)}</p>
       <div>
-        <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{card.funder}</p>
-        <h2 className={`${display} mt-2 text-3xl leading-[1.12] sm:text-[2.1rem]`}>{card.title}</h2>
+        <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{opp.funder}</p>
+        <h2 className={`${display} mt-2 text-3xl leading-[1.12] sm:text-[2.1rem]`}>{opp.name}</h2>
       </div>
       <p className="text-sm text-muted">{c.why}</p>
       <dl className="grid grid-cols-2 gap-4 border-y border-line py-4">
         <div>
           <dt className="text-[11px] text-muted">{c.amount}</dt>
-          {card.amount ? (
+          {opp.amountMax !== null ? (
             <dd className="text-lg font-medium">
-              {card.amount.min === card.amount.max ? money(card.amount.max, cur, locale) : `${money(card.amount.min, cur, locale)}–${money(card.amount.max, cur, locale)}`}
+              {opp.amountMin === null || opp.amountMin === opp.amountMax ? money(opp.amountMax, cur, locale) : `${money(opp.amountMin, cur, locale)}–${money(opp.amountMax, cur, locale)}`}
             </dd>
           ) : (
-            <dd className={unknown}>{card.otherCurrency ? c.currency(card.otherCurrency) : c.amountUnknown}</dd>
+            <dd className={unknown}>{opp.otherCurrency ? c.currency(opp.otherCurrency) : c.amountUnknown}</dd>
           )}
-          {quote(card.amountText)}
+          {quote(opp.amountText)}
         </div>
         <div className="text-right">
           <dt className="text-[11px] text-muted">{c.deadline}</dt>
-          {card.deadline && days !== null ? (
+          {opp.deadline && days !== null ? (
             <dd className={`text-lg font-medium ${days <= 14 ? "text-[#8a5a00]" : ""}`}>
-              {h.look.days(days)} <span className="block text-[11px] font-normal text-muted">{c.dueOn(card.deadline)}</span>
+              {h.look.days(days)} <span className="block text-[11px] font-normal text-muted">{c.dueOn(opp.deadline)}</span>
             </dd>
           ) : (
             <dd className={unknown}>{rolling ? c.rolling : c.deadlineUnknown}</dd>
           )}
-          {quote(card.deadlineText)}
+          {quote(opp.deadlineText)}
         </div>
       </dl>
-      {card.summary && <p className="text-sm leading-relaxed">{card.summary}</p>}
+      {opp.summary && <p className="text-sm leading-relaxed">{opp.summary}</p>}
       <p className="text-xs text-muted">
         {h.discover.source}:{" "}
-        <a className="underline" href={card.url}>
-          {card.url}
+        <a className="underline" href={opp.source.url}>
+          {opp.source.url}
         </a>
-        {` · ${h.discover.verified(card.verifiedAt)}`}
+        {` · ${h.discover.verified(opp.source.verifiedAt ?? "")}`}
       </p>
     </div>
   );

@@ -76,14 +76,21 @@ export type Opportunity = {
   id: string;
   funder: string;
   name: string;
-  amountMin: number;
-  amountMax: number;
+  /** Major units; `null` when the funder's page gave no amount Hope can show. */
+  amountMin: number | null;
+  amountMax: number | null;
   currency: Currency;
   geography: string[];
   fundingType: FundingType;
   focusAreas: string[];
   purpose: Purpose;
-  deadline: string;
+  /** `null` when the page gave no date (or a rolling one). */
+  deadline: string | null;
+  /** Live finds only: the page's own words for the amount/deadline, and a currency the UI doesn't show. */
+  amountText?: string | null;
+  deadlineText?: string | null;
+  otherCurrency?: string | null;
+  summary?: string | null;
   requirements: { id: string; label: string; field?: keyof OrgProfile; expect?: unknown }[];
   /** Dossier items this call asks for (W-9, UEI, SAM.gov…). */
   docs?: ReqId[];

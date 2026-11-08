@@ -37,7 +37,7 @@ const en: CheckCopy = {
   dueOn: (d: string): string => `Due ${d}`,
   openPage: "Open funder page",
   pass: "Pass",
-  keys: "Keyboard: ← pass",
+  keys: "Keyboard: ← pass · → save",
 };
 
 const es: CheckCopy = {
@@ -60,7 +60,7 @@ const es: CheckCopy = {
   dueOn: (d) => `Vence ${d}`,
   openPage: "Abrir página del financiador",
   pass: "Pasar",
-  keys: "Teclado: ← pasar",
+  keys: "Teclado: ← pasar · → guardar",
 };
 
 export function useCheckCopy() {

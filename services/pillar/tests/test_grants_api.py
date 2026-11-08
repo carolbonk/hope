@@ -442,6 +442,22 @@ def test_detail_and_not_found(api: TestClient, seeded: dict[str, GrantCandidate]
 
 
 @pytest.mark.db
+def test_save_accepts_unknown_amount_and_deadline(
+    api: TestClient, seeded: dict[str, GrantCandidate]
+) -> None:
+    """Discover's "check amount/deadline" cards save like any other grant (#69 follow-up)."""
+    gid = str(seeded["D"].grant_id)
+    assert (seeded["D"].amount_max, seeded["D"].deadline) == (None, None)
+    response = api.post(f"/v1/grants/{gid}/save")
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "saved"
+    saved = api.get("/v1/grants?status=saved&include_past=true").json()["items"]
+    card = next(item for item in saved if item["grant_id"] == gid)
+    assert (card["amount_max"], card["deadline"], card["days_left"]) == (None, None, None)
+    assert card["urgency"] == "unknown"
+
+
+@pytest.mark.db
 def test_requires_session(hope_api: TestClient) -> None:
     gid = uuid4()
     for method, path in [

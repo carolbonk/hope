@@ -85,14 +85,14 @@ All values come from `useHope().state` and `useOpportunities()`, joined by `appl
 
 | Element | Source | Format and example | Rules |
 |---|---|---|---|
-| Saved list | `state.applications` | one card per application | Drop an application whose opportunity isn't in `useOpportunities()`. **Fix 1:** drop one whose `decisions[oppId]?.decision === "passed"`. Sorted by `opportunity.deadline` ascending (ISO string compare) |
+| Saved list | `state.applications` | one card per application | Drop an application whose opportunity isn't in `useOpportunities()`. **Fix 1:** drop one whose `decisions[oppId]?.decision === "passed"`. Sorted by `opportunity.deadline` ascending (ISO string compare), unknown dates last |
 | Funder | `o.funder` | "TIDAL BANK GIVING (DEMO)" | Small caps (`uppercase tracking-[0.16em]`) |
 | Name | `o.name` | "Back-to-School Event Sponsorship" | Display font |
 | Demo badge | `h.demo` | "Demo data" | **Fix 2:** only when `o.source.kind === "demo"` |
-| Amount | `o.amountMax`, `o.currency` | "$10,000" | `money()` in whole units (`components/hope/ui.tsx`). The backend sends integer `amount_minor`; H2's adapter has already divided by 100 |
-| Due | `o.deadline`, `daysUntil(o.deadline, today)` | "Due 2026-11-16 · 9 days" | `h.discover.due` |
+| Amount | `o.amountMax`, `o.currency` | "$10,000" | `money()` in whole units (`components/hope/ui.tsx`). The backend sends integer `amount_minor`; H2's adapter has already divided by 100. `null` → "Amount not found" (`useGrantFacts`) |
+| Due | `o.deadline`, `daysUntil(o.deadline, today)` | "Due 2026-11-16 · 9 days" | `h.discover.due`; `null` → "Deadline not found", or "Rolling, no fixed date" when the page said so |
 | Stage | `a.stage` | `StageBar` with `h.stage` labels | `saved → eligibility → approval → drafting → ready` |
-| Deadlines list | `state.applications` | one row each | Drop stage `ready`. Drop a missing opportunity. Sorted by `days` ascending. Fix 1 applies here too |
+| Deadlines list | `state.applications` | one row each | Drop stage `ready`. Drop a missing opportunity. Sorted by `days` ascending. Fix 1 applies here too. A grant with no date (`deadline: null`) is left off the table, calendar and `DeadlineReminder` and listed after them in a "No date yet" panel (name link, funder, "Deadline not found" or "Rolling, no fixed date"; copy in `app/hope/deadlines/copy.ts`) |
 | Row line 2 | `h.stage[a.stage]`, `h.app.next[a.stage]` | "Saved · Start the eligibility review." | |
 | Days pill | `days` | `days < 0`: "Past due" (red); `days <= 14`: "Due soon · 9d" (gold); else "21d" (cream) | The border uses the same colours. These are the UI's thresholds, not the API's `urgency` |
 

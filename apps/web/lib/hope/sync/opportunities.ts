@@ -18,24 +18,6 @@ export type GrantCard = {
   discovered_at: string;
 };
 
-/** A found grant the deck can't use as a full card: what Hope read, with the unknowns left unknown. */
-export type CheckCard = {
-  id: string;
-  title: string;
-  funder: string;
-  url: string;
-  summary: string | null;
-  /** Major units, only when the page gave an amount in a UI currency. */
-  amount: { min: number; max: number; currency: Currency } | null;
-  /** The page's own words, when Hope quoted any. */
-  amountText: string | null;
-  /** Set when the page's amount is in a currency the UI doesn't show. */
-  otherCurrency: string | null;
-  deadline: string | null;
-  deadlineText: string | null;
-  verifiedAt: string;
-};
-
 export type NeedsCheckReason = "no_amount" | "no_deadline" | "currency";
 
 const CURRENCIES: readonly Currency[] = ["USD", "EUR", "MXN", "COP"];
@@ -83,26 +65,36 @@ function isFederal(url: string): boolean {
   }
 }
 
-export function toOpportunity(card: GrantCard): Opportunity | null {
-  if (needsCheck(card) || !card.amount_max || !card.deadline) return null;
+/** A deck card for every found grant. Unknowns stay `null` (see `isCheck`); nothing is guessed. */
+export function toOpportunity(card: GrantCard): Opportunity {
   const text = `${card.title} ${card.summary ?? ""}`;
   const eligibility = card.eligibility_summary?.trim() || null;
   const requirements: Opportunity["requirements"] = [{ id: "funder_eligibility", label: eligibility ?? ELIGIBILITY_FALLBACK }];
   if (eligibility && /501\(c\)\(3\)/i.test(eligibility)) requirements.push({ id: "c3", label: "501(c)(3)", field: "has501c3", expect: "yes" });
   const federal = isFederal(card.url);
-  const amountMax = card.amount_max.amount_minor / 100;
+  const max = card.amount_max && isCurrency(card.amount_max.currency) ? card.amount_max : null;
+  const amountMax = max ? max.amount_minor / 100 : null;
+  const words = (t: string | null | undefined) => t?.trim() || null;
   return {
     id: card.grant_id,
     funder: card.funder,
     name: card.title,
-    amountMin: card.amount_min ? card.amount_min.amount_minor / 100 : amountMax,
+    amountMin: max ? (card.amount_min ?? max).amount_minor / 100 : null,
     amountMax,
-    currency: (card.amount_max.currency ?? "USD") as Currency,
+    currency: (max?.currency ?? "USD") as Currency,
     geography: [],
     fundingType: "grant",
     focusAreas: Object.keys(FOCUS_KEYWORDS).filter((key) => FOCUS_KEYWORDS[key]!.some((w) => hasWord(text, w))),
     purpose: purposeOf(text),
     deadline: card.deadline,
+    ...(needsCheck(card)
+      ? {
+          amountText: words(card.amount_text),
+          deadlineText: words(card.deadline_text),
+          otherCurrency: card.amount_max && !max ? (card.amount_max.currency ?? null) : null,
+          summary: words(card.summary),
+        }
+      : {}),
     requirements,
     federal,
     ...(federal ? { docs: ["uei", "sam"] as const satisfies Opportunity["docs"] } : {}),
@@ -111,25 +103,11 @@ export function toOpportunity(card: GrantCard): Opportunity | null {
   };
 }
 
-/** A card for the "check amount/deadline" part of the deck, or `null` when `toOpportunity` takes it. */
-export function toCheckCard(card: GrantCard): CheckCard | null {
-  if (!needsCheck(card)) return null;
-  const max = card.amount_max && isCurrency(card.amount_max.currency) ? card.amount_max : null;
-  const text = (t: string | null | undefined) => t?.trim() || null;
-  return {
-    id: card.grant_id,
-    title: card.title,
-    funder: card.funder,
-    url: card.url,
-    summary: text(card.summary),
-    amount: max ? { min: (card.amount_min ?? max).amount_minor / 100, max: max.amount_minor / 100, currency: (max.currency ?? "USD") as Currency } : null,
-    amountText: text(card.amount_text),
-    otherCurrency: card.amount_max && !max ? (card.amount_max.currency ?? null) : null,
-    deadline: card.deadline,
-    deadlineText: text(card.deadline_text),
-    verifiedAt: card.discovered_at.slice(0, 10),
-  };
-}
+/** A grant still missing an amount or a date: Discover marks it "⚠ Check" and every page shows the unknown. */
+export const isCheck = (o: Opportunity) => o.amountMax === null || o.deadline === null;
+
+/** "Rolling" only when the page said so; otherwise an unknown date is just not found. */
+export const isRolling = (o: Opportunity) => !o.deadline && /rolling|ongoing|open until/i.test(o.deadlineText ?? "");
 
 type GrantList = { items: GrantCard[]; total?: number };
 const PAGE = 100;
@@ -160,22 +138,10 @@ export async function fetchOpportunities(): Promise<Opportunity[] | null> {
   if (!online) return null;
   try {
     const lists = await listStatuses();
-    const cards = lists.flatMap((l) => l.map(toOpportunity)).filter((o): o is Opportunity => o !== null);
+    const cards = lists.flat().map(toOpportunity);
     return cards.length ? cards : null;
   } catch (err) {
     console.warn("hope sync: opportunities", err);
     return null;
-  }
-}
-
-/** Undecided found grants missing an amount, a deadline or a UI currency. Never rejects; `[]` when sync is off or on error. */
-export async function fetchCheckCards(): Promise<CheckCard[]> {
-  if (!online) return [];
-  try {
-    const [fresh = []] = await listStatuses();
-    return fresh.map(toCheckCard).filter((c): c is CheckCard => c !== null);
-  } catch (err) {
-    console.warn("hope sync: check cards", err);
-    return [];
   }
 }

@@ -61,6 +61,9 @@ and mirrors it into the browser record with `updateApplication` (`mirror` in `li
 - Each requirement row has Yes / No / Unknown buttons and an "Evidence / note" field. A row decided by the
   profile shows "From your profile · {status}".
 - `unknown` and `""` are never shown as "No".
+- A saved grant with no amount or date (SC24 check card) keeps them unknown: no amount never passes or fails
+  a budget or size check (it needs a check), and no date never counts as passed or due soon. Online, the
+  server's checklist and rules (#63) decide as they are.
 - Eligibility is per call. It is separate from "profile complete" and "documentation reviewed".
 
 ### Required documents
