@@ -18,6 +18,7 @@ from hope_core.schemas import Citation, GrantCandidate
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from hope_pillar.api.applications import ensure_application
+from hope_pillar.api.requirements_autostart import start_requirements_once
 
 router = APIRouter(prefix="/v1", tags=["grants"])
 
@@ -364,6 +365,7 @@ def _set_status(
     principal: Principal, grant_id: str, status: Status, body: PassBody | None = None
 ) -> StatusChange:
     gid = _grant_uuid(grant_id)
+    application_id = None
     with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
         grant = store.get_candidate(tx, gid)
         if grant is None:
@@ -379,7 +381,9 @@ def _set_status(
                 actor=principal.user_id,
             )
         if status == "saved":
-            ensure_application(tx, gid, principal.user_id)
+            application_id = ensure_application(tx, gid, principal.user_id)
+    if application_id is not None:
+        start_requirements_once(principal.tenant_id, application_id, principal.user_id)
     return StatusChange(
         grant_id=gid, status=status, previous_status=previous, changed=previous != status
     )
