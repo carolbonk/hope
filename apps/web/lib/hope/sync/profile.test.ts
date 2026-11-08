@@ -147,6 +147,20 @@ describe("sync/profile", () => {
     expect(sync.profileSyncStatus().pending).toBe(true);
   });
 
+  it("conflict retry keeps others' sections", async () => {
+    const theirs = { ...DEMO_FORM, basics: { ...DEMO_FORM.basics, legal_name: "Their Name" } };
+    const api = fakeApi();
+    api.patchProfile.mockRejectedValueOnce(new ProblemError(409, "version_conflict", "x"));
+    h.api = api;
+    const sync = await load();
+    const p = { ...sync.local(), vision: "Care within thirty minutes for every family." };
+    await sync.loadRemoteProfile();
+    api.getProfile.mockResolvedValue(view(5, theirs));
+    sync.saveRemoteProfile(p);
+    await settle(sync.profileSyncStatus);
+    expect(api.patchProfile).toHaveBeenLastCalledWith({ mission: { ...DEMO_FORM.mission, vision_statement: p.vision } }, '"5"');
+  });
+
   it("validation drops sections", async () => {
     const api = fakeApi();
     api.patchProfile.mockRejectedValueOnce(

@@ -78,10 +78,13 @@ function build(profile: OrgProfile, base: ProfileForm): { sections: ProfileSecti
   return { sections: sections as ProfileSections, skipped };
 }
 
-async function push(profile: OrgProfile, retried = false): Promise<void> {
+/** `only`: after a conflict, resend just the sections this browser changed so others' edits survive. */
+async function push(profile: OrgProfile, only?: string[]): Promise<void> {
   const base = current();
   if (!base.form || !base.etag) return;
-  const { sections, skipped } = build(profile, base.form);
+  const built = build(profile, base.form);
+  const skipped = built.skipped;
+  const sections: ProfileSections = only ? Object.fromEntries(Object.entries(built.sections).filter(([k]) => only.includes(k))) : built.sections;
   update({ skipped });
   if (!Object.keys(sections).length) return update({ pending: false });
   try {
@@ -89,8 +92,8 @@ async function push(profile: OrgProfile, retried = false): Promise<void> {
   } catch (err) {
     warn(err);
     if (err instanceof ProblemError && (err.status === 409 || err.status === 428)) {
-      if (retried || !(await fetchBase())) return update({ pending: true });
-      return push(profile, true);
+      if (only || !(await fetchBase())) return update({ pending: true });
+      return push(profile, Object.keys(sections));
     }
     if (err instanceof ProblemError && err.status === 422) {
       const bad = err.errors.map((e) => e.field.split(".")[0] ?? e.field);
