@@ -870,7 +870,8 @@
               "draft",
               "edit",
               "fact",
-              "ask"
+              "ask",
+              "bid"
             ],
             "title": "Kind",
             "type": "string"
