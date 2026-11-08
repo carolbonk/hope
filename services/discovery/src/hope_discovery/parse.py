@@ -134,6 +134,11 @@ def parse_deadline(quote: str | None, today: date) -> DeadlineParse:
     return DeadlineParse(future[0] if future else None, rolling, dates, yearless)
 
 
+def has_money(text: str) -> bool:
+    """Any amount, USD or not (`€50,000` is an amount quote, just not one code converts)."""
+    return bool(MONEY.search(text) or MONEY_WORDS.search(text) or NON_USD.search(text))
+
+
 def has_money_or_date(sentence: str) -> bool:
     return bool(
         MONEY.search(sentence)

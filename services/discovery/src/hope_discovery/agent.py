@@ -37,6 +37,7 @@ from hope_discovery.parse import (
     context_of,
     find_amount,
     find_deadline,
+    has_money,
     parse_deadline,
     pick_award,
 )
@@ -447,6 +448,8 @@ class DiscoveryAgent:
             return found[1]
         if total:
             concerns.append(PROGRAM_TOTAL_CONCERN)
+        elif v.amount and not has_money(v.amount.text):
+            v.amount = None  # a quote with no amount in it isn't an amount quote
         return None
 
     def _settle_deadline(
@@ -462,6 +465,11 @@ class DiscoveryAgent:
         if found and (found[1].date is not None or deadline is None):
             v.deadline = VerifiedQuote(found[0].text, found[0].page)
             return found[1]
+        if deadline is not None and not (
+            deadline.all_dates or deadline.rolling or deadline.yearless
+        ):
+            v.deadline = None  # a quote with no date in it isn't a deadline quote
+            return None
         return deadline
 
     def _is_program_total(self, amount_minor: int) -> bool:

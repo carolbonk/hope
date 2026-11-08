@@ -17,6 +17,7 @@ from hope_discovery.mock import (
     CLOSED,
     DEMO_QUERIES,
     EXPIRED,
+    MOBILE,
     ORAL,
     UNQUOTED,
     ScriptedWeb,
@@ -168,6 +169,17 @@ def test_code_finds_amount_and_deadline_the_model_missed(run_agent: Any) -> None
     assert grant.deadline_text == "Deadline: Applications due March 3, 2027."
     assert grant.deadline == date(2027, 3, 3)
     assert {c.quote for c in grant.citations} >= {grant.amount_text, grant.deadline_text}
+
+
+def test_quotes_without_an_amount_or_date_are_dropped(run_agent: Any) -> None:
+    def wrong(messages: Any, schema: Any) -> dict[str, Any]:
+        out = extract_responder(messages, schema)
+        return out | {"amount": {"text": "Mobile Health Equipment Fund", "page": 1}}
+
+    repo, _ = run_agent(web=ScriptedWeb(hits=[MOBILE]), overrides={PageExtraction: wrong})
+    (grant,) = repo.candidates.values()
+    assert grant.amount_text is None and grant.amount_max is None
+    assert grant.deadline is None and grant.deadline_text == "Rolling"
 
 
 def test_program_total_quote_replaced_by_award_on_page(run_agent: Any) -> None:
