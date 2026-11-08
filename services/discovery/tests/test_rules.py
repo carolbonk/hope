@@ -59,10 +59,21 @@ def test_eligibility_checked_against_the_profile() -> None:
     assert s == ["met", "not_met", "met", "not_met", "not_met", "unknown", "unknown"]
     sam = rules["Applicants must have an active SAM.gov registration and a UEI."]
     assert sam.label == "SAM.gov registration, UEI"
-    assert "expired" in sam.reason and "No UEI" in sam.reason and sam.todo
+    assert "expired" in sam.reason and "doesn't record a UEI" in sam.reason and sam.todo
     budget = rules["Applicants must have an annual operating budget under $1 million."]
     assert budget.reason == "Your annual budget is $1,850,000; the funder wants at most $1,000,000."
     assert "Texas" in rules["Open to organizations serving the State of Texas."].reason
+
+
+def test_missing_registrations_are_checks_not_failures() -> None:
+    p = agency_profile()
+    p = p.model_copy(
+        update={"legal": p.legal.model_copy(update={"sam_registration": None, "uei": None})}
+    )
+    text = "Applicants must have an active SAM.gov registration and a UEI."
+    req = Requirements(eligibility=[Sourced(text=text, url=U)])
+    (rule,) = check_rules(req, p, None)
+    assert rule.status == "unknown" and "Request a UEI" not in rule.reason
 
 
 def test_budget_rules_use_the_request_amount() -> None:
