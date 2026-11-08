@@ -1,6 +1,9 @@
 // H6 application help: the funder's own form, translated terms, drafted answers and the checklist,
 // all from `/v1/applications`. Writes send `If-Match: <version>`; a stale version is a 412.
+// H4 on the server: eligibility evidence, internal approvals, comments and stage moves, mirrored into
+// the browser `Application` with `mirror`.
 import { API_URL, apiFetch, ProblemError } from "@/api/http";
+import type { Application, Stage, TriState } from "@/lib/hope/types";
 
 export type Owner = "program" | "finance" | "director";
 export type Limit = { unit: "words" | "characters" | "pages"; max: number; includes_spaces?: boolean | null };
@@ -40,15 +43,23 @@ export type Change = { what: "question" | "limit" | "upload" | "deadline" | "max
 export type Fact = { need: string; answer: string; shared: boolean; updated_at: string };
 export type ChecklistItem = { kind: "question" | "attachment" | "budget" | "deadline" | "submission" | "prep" | "rule"; key: string; label: string; status: string; detail?: string | null; owner?: Owner | null; count?: number | null; limit?: Limit | null; quote?: string | null; url?: string | null };
 export type InputNeeded = { owner: Owner; text: string; question_key?: string | null; answer?: string | null; fact?: string | null; rule?: string | null };
+export type Step = "program" | "director";
+export type Approval = { by: string; at: string; comment?: string | null };
+export type Evidence = { status: TriState; note?: string | null; by: string; at: string };
+export type AppEvent = { kind: string; actor: string | null; payload: Record<string, unknown>; at: string };
 export type ApplicationView = {
   application_id: string;
   grant_id: string;
   title: string;
   funder: string;
   url: string;
-  stage: string;
+  stage: Stage;
+  approvals: Partial<Record<Step, Approval>>;
+  evidence: Record<string, Evidence>;
+  events: AppEvent[];
   questions_status: "unread" | "reading" | "found" | "not_found";
   version: number;
+  updated_at: string;
   requirements: Requirements | null;
   requirements_job: Job | null;
   answers_job: Job | null;
@@ -97,6 +108,50 @@ export const setAsk = (id: string, amountMinor: number, version: number) => post
 export const confirmRule = (id: string, key: string, yes: boolean, version: number) =>
   post<ApplicationView>(`${base(id)}/evidence`, { requirement_id: key, status: yes ? "yes" : "no" }, version);
 export const supplyFact = (id: string, need: string, answer: string, version: number) => post<ApplicationView>(`${base(id)}/facts`, { need, answer }, version);
+
+export const moveStage = (id: string, to: Stage, version: number, overrideReason?: string) =>
+  post<ApplicationView>(`${base(id)}/stage`, overrideReason ? { to, override_reason: overrideReason } : { to }, version);
+export const review = (id: string, body: { step: Step; decision: "approve" | "send_back"; comment?: string }, version: number) =>
+  post<ApplicationView>(`${base(id)}/approvals`, body, version);
+export const addComment = (id: string, text: string) => post<ApplicationView>(`${base(id)}/comments`, { text });
+
+/** The server's own gate for `ready` (`READY_BLOCKERS` in the pillar API). */
+const READY_BLOCKERS = new Set(["missing", "over_limit", "to_confirm", "upload_needed", "passed"]);
+export const readyGaps = (view: ApplicationView) => view.checklist.items.filter((i) => READY_BLOCKERS.has(i.status));
+
+/** What the server said: a blocked move's reason, else the problem's `detail`. */
+export const problemMessage = (err: ProblemError) => err.errors[0]?.message ?? err.message;
+
+/** A short, stable label for one server event, in the browser activity format (`stage:approval`). */
+export function eventLabel(e: AppEvent): string {
+  const p = e.payload;
+  if (e.kind === "stage") return `stage:${p.to}`;
+  if (e.kind === "evidence") return `evidence:${p.requirement_id}=${p.status}`;
+  if (e.kind === "approval") return `${p.step}:approved`;
+  if (e.kind === "send_back") return `${p.step}:sent_back`;
+  if (e.kind === "draft" || e.kind === "edit") return `${e.kind}:${p.question_key}`;
+  return e.kind;
+}
+
+/** The server record as the browser `Application`: stage, approvals, evidence, comments and activity.
+ * `who` names an actor (the signed-in user or a teammate). Sections stay as they are. */
+export function mirror(view: ApplicationView, app: Application, who: (actor: string | null) => string): Application {
+  const events = [...view.events].reverse();
+  const lastSendBack = events.findLast((e) => e.kind === "send_back");
+  const sentBack = view.stage !== "approval" && !view.approvals.program && lastSendBack ? (lastSendBack.payload.step as Step) : null;
+  const approval = (step: Step) => (view.approvals[step] ? "approved" : sentBack === step ? "sent_back" : "pending");
+  return {
+    ...app,
+    stage: view.stage,
+    approvals: { program: approval("program"), director: approval("director") },
+    evidence: Object.fromEntries(Object.entries(view.evidence).map(([k, e]) => [k, { status: e.status, note: e.note ?? "" }])),
+    comments: events
+      .filter((e) => (e.kind === "comment" && e.payload.text) || (e.kind === "send_back" && e.payload.comment))
+      .map((e) => ({ id: `${e.at}:${e.kind}`, author: who(e.actor), text: String(e.payload.text ?? e.payload.comment), at: e.at })),
+    activity: events.map((e) => ({ at: e.at, event: `${eventLabel(e)} · ${who(e.actor)}` })),
+    updatedAt: view.updated_at,
+  };
+}
 
 export async function exportMarkdown(id: string): Promise<string> {
   const res = await fetch(`${API_URL}${base(id)}/export.md`, { credentials: "include" });

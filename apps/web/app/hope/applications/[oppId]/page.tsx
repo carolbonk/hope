@@ -1,12 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { use, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ClientOnly, Panel, StageBar, btnPrimary, btnSecondary, daysUntil, focusRing, input, money } from "@/components/hope/ui";
 import { useToday } from "@/components/useToday";
 import { DraftPanel, type Up } from "@/components/hope/draft/DraftPanel";
-import { ApplyWorkspace } from "@/components/hope/apply/ApplyWorkspace";
+import { ApplyWorkspace, ServerNotice } from "@/components/hope/apply/ApplyWorkspace";
+import { ReadyGate } from "@/components/hope/apply/ReadyGate";
+import { useServerCopy } from "@/components/hope/apply/copy";
+import { useServerApplication } from "@/components/hope/apply/useServerApplication";
+import { ErrorNotice, Loading } from "@/components/ui/States";
 import { online } from "@/api/http";
+import { useSession } from "@/api/session";
+import * as api from "@/lib/hope/sync/applications";
+import type { ApplicationView, Step } from "@/lib/hope/sync/applications";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
 import { factStatus, oppDocs, reqStatus, type FieldKey } from "@/lib/hope/dossier";
@@ -24,30 +31,172 @@ export default function ApplicationPage({ params }: { params: Promise<{ oppId: s
 }
 
 function Workspace({ oppId }: { oppId: string }) {
-  const { h, locale } = useHopeT();
-  const a = h.app;
-  const today = useToday()!;
   const opp = useOpportunities().find((o) => o.id === oppId);
-  const { state, updateApplication } = useHope();
+  const { state } = useHope();
   const app = state.applications[applicationId(state.profile.id, oppId)];
+  if (opp && online && GRANT_ID.test(opp.id)) return <ServerWorkspace opp={opp} app={app} />;
+  if (!opp || !app) return <NotFound />;
+  return <LocalWorkspace opp={opp} app={app} />;
+}
 
-  if (!opp || !app)
+function NotFound() {
+  const { h } = useHopeT();
+  return (
+    <Panel>
+      <p role="alert" className="mb-3">
+        {h.app.notFound}
+      </p>
+      <Link href="/hope/saved" className={btnPrimary}>
+        {h.saved.title}
+      </Link>
+    </Panel>
+  );
+}
+
+/** What the panels can do; the browser store (demo mode) or the server (online) does it. */
+type Actions = {
+  advance: () => void;
+  review: (step: Step, decision: "approve" | "send_back", comment: string) => Promise<boolean>;
+  comment: (text: string) => Promise<boolean>;
+  busy: boolean;
+};
+
+function LocalWorkspace({ opp, app }: { opp: Opportunity; app: Application }) {
+  const { h } = useHopeT();
+  const a = h.app;
+  const { state, updateApplication } = useHope();
+  const up: Up = (fn, event) => updateApplication(app.id, fn, event);
+  const actions: Actions = {
+    advance: () => {
+      const to = NEXT_STAGE[app.stage as keyof typeof NEXT_STAGE];
+      up((x) => ({ ...x, stage: to }), `stage:${to}`);
+    },
+    review: async (role, decision, note) => {
+      const comment = note ? [{ id: crypto.randomUUID(), author: `${role === "program" ? a.programReview : a.directorReview} (${a.you})`, text: note, at: new Date().toISOString() }] : [];
+      up((x) => {
+        if (decision === "send_back") return { ...x, stage: "eligibility", approvals: { program: "sent_back", director: "pending" }, comments: [...x.comments, ...comment] };
+        const approvals = { ...x.approvals, [role]: "approved" as const };
+        const both = approvals.program === "approved" && approvals.director === "approved";
+        return { ...x, approvals, stage: both ? "drafting" : x.stage, comments: [...x.comments, ...comment] };
+      }, `${role}:${decision === "approve" ? "approved" : "sent_back"}`);
+      return true;
+    },
+    comment: async (text) => {
+      up((x) => ({ ...x, comments: [...x.comments, { id: crypto.randomUUID(), author: a.you, text, at: new Date().toISOString() }] }), "comment");
+      return true;
+    },
+    busy: false,
+  };
+  const eligible = eligibility(opp, state.profile, app) === "meets";
+  return <Body opp={opp} app={app} actions={actions} eligible={eligible} eligibility={<EligibilityPanel opp={opp} app={app} up={up} />} draft={<DraftPanel opp={opp} app={app} up={up} />} />;
+}
+
+/** H4 + H6 on the server: every write sends `If-Match`, and the page shows what the server returns. */
+function ServerWorkspace({ opp, app }: { opp: Opportunity; app?: Application }) {
+  const { h } = useHopeT();
+  const t = h.apply;
+  const c = useServerCopy();
+  const { state, updateApplication } = useHope();
+  const { me } = useSession();
+  const server = useServerApplication(opp.id);
+  const { view, run } = server;
+  const [gate, setGate] = useState<string | null>(null);
+
+  const who = useCallback((actor: string | null) => (actor === null ? c.hope : actor === me?.user_id ? me.display_name || c.you : c.teammate), [c, me]);
+  const display = useMemo(() => (view ? api.mirror(view, app ?? blank(opp, state.profile.id), who) : null), [view, app, opp, state.profile.id, who]);
+
+  // Mirror the server's state into the browser store, once per server change.
+  const synced = useRef("");
+  useEffect(() => {
+    if (!view || !app) return;
+    const key = `${view.application_id}:${view.version}:${view.events[0]?.at ?? ""}`;
+    if (synced.current === key) return;
+    synced.current = key;
+    const next = api.mirror(view, app, who);
+    updateApplication(app.id, () => next, next.activity.at(-1)?.event ?? "sync");
+  }, [view, app, who, updateApplication]);
+
+  if (view === undefined && !server.loadError) return <Loading label={c.loading} />;
+  if (!view && server.loadError)
+    return (
+      <ErrorNotice title={t.loadFailed} onRetry={() => void server.reload()}>
+        {t.failed}
+      </ErrorNotice>
+    );
+  if (!view || !display)
     return (
       <Panel>
-        <p role="alert" className="mb-3">
-          {a.notFound}
-        </p>
-        <Link href="/hope/saved" className={btnPrimary}>
-          {h.saved.title}
-        </Link>
+        <p>{t.notOnServer}</p>
       </Panel>
     );
 
-  const up = (fn: (x: Application) => Application, event: string) => updateApplication(app.id, fn, event);
-  const elig = eligibility(opp, state.profile, app);
+  const id = view.application_id;
+  const ready = (reason?: string) =>
+    run(
+      (v) => api.moveStage(id, "ready", v, reason),
+      (e) => {
+        if (e.code !== "stage_blocked" || reason || !view.approvals.program || !view.approvals.director) return false;
+        setGate(api.problemMessage(e));
+        return true;
+      },
+    );
+
+  const actions: Actions = {
+    advance: async () => {
+      if (view.stage === "drafting") {
+        if (api.readyGaps(view).length) return setGate("");
+        return void ready();
+      }
+      const to = NEXT_STAGE[view.stage as keyof typeof NEXT_STAGE];
+      if (to) await run((v) => api.moveStage(id, to, v));
+    },
+    review: (step, decision, comment) => run((v) => api.review(id, { step, decision, ...(comment ? { comment } : {}) }, v)),
+    comment: (text) => run(() => api.addComment(id, text)),
+    busy: server.pending,
+  };
+
+  return (
+    <>
+      <Body
+        opp={opp}
+        app={display}
+        actions={actions}
+        view={view}
+        who={who}
+        notice={<ServerNotice notice={server.notice} onDismiss={server.clearNotice} />}
+        eligible={view.rules.filter((r) => r.kind === "eligibility").every((r) => r.status === "met")}
+        draft={<ApplyWorkspace view={view} run={run} />}
+      />
+      {gate !== null && (
+        <ReadyGate
+          view={view}
+          reason={gate}
+          onCancel={() => setGate(null)}
+          onConfirm={async (why) => {
+            if (await ready(why)) setGate(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function blank(opp: Opportunity, orgId: string): Application {
+  const at = new Date().toISOString();
+  return { id: applicationId(orgId, opp.id), orgId, opportunityId: opp.id, stage: "saved", approvals: { program: "pending", director: "pending" }, evidence: {}, sections: {} as Application["sections"], comments: [], activity: [], createdAt: at, updatedAt: at };
+}
+
+const NEXT_STAGE = { saved: "eligibility", eligibility: "approval", drafting: "ready" } as const;
+
+type BodyProps = { opp: Opportunity; app: Application; actions: Actions; eligible: boolean; eligibility?: React.ReactNode; draft: React.ReactNode; view?: ApplicationView; who?: (actor: string | null) => string; notice?: React.ReactNode };
+
+function Body({ opp, app, actions, eligible, eligibility, draft, view, who, notice }: BodyProps) {
+  const { h, locale } = useHopeT();
+  const a = h.app;
+  const today = useToday()!;
+  const { state } = useHope();
   const days = daysUntil(opp.deadline, today);
-  const canAdvance = app.stage === "saved" || (app.stage === "eligibility" && elig === "meets") || app.stage === "drafting";
-  const nextStage = { saved: "eligibility", eligibility: "approval", drafting: "ready" } as const;
+  const canAdvance = !actions.busy && (app.stage === "saved" || (app.stage === "eligibility" && eligible) || app.stage === "drafting");
 
   return (
     <div className="space-y-4">
@@ -74,33 +223,27 @@ function Workspace({ oppId }: { oppId: string }) {
         <StageBar stage={app.stage} />
       </header>
 
+      {notice}
+
       <section className="rounded-2xl bg-navy p-5 text-cream" aria-labelledby="next-action">
         <h2 id="next-action" className="text-xs font-semibold uppercase tracking-wide text-gold-light">
           {a.nextAction}
         </h2>
         <p className="mt-1 text-lg">{a.next[app.stage]}</p>
-        {app.stage in nextStage && (
+        {app.stage in NEXT_STAGE && (
           <div className="mt-3">
-            <button
-              className={btnPrimary}
-              disabled={!canAdvance}
-              onClick={() => up((x) => ({ ...x, stage: nextStage[app.stage as keyof typeof nextStage] }), `stage:${nextStage[app.stage as keyof typeof nextStage]}`)}
-            >
+            <button className={btnPrimary} disabled={!canAdvance} onClick={actions.advance}>
               {a.advance[app.stage]}
             </button>
-            {!canAdvance && app.stage === "eligibility" && <p className="mt-2 text-sm text-gold-light">{a.blocked}</p>}
+            {app.stage === "eligibility" && !eligible && <p className="mt-2 text-sm text-gold-light">{a.blocked}</p>}
           </div>
         )}
         {app.stage === "ready" && <p className="mt-2 text-sm text-cream/80">{a.humanSubmit}</p>}
       </section>
 
-      <EligibilityPanel opp={opp} app={app} up={up} />
-      <ApprovalPanel app={app} up={up} />
-      {online && GRANT_ID.test(opp.id) ? (
-        <ApplyWorkspace grantId={opp.id} />
-      ) : (
-        <DraftPanel opp={opp} app={app} up={up} />
-      )}
+      {eligibility}
+      <ApprovalPanel app={app} actions={actions} view={view} who={who} />
+      {draft}
 
       <details className="rounded-2xl glass-panel p-5">
         <summary className={`cursor-pointer font-display text-xl ${focusRing}`}>{a.documentsTitle}</summary>
@@ -125,7 +268,7 @@ function Workspace({ oppId }: { oppId: string }) {
         </Link>
       </details>
 
-      <CommentsPanel app={app} up={up} />
+      <CommentsPanel app={app} actions={actions} />
 
       <details className="rounded-2xl glass-panel p-5">
         <summary className={`cursor-pointer font-display text-xl ${focusRing}`}>{a.activity}</summary>
@@ -136,7 +279,7 @@ function Workspace({ oppId }: { oppId: string }) {
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-navy/60">ID: {app.id}</p>
+        <p className="mt-2 text-xs text-navy/60">ID: {view?.application_id ?? app.id}</p>
       </details>
     </div>
   );
@@ -197,37 +340,39 @@ function EligibilityPanel({ opp, app, up }: { opp: Opportunity; app: Application
   );
 }
 
-function ApprovalPanel({ app, up }: { app: Application; up: Up }) {
-  const { h } = useHopeT();
+function ApprovalPanel({ app, actions, view, who }: { app: Application; actions: Actions; view?: ApplicationView; who?: (actor: string | null) => string }) {
+  const { h, locale } = useHopeT();
   const a = h.app;
+  const c = useServerCopy();
   const [note, setNote] = useState("");
   const [err, setErr] = useState(false);
-  const active = app.stage === "approval";
+  const active = app.stage === "approval" && !actions.busy;
 
-  function decide(role: "program" | "director", decision: "approved" | "sent_back") {
-    if (decision === "sent_back" && !note.trim()) return setErr(true);
+  async function decide(role: Step, decision: "approve" | "send_back") {
+    if (decision === "send_back" && !note.trim()) return setErr(true);
     setErr(false);
-    const comment = note.trim() ? [{ id: crypto.randomUUID(), author: `${role === "program" ? a.programReview : a.directorReview} (${a.you})`, text: note.trim(), at: new Date().toISOString() }] : [];
-    up((x) => {
-      const approvals = { ...x.approvals, [role]: decision };
-      if (decision === "sent_back") return { ...x, stage: "eligibility", approvals: { program: "sent_back", director: "pending" }, comments: [...x.comments, ...comment] };
-      const both = approvals.program === "approved" && approvals.director === "approved";
-      return { ...x, approvals, stage: both ? "drafting" : x.stage, comments: [...x.comments, ...comment] };
-    }, `${role}:${decision}`);
-    setNote("");
+    if (await actions.review(role, decision, note.trim())) setNote("");
   }
 
-  const row = (role: "program" | "director", label: string, enabled: boolean) => (
+  const status = (role: Step) => {
+    const done = view?.approvals[role];
+    if (done && who) return c.approvedBy(who(done.by), new Date(done.at).toLocaleString(locale));
+    return view && app.approvals[role] === "approved" ? c.approved : a[app.approvals[role]];
+  };
+
+  const row = (role: Step, label: string, enabled: boolean) => (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line p-3">
       <div>
         <p className="font-semibold">{label}</p>
-        <p className="text-sm">{a[app.approvals[role]]}</p>
+        <p className="text-sm" data-testid={`approval-${role}`}>
+          {status(role)}
+        </p>
       </div>
       <div className="flex gap-2">
-        <button className={btnSecondary} disabled={!enabled} onClick={() => decide(role, "sent_back")}>
+        <button className={btnSecondary} disabled={!enabled} onClick={() => void decide(role, "send_back")}>
           {a.sendBack}
         </button>
-        <button className={btnPrimary} disabled={!enabled} onClick={() => decide(role, "approved")}>
+        <button className={btnPrimary} disabled={!enabled} onClick={() => void decide(role, "approve")}>
           {a.approve}
         </button>
       </div>
@@ -236,18 +381,22 @@ function ApprovalPanel({ app, up }: { app: Application; up: Up }) {
 
   return (
     <Panel title={a.approvalsTitle}>
-      <p className="mb-3 rounded-xl bg-gold/15 px-3 py-2 text-sm">{a.simulated}</p>
+      <p className="mb-3 rounded-xl bg-gold/15 px-3 py-2 text-sm">{view ? c.recorded : a.simulated}</p>
       <div className="space-y-2">
         {row("program", a.programReview, active && app.approvals.program !== "approved")}
         {row("director", a.directorReview, active && app.approvals.program === "approved")}
-        {active && app.approvals.program !== "approved" && <p className="text-xs text-navy/60">{a.directorReview}: {a.needsProgram}</p>}
+        {app.stage === "approval" && app.approvals.program !== "approved" && (
+          <p className="text-xs text-navy/60">
+            {a.directorReview}: {a.needsProgram}
+          </p>
+        )}
       </div>
-      {active && (
+      {app.stage === "approval" && (
         <div className="mt-3">
           <label htmlFor="approval-note" className="block text-sm font-semibold">
             {a.commentsTitle}
           </label>
-          <textarea id="approval-note" rows={2} className={input} value={note} onChange={(e) => setNote(e.target.value)} aria-invalid={err} />
+          <textarea id="approval-note" rows={2} maxLength={1000} className={input} value={note} onChange={(e) => setNote(e.target.value)} aria-invalid={err} />
           {err && (
             <AutoDismiss>
               <p role="alert" className="mt-1 text-sm text-red-800">
@@ -261,7 +410,7 @@ function ApprovalPanel({ app, up }: { app: Application; up: Up }) {
   );
 }
 
-function CommentsPanel({ app, up }: { app: Application; up: Up }) {
+function CommentsPanel({ app, actions }: { app: Application; actions: Actions }) {
   const { h, locale } = useHopeT();
   const [text, setText] = useState("");
   return (
@@ -278,18 +427,17 @@ function CommentsPanel({ app, up }: { app: Application; up: Up }) {
       </ul>
       <form
         className="flex gap-2"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           if (!text.trim()) return;
-          up((x) => ({ ...x, comments: [...x.comments, { id: crypto.randomUUID(), author: h.app.you, text: text.trim(), at: new Date().toISOString() }] }), "comment");
-          setText("");
+          if (await actions.comment(text.trim())) setText("");
         }}
       >
         <label htmlFor="new-comment" className="sr-only">
           {h.app.commentPlaceholder}
         </label>
-        <input id="new-comment" className={input} placeholder={h.app.commentPlaceholder} value={text} onChange={(e) => setText(e.target.value)} />
-        <button className={btnSecondary} type="submit">
+        <input id="new-comment" className={input} maxLength={2000} placeholder={h.app.commentPlaceholder} value={text} onChange={(e) => setText(e.target.value)} />
+        <button className={btnSecondary} type="submit" disabled={actions.busy}>
           {h.app.addComment}
         </button>
       </form>
