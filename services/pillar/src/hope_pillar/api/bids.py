@@ -26,6 +26,7 @@ from hope_pillar.api.applications import (
     IfMatch,
     PrincipalDep,
     _row,
+    _update,
     _version,
     _view,
     add_event,
@@ -558,7 +559,7 @@ def record_submission(
     if_match: IfMatch = None,
 ) -> BidView:
     """Record the receipt from the funder's portal after staff submitted there. Hope never
-    submits; once recorded, the bid is read-only."""
+    submits; once recorded, the bid is read-only and the application moves to `submitted`."""
     version = _version(if_match)
     with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
         aid = _bid_id(tx, grant_id)
@@ -575,6 +576,10 @@ def record_submission(
         )
         _bump(tx, aid, version, submission=item.model_dump(mode="json"))
         add_event(tx, aid, "bid", principal.user_id, action="submission", receipt=item.receipt)
+        app = _row(tx, aid)
+        _update(tx, aid, app["version"], stage="submitted")
+        stage = {"from": app["stage"], "to": "submitted", "via": "bid_receipt"}
+        add_event(tx, aid, "stage", principal.user_id, **stage)
         return _respond(tx, aid, response)
 
 

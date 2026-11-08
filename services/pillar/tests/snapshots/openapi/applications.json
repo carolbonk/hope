@@ -180,7 +180,8 @@
               "eligibility",
               "approval",
               "drafting",
-              "ready"
+              "ready",
+              "submitted"
             ],
             "title": "Stage",
             "type": "string"
@@ -392,7 +393,8 @@
               "eligibility",
               "approval",
               "drafting",
-              "ready"
+              "ready",
+              "submitted"
             ],
             "title": "Stage",
             "type": "string"
@@ -1570,7 +1572,8 @@
               "eligibility",
               "approval",
               "drafting",
-              "ready"
+              "ready",
+              "submitted"
             ],
             "title": "To",
             "type": "string"

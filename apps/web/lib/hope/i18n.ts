@@ -263,7 +263,7 @@ const en = {
     empty: "Nothing saved yet. Save cards in Discover to start an application.",
     open: "Open workspace",
   },
-  stage: { saved: "Saved", eligibility: "Reviewing eligibility", approval: "Internal approval", drafting: "Drafting", ready: "Ready for human submission" } as Record<string, string>,
+  stage: { saved: "Saved", eligibility: "Reviewing eligibility", approval: "Internal approval", drafting: "Drafting", ready: "Ready for human submission", submitted: "Submitted" } as Record<string, string>,
   app: {
     notFound: "We couldn't find this application. It may have been removed, or saved in another browser or account.",
     nextAction: "Next action",
@@ -273,6 +273,7 @@ const en = {
       approval: "Program review, then director review.",
       drafting: "Complete and review each section.",
       ready: "A person reviews and submits through the funder's portal.",
+      submitted: "Submitted through the funder's portal. The receipt is recorded on the bid, and the stage can't change.",
     } as Record<string, string>,
     advance: { saved: "Start eligibility review", eligibility: "Send to internal approval", drafting: "Mark ready for human submission" } as Record<string, string>,
     blocked: "Resolve unknown or failed requirements first.",
@@ -746,7 +747,7 @@ const es: HopeDict = {
     empty: "Aún no has guardado nada. Guarda tarjetas en Descubrir para iniciar una solicitud.",
     open: "Abrir espacio de trabajo",
   },
-  stage: { saved: "Guardada", eligibility: "Revisando elegibilidad", approval: "Aprobación interna", drafting: "Redactando", ready: "Lista para envío humano" },
+  stage: { saved: "Guardada", eligibility: "Revisando elegibilidad", approval: "Aprobación interna", drafting: "Redactando", ready: "Lista para envío humano", submitted: "Enviada" },
   app: {
     notFound: "No encontramos esta solicitud. Puede haberse eliminado o guardado en otro navegador o cuenta.",
     nextAction: "Siguiente acción",
@@ -756,6 +757,7 @@ const es: HopeDict = {
       approval: "Revisión del programa y luego de dirección.",
       drafting: "Completa y revisa cada sección.",
       ready: "Una persona revisa y envía por el portal del financiador.",
+      submitted: "Enviada por el portal del financiador. El comprobante quedó registrado y la etapa ya no cambia.",
     },
     advance: { saved: "Iniciar revisión de elegibilidad", eligibility: "Enviar a aprobación interna", drafting: "Marcar lista para envío humano" },
     blocked: "Primero resuelve los requisitos desconocidos o no cumplidos.",

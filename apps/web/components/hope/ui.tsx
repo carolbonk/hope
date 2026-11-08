@@ -238,7 +238,7 @@ function DeadlineReminder() {
   const [closed, setClosed] = useState(false);
   if (!today || closed) return null;
   const soon = Object.values(state.applications)
-    .filter((a) => a.stage !== "ready")
+    .filter((a) => a.stage !== "ready" && a.stage !== "submitted")
     .map((a) => opps.find((o) => o.id === a.opportunityId))
     .filter((o) => o?.deadline && daysUntil(o.deadline, today) <= 14);
   if (!soon.length) return null;
@@ -290,7 +290,7 @@ export function StageBar({ stage }: { stage: string }) {
   const { h } = useHopeT();
   const idx = STAGES.indexOf(stage as (typeof STAGES)[number]);
   return (
-    <ol className="mt-3 grid grid-cols-5 gap-1" aria-label={h.stage[stage]}>
+    <ol className="mt-3 grid grid-cols-6 gap-1" aria-label={h.stage[stage]}>
       {STAGES.map((s, i) => (
         <li key={s} aria-current={i === idx ? "step" : undefined} className="text-[10px] leading-tight sm:text-xs">
           <span className={`mb-1 block h-1.5 rounded-full ${i <= idx ? "bg-teal-ink" : "bg-line"}`} />

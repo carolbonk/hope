@@ -31,7 +31,7 @@ function Deadlines() {
   const c = useNoDateCopy();
   const open = Object.values(state.applications)
     .map((a) => ({ a, o: opps.find((o) => o.id === a.opportunityId)! }))
-    .filter((x) => x.o && x.a.stage !== "ready" && state.decisions[x.a.opportunityId]?.decision !== "passed");
+    .filter((x) => x.o && x.a.stage !== "ready" && x.a.stage !== "submitted" && state.decisions[x.a.opportunityId]?.decision !== "passed");
   const items: DeadlineItem[] = open
     .flatMap(({ a, o }) => (o.deadline ? [{ id: a.id, oppId: o.id, name: o.name, funder: o.funder, stage: a.stage, deadline: o.deadline, days: daysUntil(o.deadline, today) }] : []))
     .sort((x, y) => x.days - y.days);

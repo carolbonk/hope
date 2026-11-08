@@ -12,7 +12,7 @@ export { PROFILE_STEPS };
 export const HOPE_KEY = "hope:state:v1";
 export const ORG_ID = "org-local-1";
 export const SECTION_IDS: SectionId[] = ["program", "alignment", "logicModel", "objectives", "budget", "budgetNarrative"];
-export const STAGES: Stage[] = ["saved", "eligibility", "approval", "drafting", "ready"];
+export const STAGES: Stage[] = ["saved", "eligibility", "approval", "drafting", "ready", "submitted"];
 
 export const emptyProfile = (): OrgProfile => ({
   id: ORG_ID, legalName: "", publicName: "", country: "", jurisdiction: "", website: "", contactName: "", contactEmail: "",

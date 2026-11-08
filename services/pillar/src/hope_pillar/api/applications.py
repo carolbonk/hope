@@ -47,7 +47,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 router = APIRouter(prefix="/v1", tags=["applications"])
 
-Stage = Literal["saved", "eligibility", "approval", "drafting", "ready"]
+Stage = Literal["saved", "eligibility", "approval", "drafting", "ready", "submitted"]
 Step = Literal["program", "director"]
 EvidenceStatus = Literal["yes", "no", "unknown"]
 QuestionsStatus = Literal["unread", "reading", "found", "not_found"]
@@ -403,6 +403,8 @@ def move_problem(row: dict[str, Any], to: str, rules: list[RuleCheck] | None = N
     """Why `row` can't move to stage `to`, or None when it can. Moving to review needs every
     eligibility rule met, by the profile or confirmed by staff."""
     key = (row["stage"], to)
+    if "submitted" in key:
+        return "Only recording the portal receipt on the bid marks an application submitted."
     if key not in MOVES:
         return f"Can't move from {row['stage']} to {to}."
     if to == "approval":

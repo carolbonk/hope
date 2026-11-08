@@ -101,7 +101,7 @@ export type Opportunity = {
 };
 
 export type Eligibility = "meets" | "needs_review" | "not_qualified";
-export type Stage = "saved" | "eligibility" | "approval" | "drafting" | "ready";
+export type Stage = "saved" | "eligibility" | "approval" | "drafting" | "ready" | "submitted";
 export type SectionId = "program" | "alignment" | "logicModel" | "objectives" | "budget" | "budgetNarrative";
 
 export type Section = { text: string; origin: "empty" | "ai" | "template" | "human"; updatedAt: string | null };
