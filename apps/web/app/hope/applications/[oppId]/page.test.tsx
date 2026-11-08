@@ -35,6 +35,11 @@ function serverView(over: Partial<ApplicationView> = {}): ApplicationView {
     questions: [],
     answers: [],
     terms: [],
+    facts: [],
+    rules: [],
+    changes: [],
+    requirements_revision: null,
+    ask: null,
     checklist: { items: [], inputs_needed: [], complete: true },
     ...over,
   };
@@ -75,6 +80,8 @@ function serve(start: ApplicationView) {
         return json(v);
       }
       if (ifMatch !== `"${v.version}"`) return json({ code: "version_mismatch", title: "Version mismatch" }, 412);
+      if (path.endsWith("/evidence") && String(body!.requirement_id).startsWith("rule:"))
+        return bump({ rules: v.rules.map((r) => (r.key === body!.requirement_id ? { ...r, status: body!.status === "yes" ? "met" : "not_met", confirmed_by_staff: true } : r)) }, "evidence", body!);
       if (path.endsWith("/evidence")) return bump({ evidence: { ...v.evidence, [String(body!.requirement_id)]: { status: body!.status as "yes", note: null, by: ME, at: "2026-11-07T12:00:00Z" } } }, "evidence", body!);
       if (path.endsWith("/stage")) {
         if (body!.to === "ready" && !v.checklist.complete && !body!.override_reason)
@@ -128,15 +135,19 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("eligibility, approvals and stage moves are recorded on the server with If-Match", async () => {
-  const server = serve(serverView());
+const RULE = { key: "rule:c3", kind: "eligibility" as const, label: "Registered 501(c)(3)", status: "unknown" as const, reason: "Your profile doesn't say.", quote: "Applicants must be 501(c)(3) organizations.", url: "https://funder.example", owner: "director" as const, confirmed_by_staff: false };
+const REQS = { questions: [], attachments: [], budget: {}, submission: {}, eligibility: [], pages: [] };
+
+test("the grant's rules (#63) gate approval; approvals and stage moves are recorded on the server with If-Match", async () => {
+  const server = serve(serverView({ requirements: REQS, rules: [RULE] }));
   const id = seed();
   await renderPage(true);
 
-  fireEvent.click(within(await screen.findByText("501(c)(3)", { selector: "legend" }).then((l) => l.closest("fieldset") as HTMLElement)).getByLabelText("Yes"));
-  await screen.findByRole("button", { name: "Send to internal approval" });
-  expect(server.posts("/evidence")[0]).toMatchObject({ ifMatch: '"3"', body: { requirement_id: "c3", status: "yes" } });
-  await vi.waitFor(() => expect(within(c3()).getByLabelText("Yes")).toBeChecked());
+  expect(await screen.findByRole("button", { name: "Send to internal approval" })).toBeDisabled();
+  expect(screen.queryByText("501(c)(3)", { selector: "legend" })).toBeNull();
+  fireEvent.click(within(document.querySelector('[data-rule="rule:c3"]') as HTMLElement).getByRole("button", { name: "We meet this" }));
+  await vi.waitFor(() => expect(screen.getByRole("button", { name: "Send to internal approval" })).toBeEnabled());
+  expect(server.posts("/evidence")[0]).toMatchObject({ ifMatch: '"3"', body: { requirement_id: "rule:c3", status: "yes" } });
 
   fireEvent.click(screen.getByRole("button", { name: "Send to internal approval" }));
   await vi.waitFor(() => expect(server.view().stage).toBe("approval"));
@@ -212,9 +223,10 @@ test("shows the server's message on 409/422 and refetches on a version conflict"
   fireEvent.click(await screen.findByRole("button", { name: "Start eligibility review" }));
   expect(await screen.findByText("Can't move from saved to eligibility.")).toBeInTheDocument();
 
-  server.failNext.push({ path: "/evidence", status: 422, body: { code: "validation_error", title: "Unprocessable", detail: "Eligibility is locked after approval." } });
-  fireEvent.click(within(c3()).getByLabelText("No"));
-  expect(await screen.findByText("Eligibility is locked after approval.")).toBeInTheDocument();
+  server.failNext.push({ path: "/comments", status: 422, body: { code: "validation_failed", title: "Unprocessable", detail: "Comment is too long." } });
+  fireEvent.change(screen.getByPlaceholderText("Write a comment"), { target: { value: "Hello" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add comment" }));
+  expect(await screen.findByText("Comment is too long.")).toBeInTheDocument();
 
   const gets = () => server.calls.filter((c) => c.method === "GET" && c.path === `/v1/applications/${APP}`).length;
   const before = gets();

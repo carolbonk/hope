@@ -56,7 +56,6 @@ function NotFound() {
 /** What the panels can do; the browser store (demo mode) or the server (online) does it. */
 type Actions = {
   advance: () => void;
-  evidence: (id: string, status: TriState, note: string) => void;
   review: (step: Step, decision: "approve" | "send_back", comment: string) => Promise<boolean>;
   comment: (text: string) => Promise<boolean>;
   busy: boolean;
@@ -65,14 +64,13 @@ type Actions = {
 function LocalWorkspace({ opp, app }: { opp: Opportunity; app: Application }) {
   const { h } = useHopeT();
   const a = h.app;
-  const { updateApplication } = useHope();
+  const { state, updateApplication } = useHope();
   const up: Up = (fn, event) => updateApplication(app.id, fn, event);
   const actions: Actions = {
     advance: () => {
       const to = NEXT_STAGE[app.stage as keyof typeof NEXT_STAGE];
       up((x) => ({ ...x, stage: to }), `stage:${to}`);
     },
-    evidence: (id, status, note) => up((x) => ({ ...x, evidence: { ...x.evidence, [id]: { status, note } } }), `evidence:${id}`),
     review: async (role, decision, note) => {
       const comment = note ? [{ id: crypto.randomUUID(), author: `${role === "program" ? a.programReview : a.directorReview} (${a.you})`, text: note, at: new Date().toISOString() }] : [];
       up((x) => {
@@ -89,7 +87,8 @@ function LocalWorkspace({ opp, app }: { opp: Opportunity; app: Application }) {
     },
     busy: false,
   };
-  return <Body opp={opp} app={app} actions={actions} draft={<DraftPanel opp={opp} app={app} up={up} />} />;
+  const eligible = eligibility(opp, state.profile, app) === "meets";
+  return <Body opp={opp} app={app} actions={actions} eligible={eligible} eligibility={<EligibilityPanel opp={opp} app={app} up={up} />} draft={<DraftPanel opp={opp} app={app} up={up} />} />;
 }
 
 /** H4 + H6 on the server: every write sends `If-Match`, and the page shows what the server returns. */
@@ -148,18 +147,9 @@ function ServerWorkspace({ opp, app }: { opp: Opportunity; app?: Application }) 
         if (api.readyGaps(view).length) return setGate("");
         return void ready();
       }
-      if (view.stage === "eligibility") {
-        // Requirements answered from the profile are recorded too, so the server holds the full evidence.
-        for (const r of opp.requirements) {
-          if (view.evidence[r.id]) continue;
-          const ok = await run((v) => api.recordEvidence(id, { requirement_id: r.id, status: requirementStatus(r, state.profile, display) }, v));
-          if (!ok) return;
-        }
-      }
       const to = NEXT_STAGE[view.stage as keyof typeof NEXT_STAGE];
       if (to) await run((v) => api.moveStage(id, to, v));
     },
-    evidence: (rid, status, note) => void run((v) => api.recordEvidence(id, { requirement_id: rid, status, ...(note ? { note } : {}) }, v)),
     review: (step, decision, comment) => run((v) => api.review(id, { step, decision, ...(comment ? { comment } : {}) }, v)),
     comment: (text) => run(() => api.addComment(id, text)),
     busy: server.pending,
@@ -174,15 +164,8 @@ function ServerWorkspace({ opp, app }: { opp: Opportunity; app?: Application }) 
         view={view}
         who={who}
         notice={<ServerNotice notice={server.notice} onDismiss={server.clearNotice} />}
-        draft={
-          view.stage === "drafting" || view.stage === "ready" ? (
-            <ApplyWorkspace view={view} run={run} />
-          ) : (
-            <Panel title={h.app.sectionsTitle}>
-              <p className="rounded-xl bg-cream px-3 py-2 text-sm">🔒 {h.app.locked}</p>
-            </Panel>
-          )
-        }
+        eligible={view.rules.filter((r) => r.kind === "eligibility").every((r) => r.status === "met")}
+        draft={<ApplyWorkspace view={view} run={run} />}
       />
       {gate !== null && (
         <ReadyGate
@@ -205,16 +188,15 @@ function blank(opp: Opportunity, orgId: string): Application {
 
 const NEXT_STAGE = { saved: "eligibility", eligibility: "approval", drafting: "ready" } as const;
 
-type BodyProps = { opp: Opportunity; app: Application; actions: Actions; draft: React.ReactNode; view?: ApplicationView; who?: (actor: string | null) => string; notice?: React.ReactNode };
+type BodyProps = { opp: Opportunity; app: Application; actions: Actions; eligible: boolean; eligibility?: React.ReactNode; draft: React.ReactNode; view?: ApplicationView; who?: (actor: string | null) => string; notice?: React.ReactNode };
 
-function Body({ opp, app, actions, draft, view, who, notice }: BodyProps) {
+function Body({ opp, app, actions, eligible, eligibility, draft, view, who, notice }: BodyProps) {
   const { h, locale } = useHopeT();
   const a = h.app;
   const today = useToday()!;
   const { state } = useHope();
-  const elig = eligibility(opp, state.profile, app);
   const days = daysUntil(opp.deadline, today);
-  const canAdvance = !actions.busy && (app.stage === "saved" || (app.stage === "eligibility" && elig === "meets") || app.stage === "drafting");
+  const canAdvance = !actions.busy && (app.stage === "saved" || (app.stage === "eligibility" && eligible) || app.stage === "drafting");
 
   return (
     <div className="space-y-4">
@@ -253,13 +235,13 @@ function Body({ opp, app, actions, draft, view, who, notice }: BodyProps) {
             <button className={btnPrimary} disabled={!canAdvance} onClick={actions.advance}>
               {a.advance[app.stage]}
             </button>
-            {app.stage === "eligibility" && elig !== "meets" && <p className="mt-2 text-sm text-gold-light">{a.blocked}</p>}
+            {app.stage === "eligibility" && !eligible && <p className="mt-2 text-sm text-gold-light">{a.blocked}</p>}
           </div>
         )}
         {app.stage === "ready" && <p className="mt-2 text-sm text-cream/80">{a.humanSubmit}</p>}
       </section>
 
-      <EligibilityPanel opp={opp} app={app} actions={actions} locked={!!view && !["saved", "eligibility"].includes(view.stage)} />
+      {eligibility}
       <ApprovalPanel app={app} actions={actions} view={view} who={who} />
       {draft}
 
@@ -307,62 +289,54 @@ const GRANT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
 const REQ_FACT: Record<string, FieldKey> = { c3: "has501c3", budget: "annualBudget", geo: "serviceArea" };
 
 
-function EligibilityPanel({ opp, app, actions, locked }: { opp: Opportunity; app: Application; actions: Actions; locked: boolean }) {
+function EligibilityPanel({ opp, app, up }: { opp: Opportunity; app: Application; up: Up }) {
   const { h } = useHopeT();
-  const c = useServerCopy();
   const { state } = useHope();
   const elig = eligibility(opp, state.profile, app);
   return (
     <Panel title={h.app.eligibilityTitle}>
       <p className="mb-1 text-sm font-semibold">{h.discover.elig[elig]}</p>
       <p className="mb-3 text-xs text-muted">{h.app.eligSeparate}</p>
-      {locked && <p className="mb-3 text-xs text-navy/70">{c.evidenceLocked}</p>}
       {opp.requirements.length === 0 && <p className="text-sm">—</p>}
       <ul className="space-y-4">
         {opp.requirements.map((r) => {
           const status = requirementStatus(r, state.profile, app);
+          const ev = app.evidence[r.id] ?? { status, note: "" };
           const fromProfile = !app.evidence[r.id] && status !== "unknown";
           return (
             <li key={r.id} className="rounded-xl border border-line p-3">
-              <fieldset disabled={locked || actions.busy}>
+              <fieldset>
                 <legend className="font-semibold">{r.label}</legend>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {(["yes", "no", "unknown"] as TriState[]).map((v) => (
                     <label key={v} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm ${status === v ? "border-teal-ink bg-sage" : "border-navy/20"}`}>
-                      <input type="radio" name={`ev-${r.id}`} className={focusRing} checked={status === v} onChange={() => actions.evidence(r.id, v, app.evidence[r.id]?.note ?? "")} />
+                      <input
+                        type="radio"
+                        name={`ev-${r.id}`}
+                        className={focusRing}
+                        checked={status === v}
+                        onChange={() => up((x) => ({ ...x, evidence: { ...x.evidence, [r.id]: { ...ev, status: v } } }), `evidence:${r.id}`)}
+                      />
                       {h[v]}
                     </label>
                   ))}
                 </div>
                 {fromProfile && <p className="mt-1 text-xs text-navy/60">{h.app.fromProfile(h.profile.status[r.id === "sam" ? reqStatus(state.profile, "sam") : factStatus(state.profile, REQ_FACT[r.id] ?? (r.field as FieldKey))] ?? "")}</p>}
-                <EvidenceNote key={online ? `${r.id}:${app.evidence[r.id]?.note ?? ""}` : r.id} id={r.id} note={app.evidence[r.id]?.note ?? ""} onSave={(note) => actions.evidence(r.id, status, note)} live={!online} />
+                <label htmlFor={`note-${r.id}`} className="mt-2 block text-sm">
+                  {h.app.evidence}
+                </label>
+                <input
+                  id={`note-${r.id}`}
+                  className={input}
+                  value={ev.note}
+                  onChange={(e) => up((x) => ({ ...x, evidence: { ...x.evidence, [r.id]: { ...ev, note: e.target.value } } }), `evidence_note:${r.id}`)}
+                />
               </fieldset>
             </li>
           );
         })}
       </ul>
     </Panel>
-  );
-}
-
-/** Demo mode saves every keystroke in the browser; online the note is sent when the field loses focus. */
-function EvidenceNote({ id, note, onSave, live }: { id: string; note: string; onSave: (note: string) => void; live: boolean }) {
-  const { h } = useHopeT();
-  const [draft, setDraft] = useState(note);
-  return (
-    <>
-      <label htmlFor={`note-${id}`} className="mt-2 block text-sm">
-        {h.app.evidence}
-      </label>
-      <input
-        id={`note-${id}`}
-        className={input}
-        maxLength={500}
-        value={live ? note : draft}
-        onChange={(e) => (live ? onSave(e.target.value) : setDraft(e.target.value))}
-        onBlur={() => !live && draft.trim() !== note && onSave(draft.trim())}
-      />
-    </>
   );
 }
 

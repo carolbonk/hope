@@ -37,8 +37,12 @@ export type Term = {
   status: TermStatus;
   detail?: string | null;
 };
-export type ChecklistItem = { kind: "question" | "attachment" | "budget" | "deadline" | "submission" | "prep"; key: string; label: string; status: string; detail?: string | null; owner?: Owner | null; count?: number | null; limit?: Limit | null; quote?: string | null; url?: string | null };
-export type InputNeeded = { owner: Owner; text: string; question_key?: string | null; answer?: string | null };
+export type RuleStatus = "met" | "not_met" | "unknown" | "applies" | "not_applicable";
+export type Rule = { key: string; kind: "eligibility" | "budget" | "conditional"; label: string; status: RuleStatus; reason: string; quote: string; url: string; owner: Owner; todo?: string | null; confirmed_by_staff: boolean };
+export type Change = { what: "question" | "limit" | "upload" | "deadline" | "max_request" | "eligibility" | "rule"; change: "added" | "removed" | "changed"; text: string; before?: string | null };
+export type Fact = { need: string; answer: string; shared: boolean; updated_at: string };
+export type ChecklistItem = { kind: "question" | "attachment" | "budget" | "deadline" | "submission" | "prep" | "rule"; key: string; label: string; status: string; detail?: string | null; owner?: Owner | null; count?: number | null; limit?: Limit | null; quote?: string | null; url?: string | null };
+export type InputNeeded = { owner: Owner; text: string; question_key?: string | null; answer?: string | null; fact?: string | null; rule?: string | null };
 export type Step = "program" | "director";
 export type Approval = { by: string; at: string; comment?: string | null };
 export type Evidence = { status: TriState; note?: string | null; by: string; at: string };
@@ -62,6 +66,11 @@ export type ApplicationView = {
   questions: Question[];
   answers: Answer[];
   terms: Term[];
+  facts: Fact[];
+  rules: Rule[];
+  changes: Change[];
+  requirements_revision: number | null;
+  ask: { amount_minor: number; currency: string } | null;
   checklist: { items: ChecklistItem[]; inputs_needed: InputNeeded[]; complete: boolean };
 };
 
@@ -95,12 +104,13 @@ export const draftOne = (id: string, key: string, confirmOverwrite = false) =>
   post<ApplicationView>(`${base(id)}/answers/${encodeURIComponent(key)}/draft`, { confirm_overwrite: confirmOverwrite });
 export const editAnswer = (id: string, key: string, text: string, version: number) =>
   apiFetch<ApplicationView>(`${base(id)}/answers/${encodeURIComponent(key)}`, { method: "PATCH", body: JSON.stringify({ text }), headers: { "If-Match": `"${version}"` } });
+export const setAsk = (id: string, amountMinor: number, version: number) => post<ApplicationView>(`${base(id)}/ask`, { amount_minor: amountMinor }, version);
+export const confirmRule = (id: string, key: string, yes: boolean, version: number) =>
+  post<ApplicationView>(`${base(id)}/evidence`, { requirement_id: key, status: yes ? "yes" : "no" }, version);
 export const supplyFact = (id: string, need: string, answer: string, version: number) => post<ApplicationView>(`${base(id)}/facts`, { need, answer }, version);
 
 export const moveStage = (id: string, to: Stage, version: number, overrideReason?: string) =>
   post<ApplicationView>(`${base(id)}/stage`, overrideReason ? { to, override_reason: overrideReason } : { to }, version);
-export const recordEvidence = (id: string, body: { requirement_id: string; status: TriState; note?: string }, version: number) =>
-  post<ApplicationView>(`${base(id)}/evidence`, body, version);
 export const review = (id: string, body: { step: Step; decision: "approve" | "send_back"; comment?: string }, version: number) =>
   post<ApplicationView>(`${base(id)}/approvals`, body, version);
 export const addComment = (id: string, text: string) => post<ApplicationView>(`${base(id)}/comments`, { text });

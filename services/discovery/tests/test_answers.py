@@ -269,6 +269,26 @@ def test_staff_facts_fill_gaps_instead_of_to_confirm() -> None:
     assert "local data on need" in result.to_confirm
 
 
+def test_staff_answer_replaces_its_to_confirm_marker() -> None:
+    facts = {"local data on need": "Clinic records show 3,200 rural patients a year."}
+    result = drafter().draft(
+        agency_profile(), GRANT, Requirements(), q("Why is this work urgent?"), facts=facts
+    )
+    assert "TO CONFIRM" not in result.text
+    assert "Clinic records show 3,200 rural patients a year." in result.text
+    assert result.to_confirm == []
+    staff = [c for c in result.citations if c.get("path", "").startswith("staff.")]
+    assert [c["text"] for c in staff] == [f"local data on need: {facts['local data on need']}"]
+
+
+def test_unanswered_markers_stay() -> None:
+    facts = {"timeline and milestones": "Launch in March 2027."}
+    result = drafter().draft(
+        agency_profile(), GRANT, Requirements(), q("Why is this work urgent?"), facts=facts
+    )
+    assert "[TO CONFIRM: local data on need]" in result.text
+
+
 def test_plan_specifics_not_in_the_profile_become_to_confirm() -> None:
     from hope_discovery.answers import guard_specifics
 

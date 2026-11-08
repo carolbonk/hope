@@ -8,7 +8,7 @@ import type { IconName } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
 import { useHopeT } from "@/lib/hope/i18n";
 import * as api from "@/lib/hope/sync/applications";
-import type { Answer, ApplicationView, ChecklistItem, InputNeeded, Question, Term } from "@/lib/hope/sync/applications";
+import type { Answer, ApplicationView, Change, ChecklistItem, InputNeeded, Question, Rule, Term } from "@/lib/hope/sync/applications";
 import type { Run } from "./useServerApplication";
 
 const TERM_ORDER = ["at_risk", "action_needed", "check", "have", "info"];
@@ -26,14 +26,24 @@ const Q_TONE: Record<string, [Tone, IconName]> = {
   over_limit: ["bad", "alert"],
   to_confirm: ["warn", "alert"],
 };
+const RULE_ORDER = ["not_met", "unknown", "applies", "met", "not_applicable"];
+const RULE_TONE: Record<string, [Tone, IconName]> = {
+  met: ["good", "check"],
+  not_met: ["bad", "alert"],
+  unknown: ["warn", "eye"],
+  applies: ["info", "alert"],
+  not_applicable: ["neutral", "minus"],
+};
 /** SC29: the funder's own form, translated, with drafted answers and a to-do list. The page loads `view`
  * with `useServerApplication` and shows its notices. */
 export function ApplyWorkspace({ view, run }: { view: ApplicationView; run: Run }) {
   return (
     <div className="space-y-4" data-testid="apply-workspace">
       <FormSource view={view} run={run} />
+      <ChangesPanel changes={view.changes ?? []} />
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          <RulesPanel view={view} run={run} />
           <TermsPanel terms={view.terms} />
           <QuestionList view={view} run={run} />
           <Uploads items={view.checklist.items.filter((i) => i.kind === "attachment")} />
@@ -156,6 +166,132 @@ function FormSource({ view, run }: { view: ApplicationView; run: Run }) {
         <textarea id="paste-form" rows={12} className={input} value={text} onChange={(e) => setText(e.target.value)} />
       </Modal>
     </Panel>
+  );
+}
+
+function ChangesPanel({ changes }: { changes: Change[] }) {
+  const { h } = useHopeT();
+  const t = h.apply;
+  if (changes.length === 0) return null;
+  return (
+    <Panel title={t.changesTitle(changes.length)}>
+      <p className="text-sm text-muted">{t.changesIntro}</p>
+      <ul className="mt-2 space-y-2 text-sm" data-testid="changes">
+        {changes.map((c, i) => (
+          <li key={`${c.what}:${c.text}:${i}`} className="flex flex-wrap items-baseline gap-2" data-change={c.what}>
+            <Badge tone={c.change === "removed" ? "bad" : c.change === "added" ? "info" : "warn"} icon={c.change === "removed" ? "minus" : "alert"}>
+              {t.changeKind[c.change]}
+            </Badge>
+            <span>
+              <span className="font-semibold">{t.changeWhat[c.what]}:</span> {c.text}
+              {c.before && <span className="text-muted"> {t.was(c.before)}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+function RulesPanel({ view, run }: { view: ApplicationView; run: Run }) {
+  const { h } = useHopeT();
+  const t = h.apply;
+  if (!view.requirements) return null;
+  const rules = view.rules ?? [];
+  const kinds = ["eligibility", "budget", "conditional"] as const;
+  return (
+    <Panel title={t.rulesTitle}>
+      <p className="text-sm text-muted">{t.rulesIntro}</p>
+      <AskForm view={view} run={run} />
+      {rules.length === 0 && <p className="mt-3 text-sm">{t.noRules}</p>}
+      {kinds.map((kind) => {
+        const mine = rules.filter((r) => r.kind === kind).sort((a, b) => RULE_ORDER.indexOf(a.status) - RULE_ORDER.indexOf(b.status));
+        if (mine.length === 0) return null;
+        return (
+          <section key={kind} className="mt-4" aria-label={t.ruleGroup[kind]}>
+            <h3 className="text-sm font-semibold">
+              {t.ruleGroup[kind]} ({mine.length})
+            </h3>
+            <ul className="mt-1 space-y-2">
+              {mine.map((rule) => (
+                <RuleRow key={rule.key} rule={rule} view={view} run={run} />
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+    </Panel>
+  );
+}
+
+function AskForm({ view, run }: { view: ApplicationView; run: Run }) {
+  const { h } = useHopeT();
+  const t = h.apply;
+  const current = view.ask ? view.ask.amount_minor / 100 : null;
+  const [value, setValue] = useState(current === null ? "" : String(current));
+  const dollars = Number(value.replace(/[$,\s]/g, ""));
+  const valid = value.trim() !== "" && Number.isFinite(dollars) && dollars > 0;
+  return (
+    <form
+      className="mt-3 flex flex-wrap items-end gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (valid) void run((v) => api.setAsk(view.application_id, Math.round(dollars * 100), v));
+      }}
+    >
+      <label htmlFor="ask-amount" className="text-sm">
+        <span className="block font-semibold">{t.askLabel}</span>
+        <input id="ask-amount" inputMode="decimal" className={`${input} w-40`} placeholder="$25,000" value={value} onChange={(e) => setValue(e.target.value)} aria-describedby="ask-help" />
+      </label>
+      <button type="submit" className={btnSecondary} disabled={!valid || dollars === current}>
+        {t.save}
+      </button>
+      <p id="ask-help" className="w-full text-xs text-muted">
+        {t.askHelp}
+      </p>
+    </form>
+  );
+}
+
+function RuleRow({ rule, view, run }: { rule: Rule; view: ApplicationView; run: Run }) {
+  const { h } = useHopeT();
+  const t = h.apply;
+  const [tone, icon] = RULE_TONE[rule.status] ?? (["neutral", "dot"] as [Tone, IconName]);
+  const canConfirm = rule.status === "unknown" && (view.stage === "saved" || view.stage === "eligibility");
+  const conditional = rule.kind === "conditional";
+  const confirm = (yes: boolean) => void run((v) => api.confirmRule(view.application_id, rule.key, yes, v));
+  return (
+    <li className="rounded-xl border border-line p-3 text-sm" data-rule={rule.key} data-status={rule.status}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-semibold">{rule.label}</span>
+        <Badge tone={tone} icon={icon}>
+          {t.ruleStatus[rule.status]}
+        </Badge>
+        <span className="text-xs text-muted">{t.owner[rule.owner]}</span>
+      </div>
+      <p className="mt-1">{rule.reason}</p>
+      {rule.todo && !conditional && rule.status !== "met" && <p className="mt-1">{t.whatToDo(rule.todo)}</p>}
+      <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted">{t.funderSaid}</p>
+      <blockquote className="border-l-2 border-line pl-2 italic">“{rule.quote}”</blockquote>
+      {rule.url === api.PASTED ? (
+        <p className="text-xs text-muted">{t.fromPasted}</p>
+      ) : (
+        <a href={rule.url} target="_blank" rel="noreferrer" className={`text-xs text-teal-ink underline ${focusRing}`}>
+          {t.viewOnPage}
+        </a>
+      )}
+      <p className="mt-1 text-xs text-muted">{rule.confirmed_by_staff ? t.checkedByStaff : t.checkedByHope}</p>
+      {canConfirm && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button className={btnSecondary} onClick={() => confirm(true)}>
+            {conditional ? t.appliesToUs : t.weMeetIt}
+          </button>
+          <button className={btnSecondary} onClick={() => confirm(false)}>
+            {conditional ? t.doesntApply : t.weDont}
+          </button>
+        </div>
+      )}
+    </li>
   );
 }
 
@@ -435,7 +571,8 @@ function NeedRow({ need, view, run }: { need: InputNeeded; view: ApplicationView
   const t = h.apply;
   const [value, setValue] = useState(need.answer ?? "");
   const [saved, setSaved] = useState(false);
-  const upload = need.text.startsWith("Upload:");
+  const upload = need.text.startsWith("Upload:") || !!need.rule;
+  const fact = need.fact ? (view.facts ?? []).find((f) => f.need === need.fact) : undefined;
   const id = `need-${need.question_key ?? "x"}-${need.text.replace(/\W+/g, "-").slice(0, 40)}`;
   const redraft = (key: string) =>
     void run(
@@ -455,6 +592,11 @@ function NeedRow({ need, view, run }: { need: InputNeeded; view: ApplicationView
         {need.answer ? "✓ " : "○ "}
         {need.text}
       </p>
+      {fact && (
+        <p className="text-xs text-muted" data-fact-source={fact.shared ? "shared" : "this_grant"}>
+          {fact.shared ? t.reusedFact : t.thisGrantFact}
+        </p>
+      )}
       {!upload && (
         <div className="mt-1 space-y-1">
           <label htmlFor={id} className="sr-only">

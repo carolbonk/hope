@@ -33,7 +33,21 @@ where it came from.
 │ Read from 3 funder pages · Revision 2 · 6 questions · 4 uploads              │
 │ Questions behind a login? [Paste the form] [Upload the PDF]   [Read again]  │
 └──────────────────────────────────────────────────────────────────────────────┘
+┌ What changed since the last read (2) ─────────── only after a re-read ───────┐
+│ [Changed] Deadline: March 15, 2027 (was March 1, 2027)                       │
+│ [New] Who can apply: "Applicants must be located in Ohio."                   │
+└──────────────────────────────────────────────────────────────────────────────┘
 ┌ What the funder is asking (left, 2/3) ────────┐ ┌ To do (right, 1/3) ─────────┐
+│ ▸ Does this grant fit you?                     │ │                             │
+│   How much are you requesting? [$75,000] Save  │ │                             │
+│   Who can apply (2)                            │ │                             │
+│   Location · Not met · Director                │ │                             │
+│   "Applicants must be located in Ohio." ↗      │ │                             │
+│   [We meet this] [We don't]  (only if Check)   │ │                             │
+│   Budget rules: Match · Not met: "Line up      │ │                             │
+│   $75,000 in match…" · Finance                 │ │                             │
+│   Only if…: "requests over $50,000 must submit │ │                             │
+│   an audit" · Applies to you                   │ │                             │
 │ ▸ Words to know (5)              [Show all 12] │ │ At risk (1)                 │
 │   SAM.gov registration · Action needed · Dir.  │ │ ⚠ SAM.gov: renew (~10 days, │
 │   "Applicants must have an active SAM.gov…" ↗  │ │   9 left) · Director        │
@@ -67,6 +81,11 @@ latest version."
 | Read again | `POST /v1/applications/{id}/requirements/jobs`, poll `requirements_job` | Busy copy "Reading the funder's pages…" |
 | Paste the form | `POST …/requirements/paste` `{ text }` (20–100k chars) | Modal with a `TextArea`; hint "Copy every question from the funder's portal, including limits like '500 words'." |
 | Upload the PDF | `POST …/requirements/paste` `{ pdf_base64 }` | PDF under 8 MB; on `422` "We couldn't read this PDF. Paste the questions instead." |
+| What changed | `changes[]` | Shown only when non-empty; badge New / Removed / Changed, old value "(was …)" |
+| Does this grant fit you? | `rules[]`, `ask` | Grouped Who can apply / Budget rules / Only if…; sorted not met, check, applies, met, doesn't apply. Each row: label, status badge, owner, reason, "What to do", funder quote + link, "Checked by Hope against your profile" or "Confirmed by your team" |
+| Request amount | `POST …/ask` `{ amount_minor }` | Dollars in the field, integer cents on the wire |
+| We meet this / We don't | `POST …/evidence` `{ requirement_id: rule.key, status }` | Only for `unknown` rules while the server stage is `saved` or `eligibility` |
+| Reused answers | `facts[].shared`, `inputs_needed[].fact` | "Answered on another grant. Check it still fits this one." |
 | Words to know | `terms[]` (`TermExplained`) | Sorted by code: at risk, action needed, check, have, info. Collapsed list shows non-`info` items; "Show all" shows the rest |
 | Questions | `questions[]`, `answers[]`, checklist items `kind: "question"` | Funder's label and prompt verbatim; limit from `question.limit` |
 | Draft all | `POST …/answers/draft-all`, poll `answers_job` | Skips human-edited answers |
