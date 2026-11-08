@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from hope_pillar.demo import ensure_env, ensure_invite_code, run_service_seeds
+import pytest
+from hope_core import store
+from hope_core.auth import hash_password, verify_password
+from hope_core.db import connect, tenant_tx
+from hope_core.settings import get_settings
+from hope_pillar.demo import (
+    DEMO_EMAIL,
+    DEMO_PASSWORD,
+    ensure_env,
+    ensure_invite_code,
+    run_service_seeds,
+    seed_user,
+)
 
 
 def test_invite_code_is_written_once(tmp_path: Path) -> None:
@@ -23,3 +35,18 @@ def test_session_secret_is_kept_once_written(tmp_path: Path) -> None:
 
 def test_service_seeds_skip_missing_modules() -> None:
     assert "hope_discovery.demo" in run_service_seeds()
+
+
+@pytest.mark.db
+def test_seed_user_restores_the_demo_password(migrated_db: str) -> None:
+    settings = get_settings()
+    store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)
+    seed_user()
+    with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
+        user = store.get_user_by_email(tx, DEMO_EMAIL)
+        assert user is not None
+        store.set_password_hash(tx, user.user_id, hash_password("some-other-password"))
+    assert seed_user() is False
+    with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
+        user = store.get_user_by_email(tx, DEMO_EMAIL)
+    assert user is not None and verify_password(user.password_hash, DEMO_PASSWORD)
