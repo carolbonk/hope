@@ -133,3 +133,21 @@ def test_model_failure_marks_the_page_failed() -> None:
     r, _ = reader(broken)
     req = r.read(GRANT)
     assert all(p.status == "failed" for p in req.pages)
+
+
+def test_plain_string_quotes_and_bad_items_are_tolerated() -> None:
+    ext = RequirementsExtraction.model_validate(
+        {
+            "is_application_info": True,
+            "questions": [{"prompt": "How will you measure success?"}, {"prompt": ""}],
+            "attachments": [
+                {"name": "Board list", "quote": ""},
+                {"name": "Audit", "quote": {"text": "Attach your latest audit."}},
+            ],
+            "deadline": "",
+            "eligibility": None,
+        }
+    )
+    assert [q.prompt for q in ext.questions] == ["How will you measure success?"]
+    assert [a.name for a in ext.attachments] == ["Audit"]
+    assert ext.deadline is None and ext.eligibility == []
