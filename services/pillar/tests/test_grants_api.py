@@ -435,10 +435,8 @@ def test_pass_accepts_valid_bodies(
 def test_detail_and_not_found(api: TestClient, seeded: dict[str, GrantCandidate]) -> None:
     expected = mock("grants.get/ok")["body"]
     body = api.get(f"/v1/grants/{seeded['A'].grant_id}").json()
-    # `deadline_citation_id`: the mock's quote ("Applications are due...") doesn't contain
-    # `deadline_text` ("Applications due..."), so the spec's "quote contains" rule gives null.
-    assert body["deadline_citation_id"] is None
-    assert body == expected | {"deadline_citation_id": None}
+    assert (body["amount_citation_id"], body["deadline_citation_id"]) == ("c5", "c6")
+    assert body == expected
     problem(api.get(f"/v1/grants/{uuid4()}"), 404, "grant_not_found")
     problem(api.get("/v1/grants/not-a-uuid"), 404, "grant_not_found")
 
