@@ -19,7 +19,7 @@ DEMO_PASSWORD = "hope-demo"
 DEMO_NAME = "Dana Okafor"
 DEMO_AGENCY = "Riverbend Community Health Alliance"
 # Run in this order; a module that doesn't exist yet (before H1/H2 land) is skipped.
-SEED_MODULES = ("hope_profile.demo", "hope_discovery.demo")
+SEED_MODULES = ("hope_profile.demo", "hope_discovery.demo", "hope_pillar.demo_bids")
 
 
 def seed_user() -> bool:

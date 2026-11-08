@@ -28,7 +28,8 @@ const FOCUS_KEYWORDS: Record<string, string[]> = {
   mentoring: ["mentor"],
   youth: ["youth", "young people", "teen"],
   family: ["family", "families"],
-  mental_health: ["mental health", "behavioral"],
+  mental_health: ["mental health", "behavioral", "substance use"],
+  health: ["health", "dental", "clinic", "medical", "family planning"],
   safety: ["safety", "violence"],
   school_based: ["school"],
   capacity: ["capacity", "operating"],
@@ -57,6 +58,19 @@ function purposeOf(text: string): Purpose {
   return "program";
 }
 
+const counties = (text: string) => [...new Set(text.match(/\b[A-Z][a-z]+(?: [A-Z][a-z]+)? County, [A-Z]{2}\b/g) ?? [])];
+
+/** Places the funder's text names as "Chelan County, WA". A federal notice is limited only by counties its
+ * eligibility names; one its summary merely mentions still covers the United States. */
+function geographyOf(text: string, eligibility: string, federal: boolean): string[] {
+  if (!federal) return counties(`${text} ${eligibility}`);
+  const limited = counties(eligibility);
+  return limited.length ? limited : ["United States"];
+}
+
+/** "Mental health" and "behavioral health" are not general health. */
+const focusText = (key: string, text: string) => (key === "health" ? text.replace(/\b(mental|behavioral)\s+health/gi, "") : text);
+
 function isFederal(url: string): boolean {
   try {
     return new URL(url).hostname.toLowerCase().endsWith(".gov");
@@ -82,9 +96,9 @@ export function toOpportunity(card: GrantCard): Opportunity {
     amountMin: max ? (card.amount_min ?? max).amount_minor / 100 : null,
     amountMax,
     currency: (max?.currency ?? "USD") as Currency,
-    geography: [],
+    geography: geographyOf(text, eligibility ?? "", federal),
     fundingType: "grant",
-    focusAreas: Object.keys(FOCUS_KEYWORDS).filter((key) => FOCUS_KEYWORDS[key]!.some((w) => hasWord(text, w))),
+    focusAreas: Object.keys(FOCUS_KEYWORDS).filter((key) => FOCUS_KEYWORDS[key]!.some((w) => hasWord(focusText(key, text), w))),
     purpose: purposeOf(text),
     deadline: card.deadline,
     ...(needsCheck(card)
@@ -107,7 +121,7 @@ export function toOpportunity(card: GrantCard): Opportunity {
 export const isCheck = (o: Opportunity) => o.amountMax === null || o.deadline === null;
 
 /** "Rolling" only when the page said so; otherwise an unknown date is just not found. */
-export const isRolling = (o: Opportunity) => !o.deadline && /rolling|ongoing|open until/i.test(o.deadlineText ?? "");
+export const isRolling = (o: Opportunity) => !o.deadline && /rolling|ongoing|open until|year[-\s]round/i.test(o.deadlineText ?? "");
 
 type GrantList = { items: GrantCard[]; total?: number };
 const PAGE = 100;

@@ -8,6 +8,7 @@ import { btnPrimary, btnSecondary, ClientOnly, focusRing, PageIntro, Panel, Stag
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
 import { useHope } from "@/lib/hope/store";
+import { useServerStages } from "./useServerStages";
 
 export default function SavedPage() {
   return (
@@ -23,6 +24,7 @@ function SavedList() {
   const facts = useGrantFacts();
   const { state } = useHope();
   const bidIds = useBidIds();
+  const stages = useServerStages();
   const openBid = useBidsCopy().matrix.open;
   const apps = Object.values(state.applications)
     .map((a) => ({ a, o: opps.find((o) => o.id === a.opportunityId) }))
@@ -43,8 +45,8 @@ function SavedList() {
       ) : (
         <ul className="grid gap-5 sm:grid-cols-2">
           {apps.map(({ a, o }) => (
-            <li key={a.id} className="space-y-2">
-              <Link href={`/hope/applications/${o!.id}`} className={`block h-full rounded-[0.9rem] glass-panel p-6 hover:border-teal-ink ${focusRing}`}>
+            <li key={a.id} className="flex flex-col gap-2">
+              <Link href={`/hope/applications/${o!.id}`} className={`block flex-1 rounded-[0.9rem] glass-panel p-6 hover:border-teal-ink ${focusRing}`}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{o!.funder}</p>
@@ -55,11 +57,11 @@ function SavedList() {
                 <p className="mt-1 text-sm">
                   {facts.amount(o!, false)} · {facts.due(o!)}
                 </p>
-                <StageBar stage={a.stage} />
+                <StageBar stage={stages.get(o!.id) ?? a.stage} />
                 <span className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg glass-nav px-5 py-2.5 font-semibold text-teal-ink">{h.look.openWorkspace} ↗</span>
               </Link>
               {bidIds.has(o!.id) && (
-                <Link href={`/hope/bids/${o!.id}`} className={btnSecondary}>
+                <Link href={`/hope/bids/${o!.id}`} className={`${btnSecondary} self-start`}>
                   {openBid} ↗
                 </Link>
               )}
