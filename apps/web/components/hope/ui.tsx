@@ -10,6 +10,7 @@ import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
 import { STAGES, useHope } from "@/lib/hope/store";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 export const focusRing = "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-gold";
 export const btnPrimary = `inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-ink px-5 py-2.5 font-semibold text-white hover:bg-navy disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
@@ -39,7 +40,7 @@ export function HopeNav() {
   const { state } = useHope();
   const savedCount = Object.values(state.decisions).filter((d) => d.decision === "saved").length;
   return (
-    <div className="no-print -mx-4 mb-8 glass-chrome rounded-2xl px-4">
+    <div className="no-print -mx-4 mb-8 glass-nav rounded-2xl px-4">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4">
         <Logo />
         <nav aria-label={h.brand} className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
@@ -95,9 +96,11 @@ function SessionControls() {
         </button>
       </div>
       {failed && (
-        <p role="alert" className="text-xs text-bad">
-          {h.session.signOutFailed}
-        </p>
+        <AutoDismiss>
+          <p role="alert" className="text-xs text-bad">
+            {h.session.signOutFailed}
+          </p>
+        </AutoDismiss>
       )}
     </div>
   );
@@ -138,16 +141,24 @@ function DeadlineReminder() {
   const today = useToday();
   const opps = useOpportunities();
   const { state } = useHope();
-  if (!today) return null;
+  const [closed, setClosed] = useState(false);
+  if (!today || closed) return null;
   const soon = Object.values(state.applications)
     .filter((a) => a.stage !== "ready")
     .map((a) => opps.find((o) => o.id === a.opportunityId))
     .filter((o) => o && daysUntil(o.deadline, today) <= 14);
   if (!soon.length) return null;
   return (
-    <Link href="/hope/deadlines" className={`mb-3 block rounded-lg border border-gold/60 bg-[#f1ead8] px-3 py-2 text-sm text-navy ${focusRing}`}>
-      <span aria-hidden className="mr-1 inline-block h-2 w-2 rounded-full bg-gold align-middle" /> {h.deadlines.soon}: {soon.map((o) => `${o!.name} (${daysUntil(o!.deadline, today)}d)`).join(" · ")}
-    </Link>
+    <AutoDismiss className="mb-3" onDismiss={() => setClosed(true)}>
+      <div role="status" className="flex items-center gap-2 rounded-lg border border-gold/60 bg-[#f1ead8]/85 py-1 pl-3 pr-1 text-sm text-navy backdrop-blur-md">
+        <Link href="/hope/deadlines" className={`min-w-0 flex-1 rounded py-1 ${focusRing}`}>
+          <span aria-hidden className="mr-1 inline-block h-2 w-2 rounded-full bg-gold align-middle" /> {h.deadlines.soon}: {soon.map((o) => `${o!.name} (${daysUntil(o!.deadline, today)}d)`).join(" · ")}
+        </Link>
+        <button type="button" onClick={() => setClosed(true)} aria-label={h.dismiss} title={h.dismiss} className={`grid size-8 shrink-0 place-items-center rounded-full text-lg leading-none text-navy/70 transition-colors hover:bg-white/70 hover:text-navy ${focusRing}`}>
+          <span aria-hidden>×</span>
+        </button>
+      </div>
+    </AutoDismiss>
   );
 }
 

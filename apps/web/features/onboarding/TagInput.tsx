@@ -3,6 +3,7 @@
 import { useId, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/ui";
 import { cx } from "@/lib/cx";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 interface TagInputProps {
   label: string;
@@ -96,9 +97,11 @@ export function TagInput({ label, values, onChange, max, minLength = 2, maxLengt
         </p>
       )}
       {message && (
-        <p id={`${id}-err`} role="alert" className="text-xs font-semibold text-bad">
-          {message}
-        </p>
+        <AutoDismiss key={message}>
+          <p id={`${id}-err`} role="alert" className="text-xs font-semibold text-bad">
+            {message}
+          </p>
+        </AutoDismiss>
       )}
     </div>
   );

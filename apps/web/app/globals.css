@@ -20,6 +20,7 @@
   --glass-fill: rgb(255 255 255 / 0.62);
   --glass-fill-strong: rgb(255 255 255 / 0.78);
   --glass-fill-inset: rgb(255 255 255 / 0.4);
+  --glass-fill-nav: rgb(255 255 255 / 0.35);
   --glass-edge: rgb(255 255 255 / 0.75);
   --glass-line: rgb(20 26 38 / 0.12);
   --glass-blur: blur(18px) saturate(170%);
@@ -44,22 +45,29 @@
   background-color: var(--glass-fill);
   border: 1px solid var(--glass-edge);
   box-shadow: var(--shadow-glass);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 @utility glass-control {
   background-color: var(--glass-fill-strong);
   border: 1px solid var(--glass-line);
   box-shadow: var(--shadow-glass-sm);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 @utility glass-chrome {
   background-color: var(--glass-fill-strong);
   border: 1px solid var(--glass-edge);
   box-shadow: var(--shadow-glass-sm);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+@utility glass-nav {
+  background-color: var(--glass-fill-nav);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass-sm);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 @utility glass-inset {
   background-color: var(--glass-fill-inset);
@@ -73,8 +81,8 @@
 }
 @utility glass-overlay {
   background-color: rgb(20 26 38 / 0.28);
-  backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 @utility glass-focus {
   &:focus-visible {
@@ -89,6 +97,7 @@
     --glass-fill: #ffffff;
     --glass-fill-strong: #ffffff;
     --glass-fill-inset: #f3f5fa;
+    --glass-fill-nav: #ffffff;
   }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -96,6 +105,7 @@
     --glass-fill: #ffffff;
     --glass-fill-strong: #ffffff;
     --glass-fill-inset: #f3f5fa;
+    --glass-fill-nav: #ffffff;
     --glass-blur: none;
   }
   .glass-overlay {

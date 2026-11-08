@@ -9,6 +9,7 @@ import { useOpportunities } from "@/lib/hope/opportunities";
 import { pendingItems } from "@/lib/hope/dossier";
 import { eligibility, matchReasons, PROFILE_STEPS, requirementStatus, useHope } from "@/lib/hope/store";
 import type { Opportunity } from "@/lib/hope/types";
+import { NOTICE_MS } from "@/components/ui/AutoDismiss";
 
 type Filters = { geo: string; amount: string; type: string; focus: string; deadline: string; purpose: string };
 const NO_FILTERS: Filters = { geo: "", amount: "", type: "", focus: "", deadline: "", purpose: "" };
@@ -28,7 +29,7 @@ function Deck() {
   const all = useOpportunities();
   const { state, decide, undo } = useHope();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<{ text: string } | null>(null);
   const [details, setDetails] = useState<Opportunity | null>(null);
   const profile = state.profile;
 
@@ -56,13 +57,19 @@ function Deck() {
   const act = (kind: "saved" | "passed") => {
     if (!top) return;
     decide(top, kind);
-    setToast(kind === "saved" ? d.savedToast : d.passedToast);
+    setToast({ text: kind === "saved" ? d.savedToast : d.passedToast });
   };
   const doUndo = () => {
     if (!state.history.length) return;
     undo();
-    setToast(d.undone);
+    setToast({ text: d.undone });
   };
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), NOTICE_MS);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -141,7 +148,7 @@ function Deck() {
         )}
 
         <p role="status" aria-live="polite" className="mb-2 min-h-5 text-center text-sm font-medium text-teal-ink">
-          {toast}
+          {toast?.text}
         </p>
 
         {matching.length === 0 ? (

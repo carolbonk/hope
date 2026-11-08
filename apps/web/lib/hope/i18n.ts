@@ -5,6 +5,7 @@ import { useI18n } from "@/components/I18nProvider";
 const en = {
   brand: "Hope",
   demo: "Demo data",
+  dismiss: "Dismiss notification",
   storageNote: "Saved in this browser only — not shared, not production storage, no real sign-in.",
   nav: { profile: "Our profile", discover: "Discover", saved: "Saved", deadlines: "Deadlines" },
   look: {
@@ -326,6 +327,7 @@ export type HopeDict = typeof en;
 const es: HopeDict = {
   brand: "Hope",
   demo: "Datos de demostración",
+  dismiss: "Cerrar notificación",
   storageNote: "Guardado solo en este navegador — no se comparte, no es almacenamiento de producción, sin inicio de sesión real.",
   nav: { profile: "Nuestro perfil", discover: "Descubrir", saved: "Guardadas", deadlines: "Plazos" },
   look: {

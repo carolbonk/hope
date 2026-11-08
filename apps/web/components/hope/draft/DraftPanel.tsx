@@ -6,6 +6,7 @@ import type { HopeDraftResult } from "@/lib/hope/draft";
 import { useHopeT } from "@/lib/hope/i18n";
 import { SECTION_IDS, useHope } from "@/lib/hope/store";
 import type { Application, Opportunity, SectionId } from "@/lib/hope/types";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 export type Up = (fn: (x: Application) => Application, event: string) => void;
 
@@ -68,9 +69,11 @@ export function DraftPanel({ opp, app, up }: { opp: Opportunity; app: Applicatio
             </p>
           )}
           {error && (
-            <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
-              {error}
-            </p>
+            <AutoDismiss key={error}>
+              <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
+                {error}
+              </p>
+            </AutoDismiss>
           )}
           {notes.length > 0 && (
             <ul className="list-inside list-disc rounded-xl bg-gold/15 p-3 text-sm">

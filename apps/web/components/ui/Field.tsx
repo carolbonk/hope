@@ -1,5 +1,6 @@
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { cx } from "@/lib/cx";
+import { AutoDismiss } from "./AutoDismiss";
 
 const CONTROL =
   "glass-inset glass-focus w-full rounded-xl px-3 py-2 text-sm text-ink placeholder:text-ink-muted disabled:opacity-70";
@@ -29,9 +30,11 @@ function FieldShell({ label, hint, error, className, children }: FieldShellProps
         </p>
       )}
       {error && (
-        <p id={errorId} role="alert" className="text-xs font-semibold text-bad">
-          {error}
-        </p>
+        <AutoDismiss key={error}>
+          <p id={errorId} role="alert" className="text-xs font-semibold text-bad">
+            {error}
+          </p>
+        </AutoDismiss>
       )}
     </div>
   );

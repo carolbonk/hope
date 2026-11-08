@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
+import { AutoDismiss } from "./AutoDismiss";
 
 export function Loading({ label }: { label: string }) {
   return (
@@ -29,10 +30,12 @@ export function ErrorNotice({ title, children, onRetry }: { title: string; child
 
 export function SuccessNotice({ children }: { children: ReactNode }) {
   return (
-    <div role="status" className="glass-inset flex items-start gap-3 rounded-2xl border-l-4 border-good p-4 text-sm text-ink">
-      <Icon name="check" className="mt-0.5 size-5 shrink-0 text-good" />
-      <div>{children}</div>
-    </div>
+    <AutoDismiss>
+      <div role="status" className="glass-inset flex items-start gap-3 rounded-2xl border-l-4 border-good p-4 text-sm text-ink">
+        <Icon name="check" className="mt-0.5 size-5 shrink-0 text-good" />
+        <div>{children}</div>
+      </div>
+    </AutoDismiss>
   );
 }
 
