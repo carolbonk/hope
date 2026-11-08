@@ -203,8 +203,8 @@ def grant_id(tx: Tx, url: str) -> UUID | None:
 def candidate(spec: dict[str, Any], today: date, found: datetime) -> GrantCandidate:
     amount = parse_amount(spec["amount_text"])
     deadline = parse_deadline(spec["deadline_text"], today)
-    # A grant found before its deadline keeps that deadline once it has passed.
-    found_on = spec.get("found", found).date()
+    # A deadline that was still ahead when the notice was recorded is kept once it has passed.
+    found_on = spec.get("found", RECORDED).date()
     due = deadline.date or next(
         (d for d in sorted(deadline.all_dates) if found_on <= d < today), None
     )
