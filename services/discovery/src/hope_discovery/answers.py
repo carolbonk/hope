@@ -375,11 +375,13 @@ class AnswerDrafter:
                     citations.append({"ref": ref, "kind": "funder", "url": web[ref][1],
                                       "text": web[ref][0]})  # fmt: skip
         confirm = []
-        for item in [*TO_CONFIRM.findall(text), *draft.to_confirm]:
-            item = item.strip()
+        for raw in [*TO_CONFIRM.findall(text), *draft.to_confirm]:
+            item = re.sub(r"^\[?\s*TO CONFIRM:?\s*|\]$", "", raw.strip(), flags=re.I).strip()
             if item and item.lower() not in _VAGUE and item not in confirm:
                 confirm.append(item)
         sourced = {c.sentence.strip() for c in draft.claims if set(c.refs) & seen}
+        unsourced = [x for x in sentences(text) if x not in sourced and not TO_CONFIRM.search(x)]
+        citations += [{"ref": None, "kind": "unsourced", "text": x} for x in unsourced]
         return DraftResult(
             text=text,
             citations=citations,
@@ -387,7 +389,7 @@ class AnswerDrafter:
             over_limit=over_limit(text, question.limit),
             count=measure(text, question.limit) if question.limit else len(text.split()),
             unsupported=bad,
-            unsourced=[x for x in sentences(text) if x not in sourced and not TO_CONFIRM.search(x)],
+            unsourced=unsourced,
         )
 
     def _call(self, messages: list[Message]) -> AnswerDraft:

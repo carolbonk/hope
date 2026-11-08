@@ -83,7 +83,8 @@ def test_draft_cites_profile_and_flags_missing_facts() -> None:
     profile = agency_profile()
     result = drafter().draft(profile, GRANT, Requirements(), q("Describe the community need."))
     assert profile.mission.mission_statement.split()[0] in result.text
-    assert result.citations and all(c["kind"] == "profile" for c in result.citations)
+    assert {c["kind"] for c in result.citations} <= {"profile", "unsourced"}
+    assert any(c["kind"] == "profile" for c in result.citations)
     assert "local data on need" in result.to_confirm
     assert not result.over_limit
 
@@ -223,9 +224,14 @@ def test_sentences_without_a_source_are_reported() -> None:
         return {
             "text": "Our clinic serves rural families today. We will run quarterly workshops.",
             "claims": [{"sentence": "Our clinic serves rural families today.", "refs": ["P1"]}],
-            "to_confirm": ["what is needed"],
+            "to_confirm": ["what is needed", "[TO CONFIRM: board size]"],
         }
 
     result = drafter(mixed).draft(agency_profile(), GRANT, Requirements(), q("Describe it."))
     assert result.unsourced == ["We will run quarterly workshops."]
-    assert result.to_confirm == []
+    assert result.to_confirm == ["board size"]
+    assert result.citations[-1] == {
+        "ref": None,
+        "kind": "unsourced",
+        "text": "We will run quarterly workshops.",
+    }
