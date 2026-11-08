@@ -42,7 +42,7 @@ it("online shows the signed-in name and signs out without clearing browser state
   const fetch = vi.fn((url: string) => Promise.resolve(url.endsWith("/v1/auth/logout") ? w1("auth.logout/ok") : w1("me.get/onboarded")));
   vi.stubGlobal("fetch", fetch);
   await renderNav(true);
-  expect(screen.getByText("Dana Okafor")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: /Dana Okafor/ }));
   await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
   await act(async () => {});
   expect(fetch).toHaveBeenCalledWith("http://api.test/v1/auth/logout", expect.objectContaining({ method: "POST", credentials: "include" }));
@@ -56,6 +56,7 @@ it("stays and explains when sign-out fails", async () => {
   );
   vi.stubGlobal("fetch", fetch);
   await renderNav(true);
+  await userEvent.click(screen.getByRole("button", { name: /Dana Okafor/ }));
   await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
   await act(async () => {});
   expect(screen.getByRole("alert")).toHaveTextContent("Couldn't sign out. Try again.");
@@ -67,4 +68,19 @@ it("truncates long names at 24 characters", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(long), { status: 200 })));
   await renderNav(true);
   expect(screen.getByTitle("Alexandria Montgomery-Okafor").textContent).toHaveLength(24);
+});
+
+it("orders links by the grant journey and keeps the profile in the account menu", async () => {
+  vi.stubGlobal("fetch", vi.fn());
+  await renderNav(false);
+  const nav = screen.getByRole("navigation", { name: /hope/i });
+  expect([...nav.querySelectorAll("a")].map((a) => a.textContent)).toEqual(["Discover", "Saved", "Deadlines"]);
+  const account = screen.getByRole("button", { name: "Account" });
+  expect(screen.queryByRole("link", { name: "Our profile" })).not.toBeInTheDocument();
+  await userEvent.click(account);
+  expect(account).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByRole("link", { name: "Our profile" })).toHaveFocus();
+  await userEvent.keyboard("{Escape}");
+  expect(screen.queryByRole("link", { name: "Our profile" })).not.toBeInTheDocument();
+  expect(account).toHaveFocus();
 });

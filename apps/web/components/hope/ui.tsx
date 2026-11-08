@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { online } from "@/api/http";
 import { invalidateSession, logout, useSession } from "@/api/session";
 import { useToday } from "@/components/useToday";
@@ -11,6 +11,7 @@ import { useOpportunities } from "@/lib/hope/opportunities";
 import { STAGES, useHope } from "@/lib/hope/store";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { AutoDismiss } from "@/components/ui/AutoDismiss";
+import { Icon } from "@/components/ui/Icon";
 
 export const focusRing = "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-gold";
 export const btnPrimary = `inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-ink px-5 py-2.5 font-semibold text-white hover:bg-navy disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
@@ -23,7 +24,6 @@ const NAV = [
   { key: "discover", href: "/hope/discover" },
   { key: "saved", href: "/hope/saved" },
   { key: "deadlines", href: "/hope/deadlines" },
-  { key: "profile", href: "/hope/profile" },
 ] as const;
 
 export function Logo() {
@@ -34,46 +34,75 @@ export function Logo() {
   );
 }
 
+/** Links follow the grant journey (find → shortlist → meet deadlines); profile and sign-out live in the account menu. */
 export function HopeNav() {
-  const { h } = useHopeT();
-  const path = usePathname();
-  const { state } = useHope();
-  const savedCount = Object.values(state.decisions).filter((d) => d.decision === "saved").length;
   return (
     <div className="no-print -mx-4 mb-8 glass-nav rounded-2xl px-4">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4">
         <Logo />
-        <nav aria-label={h.brand} className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
-          {NAV.map((n) => {
-            const active = path.startsWith(n.href) || (n.key === "saved" && path.startsWith("/hope/applications"));
-            return (
-              <Link
-                key={n.key}
-                href={n.href}
-                aria-current={active ? "page" : undefined}
-                className={`whitespace-nowrap rounded-full px-3 py-2.5 text-sm sm:px-4 ${focusRing} ${active ? "bg-navy text-white" : "text-muted hover:text-navy"}`}
-              >
-                {h.nav[n.key]}
-                {n.key === "saved" && savedCount > 0 && <span className="ml-1 tabular-nums">({savedCount})</span>}
-              </Link>
-            );
-          })}
-        </nav>
-        <LanguageToggle tone="light" />
-        {online && <SessionControls />}
+        <NavLinks />
+        <div className="flex items-center gap-2">
+          <LanguageToggle tone="light" />
+          {online ? <OnlineAccount /> : <AccountMenu />}
+        </div>
       </div>
       <DeadlineReminder />
     </div>
   );
 }
 
+function NavLinks() {
+  const { h } = useHopeT();
+  const path = usePathname();
+  const { state } = useHope();
+  const savedCount = Object.values(state.decisions).filter((d) => d.decision === "saved").length;
+  const navRef = useRef<HTMLElement>(null);
+  const pillRef = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    const pill = pillRef.current;
+    if (!nav || !pill) return;
+    const place = () => {
+      const active = nav.querySelector<HTMLElement>('[aria-current="page"]');
+      pill.style.opacity = active ? "1" : "0";
+      if (!active) return;
+      pill.style.width = `${active.offsetWidth}px`;
+      pill.style.transform = `translateX(${active.offsetLeft}px)`;
+      nav.dataset.ready = "";
+    };
+    place();
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(place);
+    ro?.observe(nav);
+    return () => ro?.disconnect();
+  }, [path, savedCount, h]);
+  return (
+    <nav ref={navRef} aria-label={h.brand} className="group relative order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
+      <span ref={pillRef} aria-hidden className="pointer-events-none absolute inset-y-0 left-0 rounded-full bg-navy opacity-0 transition-[transform,width,opacity] duration-300 ease-out" />
+      {NAV.map((n) => {
+        const active = path.startsWith(n.href) || (n.key === "saved" && path.startsWith("/hope/applications"));
+        return (
+          <Link
+            key={n.key}
+            href={n.href}
+            aria-current={active ? "page" : undefined}
+            className={`relative whitespace-nowrap rounded-full px-3 py-2.5 text-sm transition-colors duration-300 sm:px-4 ${focusRing} ${active ? "bg-navy text-white group-data-ready:bg-transparent" : "text-muted hover:text-navy"}`}
+          >
+            {h.nav[n.key]}
+            {n.key === "saved" && savedCount > 0 && <span className="ml-1 tabular-nums">({savedCount})</span>}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 /** Online only: the signed-in name and Sign out. Signing out never clears `hope:state:v1`. */
-function SessionControls() {
+function OnlineAccount() {
   const { h } = useHopeT();
   const router = useRouter();
   const { status, me } = useSession();
   const [failed, setFailed] = useState(false);
-  if (status !== "ready" || !me) return null;
+  if (status !== "ready" || !me) return <AccountMenu />;
   const name = me.display_name.length > 24 ? `${me.display_name.slice(0, 23)}…` : me.display_name;
   const signOut = () => {
     setFailed(false);
@@ -87,20 +116,82 @@ function SessionControls() {
   };
   return (
     <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-3 text-sm">
-        <span className="text-muted" title={me.display_name}>
-          {name}
-        </span>
-        <button type="button" onClick={signOut} className={btnSecondary}>
-          {h.session.signOut}
-        </button>
-      </div>
+      <AccountMenu name={name} fullName={me.display_name} onSignOut={signOut} />
       {failed && (
         <AutoDismiss>
           <p role="alert" className="text-xs text-bad">
             {h.session.signOutFailed}
           </p>
         </AutoDismiss>
+      )}
+    </div>
+  );
+}
+
+const menuItem = `flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm text-navy transition-colors hover:bg-white/70 ${focusRing}`;
+
+function AccountMenu({ name, fullName, onSignOut }: { name?: string; fullName?: string; onSignOut?: () => void }) {
+  const { h } = useHopeT();
+  const path = usePathname();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const id = useId();
+  useEffect(() => {
+    if (!open) return;
+    root.current?.querySelector<HTMLElement>("[data-menu-item]")?.focus();
+    const onDown = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      button.current?.focus();
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  const onProfile = path.startsWith("/hope/profile");
+  return (
+    <div ref={root} className="relative">
+      <button
+        ref={button}
+        type="button"
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((o) => !o)}
+        className={`inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm transition-colors ${onProfile ? "bg-navy text-white" : "glass-control text-navy"} ${focusRing}`}
+      >
+        <Icon name="user" />
+        <span title={fullName} className="sr-only sm:not-sr-only sm:max-w-48 sm:truncate">
+          {name ?? h.session.account}
+        </span>
+        <Icon name="chevron" className={`size-3.5 transition-transform duration-200 ${open ? "-rotate-90" : "rotate-90"}`} />
+      </button>
+      {open && (
+        <div id={id} className="animate-pop-in absolute right-0 top-full z-50 mt-2 w-56 origin-top-right rounded-2xl border border-white/75 bg-white/90 p-1.5 shadow-xl backdrop-blur-xl">
+          <Link data-menu-item href="/hope/profile" onClick={() => setOpen(false)} aria-current={onProfile ? "page" : undefined} className={menuItem}>
+            {h.nav.profile}
+          </Link>
+          {onSignOut && (
+            <button
+              data-menu-item
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onSignOut();
+              }}
+              className={menuItem}
+            >
+              {h.session.signOut}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
