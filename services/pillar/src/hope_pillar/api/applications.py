@@ -63,6 +63,7 @@ EventKind = Literal[
     "edit",
     "fact",
     "ask",
+    "bid",
 ]
 
 EVENTS_SHOWN = 50

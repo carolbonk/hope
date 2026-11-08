@@ -1,0 +1,1247 @@
+{
+  "components": {
+    "schemas": {
+      "BidItem": {
+        "properties": {
+          "checklist_status": {
+            "description": "The application checklist's own status",
+            "title": "Checklist Status",
+            "type": "string"
+          },
+          "due": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due"
+          },
+          "evidence_ref": {
+            "title": "Evidence Ref",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Limit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Review"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "missing",
+              "working",
+              "ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "label",
+          "checklist_status",
+          "quote",
+          "url",
+          "limit",
+          "owner",
+          "due",
+          "status",
+          "note",
+          "evidence_ref",
+          "review"
+        ],
+        "title": "BidItem",
+        "type": "object"
+      },
+      "BidList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BidSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "BidList",
+        "type": "object"
+      },
+      "BidSummary": {
+        "properties": {
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "blockers": {
+            "title": "Blockers",
+            "type": "integer"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "funder": {
+            "title": "Funder",
+            "type": "string"
+          },
+          "grant_id": {
+            "format": "uuid",
+            "title": "Grant Id",
+            "type": "string"
+          },
+          "phase": {
+            "enum": [
+              "preparing",
+              "final_reviewed",
+              "submitted"
+            ],
+            "title": "Phase",
+            "type": "string"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "application_id",
+          "grant_id",
+          "title",
+          "funder",
+          "deadline",
+          "phase",
+          "ready",
+          "total",
+          "blockers",
+          "updated_at"
+        ],
+        "title": "BidSummary",
+        "type": "object"
+      },
+      "BidView": {
+        "properties": {
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "blocker_list": {
+            "description": "What must be done before the final review",
+            "items": {
+              "$ref": "#/components/schemas/Blocker"
+            },
+            "title": "Blocker List",
+            "type": "array"
+          },
+          "blockers": {
+            "title": "Blockers",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "final_review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FinalReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "funder": {
+            "title": "Funder",
+            "type": "string"
+          },
+          "grant_id": {
+            "format": "uuid",
+            "title": "Grant Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BidItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "phase": {
+            "enum": [
+              "preparing",
+              "final_reviewed",
+              "submitted"
+            ],
+            "title": "Phase",
+            "type": "string"
+          },
+          "plan": {
+            "description": "Steps counted back from the deadline",
+            "items": {
+              "$ref": "#/components/schemas/Milestone"
+            },
+            "title": "Plan",
+            "type": "array"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "integer"
+          },
+          "submission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Submission"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "application_id",
+          "grant_id",
+          "title",
+          "funder",
+          "deadline",
+          "phase",
+          "ready",
+          "total",
+          "blockers",
+          "updated_at",
+          "url",
+          "version",
+          "items",
+          "blocker_list",
+          "plan",
+          "final_review",
+          "submission",
+          "created_at"
+        ],
+        "title": "BidView",
+        "type": "object"
+      },
+      "Blocker": {
+        "properties": {
+          "code": {
+            "enum": [
+              "no_requirements",
+              "checklist_incomplete",
+              "no_owner",
+              "not_ready",
+              "not_reviewed",
+              "stale_review",
+              "deadline_passed"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "Blocker",
+        "type": "object"
+      },
+      "FinalReview": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "format": "uuid",
+            "title": "By",
+            "type": "string"
+          },
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          }
+        },
+        "required": [
+          "by",
+          "at",
+          "comment"
+        ],
+        "title": "FinalReview",
+        "type": "object"
+      },
+      "FinalReviewBody": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Comment",
+            "type": "string"
+          }
+        },
+        "title": "FinalReviewBody",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ItemBody": {
+        "additionalProperties": false,
+        "description": "Only the fields sent change; send `owner: null` or `due: null` to clear them.",
+        "properties": {
+          "due": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due"
+          },
+          "evidence_ref": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Ref"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "missing",
+                  "working",
+                  "ready"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "ItemBody",
+        "type": "object"
+      },
+      "Limit": {
+        "properties": {
+          "includes_spaces": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Includes Spaces"
+          },
+          "max": {
+            "title": "Max",
+            "type": "integer"
+          },
+          "unit": {
+            "enum": [
+              "words",
+              "characters",
+              "pages"
+            ],
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit",
+          "max"
+        ],
+        "title": "Limit",
+        "type": "object"
+      },
+      "Member": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "display_name",
+          "email"
+        ],
+        "title": "Member",
+        "type": "object"
+      },
+      "MemberList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Member"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MemberList",
+        "type": "object"
+      },
+      "Milestone": {
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "due": {
+            "format": "date",
+            "title": "Due",
+            "type": "string"
+          },
+          "key": {
+            "enum": [
+              "owners",
+              "drafts",
+              "reviews",
+              "final_review"
+            ],
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "due",
+          "done"
+        ],
+        "title": "Milestone",
+        "type": "object"
+      },
+      "Review": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "format": "uuid",
+            "title": "By",
+            "type": "string"
+          },
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "approved",
+              "changes_requested"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "stale": {
+            "default": false,
+            "description": "The funder's requirement changed after this review",
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "by",
+          "at",
+          "decision",
+          "comment"
+        ],
+        "title": "Review",
+        "type": "object"
+      },
+      "ReviewBody": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Comment",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "approved",
+              "changes_requested"
+            ],
+            "title": "Decision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "ReviewBody",
+        "type": "object"
+      },
+      "StartBody": {
+        "additionalProperties": false,
+        "properties": {
+          "grant_id": {
+            "format": "uuid",
+            "title": "Grant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_id"
+        ],
+        "title": "StartBody",
+        "type": "object"
+      },
+      "Submission": {
+        "properties": {
+          "portal": {
+            "title": "Portal",
+            "type": "string"
+          },
+          "receipt": {
+            "title": "Receipt",
+            "type": "string"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "recorded_by": {
+            "format": "uuid",
+            "title": "Recorded By",
+            "type": "string"
+          },
+          "sent_by_hope": {
+            "const": false,
+            "default": false,
+            "title": "Sent By Hope",
+            "type": "boolean"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "receipt",
+          "portal",
+          "submitted_at",
+          "recorded_by",
+          "recorded_at"
+        ],
+        "title": "Submission",
+        "type": "object"
+      },
+      "SubmissionBody": {
+        "additionalProperties": false,
+        "properties": {
+          "portal": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Portal",
+            "type": "string"
+          },
+          "receipt": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Receipt",
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "receipt",
+          "portal",
+          "submitted_at"
+        ],
+        "title": "SubmissionBody",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Hope API: bids",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/bids": {
+      "get": {
+        "operationId": "list_bids_v1_bids_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BidList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Bids",
+        "tags": [
+          "bids"
+        ]
+      },
+      "post": {
+        "description": "Start preparing a grant: saves it (which creates the application and starts reading the\nfunder's requirements), then opens its bid. Starting again returns the same bid (200).",
+        "operationId": "start_bid_v1_bids_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BidView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Bid",
+        "tags": [
+          "bids"
+        ]
+      }
+    },
+    "/v1/bids/{grant_id}": {
+      "get": {
+        "operationId": "get_bid_v1_bids__grant_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "title": "Grant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BidView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Bid",
+        "tags": [
+          "bids"
+        ]
+      }
+    },
+    "/v1/bids/{grant_id}/final-review": {
+      "post": {
+        "description": "The last internal sign-off, allowed only when nothing blocks the bid.",
+        "operationId": "final_review_v1_bids__grant_id__final_review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "title": "Grant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinalReviewBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BidView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Final Review",
+        "tags": [
+          "bids"
+        ]
+      }
+    },
+    "/v1/bids/{grant_id}/items/{key}": {
+      "put": {
+        "description": "Assign, date and track one requirement. Changing its status, note or evidence undoes\nits review, since the reviewer approved the previous version.",
+        "operationId": "update_item_v1_bids__grant_id__items__key__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "title": "Grant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BidView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Item",
+        "tags": [
+          "bids"
+        ]
+      }
+    },
+    "/v1/bids/{grant_id}/items/{key}/review": {
+      "post": {
+        "description": "Simulated internal review (anyone signed in). Asking for changes needs a comment and\nmoves the requirement back to in progress.",
+        "operationId": "review_item_v1_bids__grant_id__items__key__review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "title": "Grant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BidView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Item",
+        "tags": [
+          "bids"
+        ]
+      }
+    },
+    "/v1/bids/{grant_id}/submission": {
+      "post": {
+        "description": "Record the receipt from the funder's portal after staff submitted there. Hope never\nsubmits; once recorded, the bid is read-only.",
+        "operationId": "record_submission_v1_bids__grant_id__submission_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "title": "Grant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BidView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Submission",
+        "tags": [
+          "bids"
+        ]
+      }
+    },
+    "/v1/members": {
+      "get": {
+        "description": "The team, for assigning requirements.",
+        "operationId": "list_members_v1_members_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Members",
+        "tags": [
+          "bids"
+        ]
+      }
+    }
+  }
+}
