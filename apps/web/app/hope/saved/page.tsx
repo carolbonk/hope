@@ -52,7 +52,7 @@ function SavedList() {
                   {money(o!.amountMax, o!.currency, locale)} · {h.discover.due(o!.deadline, daysUntil(o!.deadline, today))}
                 </p>
                 <StageBar stage={a.stage} />
-                <span className={`${btnPrimary} mt-5`}>{h.look.openWorkspace} ↗</span>
+                <span className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg glass-nav px-5 py-2.5 font-semibold text-teal-ink">{h.look.openWorkspace} ↗</span>
               </Link>
             </li>
           ))}
