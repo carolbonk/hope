@@ -39,3 +39,11 @@ def test_explains_with_official_source_and_profile_status() -> None:
     support = explain(uses, profile, date(2026, 11, 15), date(2026, 11, 8))
     assert support[0].status == "at_risk"
     assert next(t for t in support if t.key == "letters_support").status == "at_risk"
+
+
+def test_quote_keeps_dotted_names_whole() -> None:
+    text = "Applicants need an active SAM.gov registration and a Unique Entity ID (UEI). Next."
+    uei = next(t for t in find_terms(text, "pasted") if t.key == "uei")
+    assert (
+        uei.quote == "Applicants need an active SAM.gov registration and a Unique Entity ID (UEI)."
+    )

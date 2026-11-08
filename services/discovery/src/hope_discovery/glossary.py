@@ -241,7 +241,8 @@ TERMS: tuple[Term, ...] = (
 
 BY_KEY = {t.key: t for t in TERMS}
 _COMPILED = [(t, re.compile(t.pattern)) for t in TERMS]
-_SENTENCE = re.compile(r"[^.!?\n]*(?:[.!?]|$)")
+# A period inside a word ("SAM.gov", "Grants.gov") doesn't end the sentence.
+_SENTENCE = re.compile(r"(?:[^.!?\n]|[.!?](?=\S))*(?:[.!?]|$)")
 
 
 def glossary_term(name: str) -> Term | None:
