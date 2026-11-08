@@ -301,7 +301,9 @@ function CardBody({ opp, onDetails }: { opp: Opportunity; onDetails: () => void 
         <div className="flex justify-between gap-4 border-y border-line py-4">
           <div>
             <p className="text-lg font-medium">
-              {money(opp.amountMin!, opp.currency, locale)}–{money(opp.amountMax!, opp.currency, locale)}
+              {opp.amountMin === opp.amountMax
+                ? money(opp.amountMax!, opp.currency, locale)
+                : `${money(opp.amountMin!, opp.currency, locale)}–${money(opp.amountMax!, opp.currency, locale)}`}
             </p>
             <p className="mt-1 text-[11px] text-muted">
               {opp.currency} · {L.range}
