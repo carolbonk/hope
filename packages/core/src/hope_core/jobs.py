@@ -57,10 +57,13 @@ def start_job(
         return target
 
     claimed = _with_tx(_claim)
+    # Heartbeat from the claim on, so a job queued behind busy workers isn't swept as stale.
+    stop = threading.Event()
+    threading.Thread(target=_heartbeat, args=(claimed, stop), daemon=True).start()
     if get_settings().jobs_inline:
-        _run(claimed, fn, args)
+        _run(claimed, fn, args, stop)
     else:
-        _pool.submit(_run, claimed, fn, args)
+        _pool.submit(_run, claimed, fn, args, stop)
     return claimed
 
 
@@ -95,10 +98,10 @@ def _heartbeat(job_id: UUID, stop: threading.Event) -> None:
             log.warning("heartbeat for job %s failed", job_id, exc_info=True)
 
 
-def _run(job_id: UUID, fn: Callable[..., JobResult], args: tuple[Any, ...]) -> None:
+def _run(
+    job_id: UUID, fn: Callable[..., JobResult], args: tuple[Any, ...], stop: threading.Event
+) -> None:
     token = _current_job.set(job_id)
-    stop = threading.Event()
-    threading.Thread(target=_heartbeat, args=(job_id, stop), daemon=True).start()
     try:
         result = fn(*args)
     except Exception as exc:
