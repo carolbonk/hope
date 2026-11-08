@@ -304,6 +304,16 @@ def _norm(text: str) -> str:
     return " ".join(text.lower().split())
 
 
+def _same_field(prompt: str, questions: list[Question]) -> Question | None:
+    a = _norm(prompt).rstrip(":*")
+    for q in questions:
+        b = _norm(q.prompt).rstrip(":*")
+        short, long = sorted((a, b), key=len)
+        if short != long and long.startswith(short) and long[len(short)] in " (:*":
+            return q
+    return None
+
+
 def question_key(prompt: str) -> str:
     """Stable id for a question, so re-reading the pages keeps answers linked."""
     cleaned = re.sub(r"[^a-z0-9 ]", "", _norm(prompt))
@@ -467,6 +477,14 @@ class RequirementsReader:
             limit_text = ok(item.limit)
             limit = parse_limit(limit_text) or parse_limit(prompt)
             key = question_key(prompt)
+            if key not in by_key and (known := _same_field(prompt, out.questions)):
+                # One is the other's bare label ("Statement of Need"): keep the full wording and
+                # the existing key, so answers stay linked.
+                if len(prompt) > len(known.prompt):
+                    known.prompt = prompt
+                    known.limit = known.limit or limit
+                    known.limit_text = known.limit_text or limit_text or (prompt if limit else None)
+                continue
             if key in by_key:
                 known = by_key[key]
                 if limit and known.limit and limit != known.limit:

@@ -10,6 +10,7 @@ from hope_core.model_gateway import Message, MockProvider, ModelGateway
 from hope_core.web import FetchError, Link, Page
 from hope_discovery.requirements import (
     Limit,
+    Question,
     Requirements,
     RequirementsExtraction,
     RequirementsReader,
@@ -285,3 +286,26 @@ def test_label_only_quotes_take_the_rest_of_the_question() -> None:
     assert full_prompt("Why now?", form) == "Why now?"
     assert is_question(need)
     assert asks_for_document("Attachments: Logic model; budget justification.")
+
+
+def test_full_question_replaces_an_earlier_bare_label() -> None:
+    form = "1. Statement of Need (500 words): Describe the gap.\n"
+    base = Requirements(
+        questions=[
+            Question(
+                key=question_key("Statement of Need"), prompt="Statement of Need", url="pasted"
+            )
+        ]
+    )
+    reader = RequirementsReader(ModelGateway([MockProvider()]), None)  # type: ignore[arg-type]
+    out = base.model_copy(deep=True)
+    ext = RequirementsExtraction.model_validate(
+        {
+            "is_application_info": True,
+            "questions": [{"prompt": "Statement of Need (500 words): Describe the gap."}],
+        }
+    )
+    reader._merge(out, ext, form, "pasted")
+    assert [q.prompt for q in out.questions] == ["Statement of Need (500 words): Describe the gap."]
+    assert out.questions[0].key == question_key("Statement of Need")
+    assert out.questions[0].limit == Limit(unit="words", max=500)
