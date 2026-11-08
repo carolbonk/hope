@@ -76,6 +76,11 @@ def _serializer(settings: HopeSettings) -> URLSafeTimedSerializer:
     return URLSafeTimedSerializer(secret, salt="hope-session")
 
 
+def require_session_secret(settings: HopeSettings | None = None) -> None:
+    """Raise `SessionSecretError` before any side effect that would end with a session."""
+    _serializer(settings or get_settings())
+
+
 def make_session_token(user_id: UUID, settings: HopeSettings | None = None) -> str:
     return _serializer(settings or get_settings()).dumps({"user_id": str(user_id)})
 

@@ -144,3 +144,7 @@ def test_missing_session_secret_is_a_clear_503(
     response = signup(hope_api)
     problem(response, 503, "server_misconfigured")
     assert "HOPE_SESSION_SECRET" in response.json()["title"]
+
+    monkeypatch.setenv("HOPE_SESSION_SECRET", "test-session-secret-0123456789")
+    get_settings.cache_clear()
+    assert signup(hope_api).status_code == 201, "the failed attempt created no account"
