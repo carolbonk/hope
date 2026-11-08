@@ -228,6 +228,8 @@ class DiscoveryAgent:
     def _search(self, queries: list[str]) -> list[list[SearchResult]]:
         results: list[list[SearchResult]] = []
         for q in queries:
+            if self._elapsed() >= self.s.job_timeout_s:
+                break
             self.progress.current_step = f"Searching: {q}"[:300]
             self.repo.progress(self.job_id, self.progress, "running")
             try:
@@ -242,7 +244,7 @@ class DiscoveryAgent:
             self.progress.queries_done += 1
             self._step(f"Searching: {q}", "query", query=q, result_count=len(hits))
             results.append(hits)
-        if queries and self.counts["queries_failed"] == len(queries):
+        if results and self.counts["queries_failed"] == len(results):
             self._safe_error(SEARCH_UNAVAILABLE)
             raise DiscoveryFailed(SEARCH_UNAVAILABLE)
         return results
