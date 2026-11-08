@@ -42,6 +42,9 @@ def canonicalize(url: str) -> str | None:
         return None
     host = parts.hostname.lower().rstrip(".")
     host = host.removeprefix("www.")
+    if host == "google.com" and parts.path == "/url":
+        target = dict(parse_qsl(parts.query)).get("q") or dict(parse_qsl(parts.query)).get("url")
+        return canonicalize(target) if target and "google.com" not in target else None
     if port and port not in (80, 443):
         host = f"{host}:{port}"
     query = urlencode(

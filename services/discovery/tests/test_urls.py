@@ -67,3 +67,10 @@ def test_statute_sites_blocked() -> None:
     assert is_blocked("https://uscode.house.gov/view.xhtml?req=42+usc+247b")
     assert is_blocked("https://www.law.cornell.edu/uscode/text/42/247b")
     assert not is_blocked("https://doh.wa.gov/grants")
+
+
+def test_google_redirects_unwrapped() -> None:
+    assert canonicalize("https://www.google.com/url?q=https://doh.wa.gov/grants/&sa=U") == (
+        "https://doh.wa.gov/grants"
+    )
+    assert canonicalize("https://www.google.com/url?q=https://www.google.com/x") is None
