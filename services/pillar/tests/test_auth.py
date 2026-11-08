@@ -154,3 +154,26 @@ def test_missing_session_secret_is_a_clear_503(
     monkeypatch.setenv("HOPE_SESSION_SECRET", "test-session-secret-0123456789")
     get_settings.cache_clear()
     assert signup(hope_api).status_code == 201, "the failed attempt created no account"
+
+
+def test_open_login_creates_new_emails_only(
+    hope_api: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    login = {"email": "New@Example.org", "password": "x"}
+    problem(hope_api.post("/v1/auth/login", json=login), 401, "invalid_credentials")
+
+    monkeypatch.setenv("HOPE_OPEN_LOGIN", "true")
+    get_settings.cache_clear()
+    first = hope_api.post("/v1/auth/login", json=login)
+    assert first.status_code == 200, first.text
+    assert first.json()["user"]["email"] == "new@example.org"
+    assert hope_api.get("/v1/me").json()["email"] == "new@example.org"
+
+    hope_api.cookies.clear()
+    again = hope_api.post("/v1/auth/login", json={"email": "new@example.org", "password": "x"})
+    assert again.json()["user"] == first.json()["user"]
+    hope_api.cookies.clear()
+    wrong = {"email": "new@example.org", "password": "other"}
+    problem(hope_api.post("/v1/auth/login", json=wrong), 401, "invalid_credentials")
+    bad = {"email": "not-an-email", "password": "x"}
+    problem(hope_api.post("/v1/auth/login", json=bad), 401, "invalid_credentials")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hmac
+import re
 
 from fastapi import APIRouter, Response, status
 from hope_core import store
@@ -102,12 +103,31 @@ def login(body: LoginBody, response: Response) -> UserOut:
     settings = get_settings()
     with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
         user = store.get_user_by_email(tx, body.email)
+    if user is None and settings.open_login:
+        user = _open_login(body, settings)
+        if user is not None:
+            _set_cookie(response, user, settings)
+            return UserOut(user=_view(user))
     # Verify against a dummy hash for unknown emails so both failures cost the same.
     ok = verify_password(user.password_hash if user else _DUMMY_HASH, body.password)
     if user is None or not ok:
         raise ProblemException(401, "invalid_credentials", "Wrong email or password")
     _set_cookie(response, user, settings)
     return UserOut(user=_view(user))
+
+
+def _open_login(body: LoginBody, settings: HopeSettings) -> store.UserRecord | None:
+    """`HOPE_OPEN_LOGIN`: an email with no account gets one with the given password."""
+    email = body.email.strip().lower()
+    if not body.password or not re.fullmatch(EMAIL_PATTERN, email):
+        return None
+    try:
+        with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
+            if store.get_user_by_email(tx, email) is not None:
+                return None
+            return create_user(tx, email, body.password, email.split("@")[0])
+    except EmailTaken:
+        return None
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
