@@ -34,7 +34,7 @@ browser ── https://<web>/v1/* ──▶ Vercel (Next.js rewrite) ──▶ R
 - Project root directory: `apps/web`, Node 22, framework Next.js. Vercel detects the pnpm workspace.
 - Pages are static: EN/ES is chosen in the browser (`components/I18nProvider.tsx`, `lang` cookie, then the browser
   language), so only `/api/hope/draft` and `/hope/applications/[oppId]` are functions. That keeps the deployment within
-  the Hobby plan's 12-function limit; don't read `cookies()` / `headers()` in a layout.
+  the Hobby plan's 12-function limit; don't read `cookies()` / `headers()` in a layout, and don't add an `apps/web/api/` folder (Vercel deploys every file in it as a separate function; API clients live in `lib/api/`).
 
 | Variable | Value |
 |---|---|
