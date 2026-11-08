@@ -74,7 +74,12 @@ Hackathon migration ranges: H0 `0002`, H1 profile `0310-0319`, discovery `0700-0
   (`NOTICE_MS`), keyed to the message. Page-level states (loading, not found, load failure) stay.
 - Glass utilities in `app/globals.css` declare `-webkit-backdrop-filter` before `backdrop-filter`: the CSS build keeps
   only the last of the two, and Chrome needs the standard one.
-- H4/H5 are browser state plus `POST /api/hope/draft`. The OpenAI key is server-only (`OPENAI_API_KEY`).
+- Online (`NEXT_PUBLIC_HOPE_API_URL` set), the profile (H1), discovered grants (H2), save/pass decisions (H3) and H6
+  applications (`/v1/applications`) live on the server. H5 drafting runs on that application's questions and answers,
+  and H4's eligibility and approval controls use its `stage|evidence|approvals` routes. The profile dossier
+  (documents, reviews) and the offline demo stay in browser state.
+- The OpenAI key is server-only: the API reads `HOPE_OPENAI_API_KEY`, the `POST /api/hope/draft` route reads
+  `OPENAI_API_KEY`. `make demo` sets either from the other. Never print or commit it.
 - Web checks: `pnpm --filter @hope/web typecheck && pnpm --filter @hope/web lint && pnpm --filter @hope/web test`.
   Don't commit the generated `apps/web/AGENTS.md` / `CLAUDE.md`.
 

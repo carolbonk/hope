@@ -79,7 +79,7 @@ the sign-out error, and `Loading` / `ErrorNotice` from `components/ui` for the g
 4. **Account menu:** the button toggles the popover (`aria-expanded`). Opening focuses the first item; Esc closes and
    returns focus to the button; an outside click or choosing an item closes it.
 5. **Sign out (online, in the menu):** `POST /v1/auth/logout` returns 204, then `invalidateSession()` and
-   `router.replace("/login")`. On an error, stay and show "Couldn't sign out. Try again." `hope:state:v1` is never cleared.
+   `router.replace("/login?signedOut=1")`, so `/login` shows "You're signed out." (SC01). On an error, stay and show "Couldn't sign out. Try again." `hope:state:v1` is never cleared.
 6. **Deadline reminder:** clicking the text opens `/hope/deadlines`; × closes it without navigating.
 7. **Session expires mid-use:** any `/v1` 401 dispatches `hope:unauthorized`; the guard redirects as in 2, keeping `next`.
 8. **Window focus:** `me()` is refetched, so a sign-out in another tab is picked up.
