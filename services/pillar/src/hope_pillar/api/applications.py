@@ -653,6 +653,7 @@ def _draft_one(
         over_limit=result.over_limit,
         to_confirm=len(result.to_confirm),
         unsupported_figures=result.unsupported,
+        unsourced_sentences=len(result.unsourced),
     )
 
 

@@ -162,6 +162,11 @@ def test_notes_to_the_reader_are_not_questions() -> None:
     assert is_question("Describe the community need your program addresses.")
     assert is_question("1. What outcomes will you track")
     assert is_question("Who does the program serve?")
+    assert is_question(
+        "Organization Snapshot*  In 100 words or fewer, introduce your organization."
+    )
+    assert is_question("Project Design* Walk us through the activities and the timeline.")
+    assert not is_question("Need help? Email grants@rhef.example.org.")
     assert not is_question("Please carefully read the eligibility criteria before applying.")
     assert not is_question("Please contact the Foundation before proceeding with an application.")
     assert not is_question("Organizations are limited to one grant proposal per cycle.")

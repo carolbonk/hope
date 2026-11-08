@@ -198,8 +198,9 @@ class Requirements(BaseModel):
 
 _ASK_START = re.compile(
     r"^(?:\d+[.)]\s*)?(?:please\s+)?(?:describe|explain|list|provide|tell|share|summari[sz]e|identify"
-    r"|outline|discuss|detail|state|include|what|how|why|who|which|when|where|is|are|does|do"
-    r"|will|has|have)\b",
+    r"|outline|discuss|detail|state|include|introduce|walk|give|briefly|characteri[sz]e"
+    r"|demonstrate|elaborate|indicate|specify|clarify|what|how|why|who|which|when|where|is|are"
+    r"|does|do|will|has|have|can|could|should|to what extent)\b",
     re.I,
 )
 _READER_NOTE = re.compile(
@@ -210,9 +211,19 @@ _ASKS_FOR_DOC = re.compile(
 )
 
 
+_FIELD_LABEL = re.compile(r"^[A-Z][\w ,&/'-]{1,60}?(?:\*\s*|:\s+)(?=\S)")
+_LIMIT_LEAD = re.compile(
+    r"^(?:in|using)\s+(?:no more than\s+|up to\s+)?[\d,]+\s+\w+(?:\s+or\s+(?:fewer|less))?,?\s*",
+    re.I,
+)
+
+
 def is_question(prompt: str) -> bool:
-    """An application question asks the applicant something; a note to the reader doesn't."""
-    text = prompt.strip()
+    """An application question asks the applicant something; a note to the reader doesn't.
+
+    Portal fields often lead with a label ("Project Design* ...") or a limit
+    ("In 100 words or fewer, ..."); the ask comes after."""
+    text = _LIMIT_LEAD.sub("", _FIELD_LABEL.sub("", prompt.strip(), count=1), count=1)
     if _READER_NOTE.match(text):
         return False
     return text.endswith("?") or bool(_ASK_START.match(text))

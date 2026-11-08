@@ -18,10 +18,13 @@ from hope_discovery.answers import (
     dossier_item,
     export_markdown,
     guard_figures,
+    limit_label,
     measure,
     mock_answer,
     owner_for,
     standard_questions,
+    strip_refs,
+    unsupported_figures,
 )
 from hope_discovery.requirements import (
     Attachment,
@@ -189,3 +192,40 @@ def test_export_lists_every_question_and_attachment() -> None:
     )
     assert "## 1. Describe the need." in md and "_Limit: 250 words_" in md
     assert "We help." in md and "- [ ] Budget" in md
+
+
+def test_same_figure_in_another_format_is_supported() -> None:
+    sources = "Annual operating budget USD 3,120,000. Serves 3,200 a year. 12% growth."
+    assert unsupported_figures("A $3.12 million budget, 3.2k people, 12 percent.", sources) == []
+    assert unsupported_figures("We serve 4,650 people.", sources) == ["4,650"]
+
+
+def test_inline_refs_are_kept_out_of_the_pasted_text() -> None:
+    assert strip_refs("We serve 3,200 children (P1, P18). We help [P2][P11].") == (
+        "We serve 3,200 children. We help."
+    )
+    assert strip_refs("Phase 2 (pilot) starts soon.") == "Phase 2 (pilot) starts soon."
+
+
+def test_limit_label_says_how_spaces_count() -> None:
+    assert limit_label(Limit(unit="characters", max=1500, includes_spaces=True)) == (
+        "1,500 characters, including spaces"
+    )
+    assert limit_label(Limit(unit="words", max=250)) == "250 words"
+
+
+def test_covid_19_is_not_a_figure() -> None:
+    assert unsupported_figures("Since COVID-19, visits rose.", "") == []
+
+
+def test_sentences_without_a_source_are_reported() -> None:
+    def mixed(messages: list[Message], schema: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "text": "Our clinic serves rural families today. We will run quarterly workshops.",
+            "claims": [{"sentence": "Our clinic serves rural families today.", "refs": ["P1"]}],
+            "to_confirm": ["what is needed"],
+        }
+
+    result = drafter(mixed).draft(agency_profile(), GRANT, Requirements(), q("Describe it."))
+    assert result.unsourced == ["We will run quarterly workshops."]
+    assert result.to_confirm == []
