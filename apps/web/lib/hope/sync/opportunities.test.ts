@@ -48,7 +48,7 @@ describe("toOpportunity", () => {
         amount_min: { amount_minor: 1_000_000, currency: "USD" },
       }),
     )!;
-    expect(rich.focusAreas).toEqual(["mentoring", "youth", "family", "mental_health", "health", "safety", "school_based", "capacity", "arts"]);
+    expect(rich.focusAreas).toEqual(["mentoring", "youth", "family", "mental_health", "safety", "school_based", "capacity", "arts"]);
     expect(rich.geography).toEqual(["United States"]);
     expect(rich.purpose).toBe("general_operating");
     expect(rich.amountMin).toBe(10000);
@@ -59,6 +59,9 @@ describe("toOpportunity", () => {
     expect(toOpportunity(card({ title: "Arts", summary: "Murals" }))!.focusAreas).toEqual(["arts"]);
     const local = toOpportunity(card({ eligibility_summary: "Nonprofits serving Chelan County, WA or Douglas County, WA" }))!;
     expect(local.geography).toEqual(["Chelan County, WA", "Douglas County, WA"]);
+    expect(toOpportunity(card({ title: "Mental health access", summary: "Behavioral health counseling" }))!.focusAreas).toEqual(["mental_health"]);
+    const county = toOpportunity(card({ url: "https://www.grants.gov/search-results-detail/1", eligibility_summary: "Applicants must serve Yakima County, WA" }))!;
+    expect(county.geography).toEqual(["Yakima County, WA"]);
   });
 
   it("needs check rules", async () => {
@@ -111,6 +114,7 @@ describe("incomplete grants", () => {
     expect(isCheck(noDate)).toBe(true);
     expect(isRolling(noDate)).toBe(false);
     expect(isRolling(toOpportunity(card({ deadline: null, deadline_text: "Rolling" })))).toBe(true);
+    expect(isRolling(toOpportunity(card({ deadline: null, deadline_text: "Applications are accepted year-round" })))).toBe(true);
     expect(toOpportunity(card({ amount_max: null, amount_text: null }))).toMatchObject({ amountMin: null, amountMax: null, amountText: null, deadline: "2027-03-03" });
     expect(toOpportunity(card({ amount_max: { amount_minor: 5_000_000, currency: "CAD" } }))).toMatchObject({ amountMin: null, amountMax: null, otherCurrency: "CAD" });
   });

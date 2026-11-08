@@ -58,11 +58,14 @@ function purposeOf(text: string): Purpose {
   return "program";
 }
 
-/** Places the funder's text names as "Chelan County, WA"; a federal notice covers the United States. */
+/** Places the funder's text names as "Chelan County, WA"; a federal notice naming none covers the United States. */
 function geographyOf(text: string, federal: boolean): string[] {
-  if (federal) return ["United States"];
-  return [...new Set(text.match(/\b[A-Z][a-z]+(?: [A-Z][a-z]+)? County, [A-Z]{2}\b/g) ?? [])];
+  const places = [...new Set(text.match(/\b[A-Z][a-z]+(?: [A-Z][a-z]+)? County, [A-Z]{2}\b/g) ?? [])];
+  return places.length || !federal ? places : ["United States"];
 }
+
+/** "Mental health" and "behavioral health" are not general health. */
+const focusText = (key: string, text: string) => (key === "health" ? text.replace(/\b(mental|behavioral)\s+health/gi, "") : text);
 
 function isFederal(url: string): boolean {
   try {
@@ -91,7 +94,7 @@ export function toOpportunity(card: GrantCard): Opportunity {
     currency: (max?.currency ?? "USD") as Currency,
     geography: geographyOf(`${text} ${eligibility ?? ""}`, federal),
     fundingType: "grant",
-    focusAreas: Object.keys(FOCUS_KEYWORDS).filter((key) => FOCUS_KEYWORDS[key]!.some((w) => hasWord(text, w))),
+    focusAreas: Object.keys(FOCUS_KEYWORDS).filter((key) => FOCUS_KEYWORDS[key]!.some((w) => hasWord(focusText(key, text), w))),
     purpose: purposeOf(text),
     deadline: card.deadline,
     ...(needsCheck(card)
@@ -114,7 +117,7 @@ export function toOpportunity(card: GrantCard): Opportunity {
 export const isCheck = (o: Opportunity) => o.amountMax === null || o.deadline === null;
 
 /** "Rolling" only when the page said so; otherwise an unknown date is just not found. */
-export const isRolling = (o: Opportunity) => !o.deadline && /rolling|ongoing|open until/i.test(o.deadlineText ?? "");
+export const isRolling = (o: Opportunity) => !o.deadline && /rolling|ongoing|open until|year[-\s]round/i.test(o.deadlineText ?? "");
 
 type GrantList = { items: GrantCard[]; total?: number };
 const PAGE = 100;
