@@ -229,25 +229,25 @@ function Deck() {
                 </>
               ) : (
                 <>
-                <SwipeCard key={top.opp.id} onSwipe={act}>
-                  <CardBody opp={top.opp} onDetails={() => setDetails(top.opp)} />
-                </SwipeCard>
-                <div className="mt-6 flex items-end justify-center gap-5 sm:gap-6" role="group" aria-label={d.keys}>
-                  <RoundButton label={d.undo} onClick={doUndo} disabled={!state.history.length} size="sm">
-                    ↶
-                  </RoundButton>
-                  <RoundButton label={d.pass} onClick={() => act("passed")}>
-                    ✕
-                  </RoundButton>
-                  <RoundButton label={d.details} onClick={() => setDetails(top.opp)}>
-                    i
-                  </RoundButton>
-                  <RoundButton label={d.save} onClick={() => act("saved")} size="lg">
-                    ♥
-                  </RoundButton>
-                </div>
-                <p className="mt-5 text-center text-xs text-muted">{L.left(deck.length)}</p>
-                <p className="mt-1 hidden text-center text-xs text-muted sm:block">{d.keys}</p>
+                  <SwipeCard key={top.opp.id} onSwipe={act}>
+                    <CardBody opp={top.opp} onDetails={() => setDetails(top.opp)} />
+                  </SwipeCard>
+                  <div className="mt-6 flex items-end justify-center gap-5 sm:gap-6" role="group" aria-label={d.keys}>
+                    <RoundButton label={d.undo} onClick={doUndo} disabled={!state.history.length} size="sm">
+                      ↶
+                    </RoundButton>
+                    <RoundButton label={d.pass} onClick={() => act("passed")}>
+                      ✕
+                    </RoundButton>
+                    <RoundButton label={d.details} onClick={() => setDetails(top.opp)}>
+                      i
+                    </RoundButton>
+                    <RoundButton label={d.save} onClick={() => act("saved")} size="lg">
+                      ♥
+                    </RoundButton>
+                  </div>
+                  <p className="mt-5 text-center text-xs text-muted">{L.left(deck.length)}</p>
+                  <p className="mt-1 hidden text-center text-xs text-muted sm:block">{d.keys}</p>
                 </>
               )}
             </div>

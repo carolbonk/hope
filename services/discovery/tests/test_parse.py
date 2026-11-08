@@ -144,3 +144,11 @@ def test_find_deadline_rolling_none_and_past_only() -> None:
 def test_context_of_finds_the_clause() -> None:
     assert context_of("$400,000", [PAGE]) == "This year $400,000 is available in total."
     assert context_of("not on the page", [PAGE]) == ""
+
+
+def test_cumulative_awarded_reads_as_total() -> None:
+    pick = pick_award("Grants Awarded $5,921,817.32")
+    assert pick is not None and pick.total
+    assert find_amount(["Grants Awarded $5,921,817.32"]) is None
+    pick = pick_award("Up to $5,000 will be awarded per organization.")
+    assert pick is not None and not pick.total

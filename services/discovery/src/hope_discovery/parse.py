@@ -164,7 +164,8 @@ TOTAL_WORDS = re.compile(
     r"\btotal\b|\btotaling\b|\bavailable\b|\bpool\b|\bbudget\b|\bhas (?:awarded|granted|invested)"
     r"|\b(?:over|more than|nearly|almost) \$|\bin (?:total )?(?:grants|funding|awards)\b"
     r"|\bdistributed\b|\braised\b|\bsince \d{4}|\bendowment\b|\binvest(?:s|ed|ment)\b"
-    r"|\bmatch(?:ing)?\b|\bfee\b|\bcost\b|\bsalary\b",
+    r"|\bmatch(?:ing)?\b|\bfee\b|\bcost\b|\bsalary\b"
+    r"|\b(?:grants|funds|dollars|total) awarded\b|\bawarded (?:to date|since|so far)\b",
     re.I,
 )
 DEADLINE_WORDS = re.compile(
