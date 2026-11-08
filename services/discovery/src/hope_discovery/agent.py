@@ -366,7 +366,9 @@ class DiscoveryAgent:
             return
         if deadline is not None and deadline.yearless:
             concerns.append(YEARLESS_CONCERN)
-        rolling = v.rolling or bool(deadline and deadline.rolling and deadline.date is None)
+        rolling = (v.rolling or bool(deadline and deadline.rolling)) and (
+            deadline is None or deadline.date is None
+        )
 
         o.events.append(_Event("info", f"Scoring fit: {v.title}"))
         sources = self._web_sources(v, final_url, page.title)
