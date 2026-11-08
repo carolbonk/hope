@@ -7,7 +7,7 @@
 | Screens | [SC01](../screens/SC01-sign-in.md) `/login` (to build), [SC11](../screens/SC11-onboarding.md) `/onboarding` (built), [SC09](../screens/SC09-agency-profile.md) `/hope/profile` (built) |
 | Migrations | `0310_profile_extras.sql` (profile range 0300-0399; H1 uses 0310-0319) |
 | Blueprint | 3 (system of record), 5.1 (Agency Profile) |
-| Status | Draft. SC11 and SC09 are built; SC01, the profile backend and `lib/hope/sync/profile.ts` are to build |
+| Status | Built (PR #49) |
 
 ## Goal
 

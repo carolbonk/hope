@@ -56,7 +56,13 @@ function Workspace({ oppId }: { oppId: string }) {
           ← {h.saved.title}
         </Link>
         <p className="pt-3 text-[11px] uppercase tracking-[0.16em] text-muted">
-          {opp.funder} · <span className="rounded bg-[#f1ead8] px-1.5 font-semibold normal-case tracking-normal text-[#6b5520]">{h.demo}</span>
+          {opp.funder}
+          {opp.source.kind === "demo" && (
+            <>
+              {" · "}
+              <span className="rounded bg-[#f1ead8] px-1.5 font-semibold normal-case tracking-normal text-[#6b5520]">{h.demo}</span>
+            </>
+          )}
         </p>
         <h1 className="font-display text-4xl leading-tight sm:text-5xl">{opp.name}</h1>
         <p className="text-sm">

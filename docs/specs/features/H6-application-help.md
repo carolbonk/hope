@@ -6,7 +6,7 @@
 | Depends on | H0 (auth, jobs, web tools, model gateway, store); H1 `/v1/profile`; H2 `grant_candidates` + `hope_discovery` fetch/quote helpers; H3 save |
 | Screens | SC27/SC28 `/hope/applications/[oppId]` (built; H6 swaps its data source, no page rebuilt) |
 | Migrations | `db/migrations/0720_applications.sql` (range 0720-0729) |
-| Status | Draft |
+| Status | Built (PR #53) |
 
 ## Goal
 

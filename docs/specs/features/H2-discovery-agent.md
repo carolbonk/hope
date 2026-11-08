@@ -7,7 +7,7 @@
 | Screens | SC24 `/hope/discover` (deck built by PR #34; H2 adds the run panel and the live catalog) |
 | Migrations | `db/migrations/0700_discovery.sql` (range 0700-0709) |
 | Blueprint | 2.2 A1 (discovery), 8.3 (untrusted content), 8.5 (budgets) |
-| Status | Draft (backend and adapter to build; the UI exists) |
+| Status | Built (PR #50) |
 
 ## Goal
 

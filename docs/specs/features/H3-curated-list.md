@@ -6,7 +6,7 @@
 | Depends on | H0 (auth, `hope_core.store`, `api/http.ts`, the `lib/hope/sync/` seam); H2 (fills `grant_candidates` and maps them into `useOpportunities()`) |
 | Screens | SC25 `/hope/saved` and `/hope/deadlines` (built by PR #34). SC26 has no page (see SC26) |
 | Migrations | none (`0710-0719` stays reserved; H0 already adds the status/reason columns) |
-| Status | UI built in the browser by PR #34; this spec covers the backend, the sync adapter, two small page fixes and the tests |
+| Status | Built (backend and sync PR #48, grants API test PR #52; UI by PR #34) |
 
 ## Goal
 
