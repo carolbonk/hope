@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from typing import Any
 
 import psycopg
 import pytest
@@ -47,3 +48,46 @@ def pillar() -> InMemoryPillar:
 @pytest.fixture
 def repo(conn: Conn, pillar: InMemoryPillar) -> ProfileRepository:
     return ProfileRepository(conn, pillar)
+
+
+INVITE = "test-invite-code-0123456789"
+
+
+@pytest.fixture
+def hope_api(migrated_db: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[Any]:
+    """The hackathon API on the configured tenant, with no users and no profile yet."""
+    from fastapi.testclient import TestClient
+    from hope_core import store
+    from hope_core.settings import get_settings
+    from hope_pillar.api import create_app
+    from hope_profile.api import suggestion_limiter
+
+    monkeypatch.setenv("HOPE_INVITE_CODE", INVITE)
+    monkeypatch.setenv("HOPE_SESSION_SECRET", "test-session-secret-0123456789")
+    monkeypatch.delenv("HOPE_OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("HOPE_DEMO_FRESH", raising=False)
+    get_settings.cache_clear()
+    settings = get_settings()
+    store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)
+    with psycopg.connect(migrated_db) as admin:
+        admin.execute("DELETE FROM users WHERE tenant_id = %s", (settings.tenant_id,))
+        for table in ("agency_profile_extras", "agency_profile_versions"):
+            admin.execute(f"DELETE FROM {table} WHERE agency_id = %s", (settings.agency_id,))
+    suggestion_limiter.reset()
+    with TestClient(create_app(), base_url="https://testserver") as client:
+        yield client
+    suggestion_limiter.reset()
+    get_settings.cache_clear()
+
+
+@pytest.fixture
+def signed_in(hope_api: Any) -> Any:
+    signup = {
+        "email": "dana@riverbendhealth.example.org",
+        "password": "correct-horse-battery",
+        "display_name": "Dana Okafor",
+        "invite_code": INVITE,
+    }
+    response = hope_api.post("/v1/auth/signup", json=signup)
+    assert response.status_code == 201, response.text
+    return hope_api

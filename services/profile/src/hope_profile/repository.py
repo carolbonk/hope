@@ -337,6 +337,110 @@ class ProfileRepository:
             status="committed", version=committed.version, changes=changes, proposal=proposal
         )
 
+    def latest(self, tenant_id: UUID, agency_id: UUID) -> ProfileVersion | None:
+        """The newest version (by number), or None before the first save."""
+        with tenant_tx(self.conn, tenant_id) as cur:
+            cur.execute(
+                f"SELECT {_VERSION_COLS} FROM agency_profile_versions"
+                " WHERE agency_id = %s ORDER BY version DESC LIMIT 1",
+                (agency_id,),
+            )
+            row = cur.fetchone()
+        return _version(row) if row else None
+
+    def save_direct(
+        self,
+        tenant_id: UUID,
+        agency_id: UUID,
+        data: dict[str, Any],
+        actor: str,
+        expected_version: int | None,
+    ) -> ProfileVersion:
+        """Commit `data` as the next version with no HITL-0 proposal (hackathon). With no
+        version yet it creates the agency and version 1; otherwise `expected_version` must be
+        the latest version. A no-op save returns the current version unchanged."""
+        if data.get("agency_id") != str(agency_id) or data.get("tenant_id") != str(tenant_id):
+            raise ProfileValidationError(["profile agency_id/tenant_id do not match"])
+        committed: ProfileVersion | None = None
+        with tenant_tx(self.conn, tenant_id) as cur:
+            legal_name = str(data.get("legal", {}).get("legal_name") or "")
+            cur.execute(
+                "INSERT INTO agencies (agency_id, tenant_id, legal_name) VALUES (%s, %s, %s)"
+                " ON CONFLICT (agency_id) DO NOTHING",
+                (agency_id, tenant_id, legal_name),
+            )
+            cur.execute(
+                "SELECT agency_id FROM agencies WHERE agency_id = %s FOR UPDATE", (agency_id,)
+            )
+            cur.execute(
+                f"SELECT {_VERSION_COLS} FROM agency_profile_versions WHERE agency_id = %s"
+                " ORDER BY version DESC LIMIT 1 FOR UPDATE",
+                (agency_id,),
+            )
+            row = cur.fetchone()
+            latest = _version(row) if row else None
+            current = latest.version if latest else None
+            if expected_version != current:
+                raise VersionConflictError(f"expected v{expected_version}, current v{current}")
+            if latest is None:
+                new = self._normalize(data, version=1)
+                changes = diff({}, new)
+                committed = self._insert_version(cur, tenant_id, new, actor)
+                cur.execute(
+                    "UPDATE agencies SET legal_name = %s WHERE agency_id = %s",
+                    (committed.profile.legal.legal_name, agency_id),
+                )
+                self._audit(
+                    cur,
+                    tenant_id,
+                    actor,
+                    "profile.updated",
+                    agency_id,
+                    {"version": 1, "paths": [c.path for c in changes]},
+                )
+            else:
+                old = latest.profile.model_dump(mode="json")
+                new = self._normalize(data, version=latest.version + 1)
+                changes = diff(old, new)
+                if not changes:
+                    return latest
+                committed = self._commit(cur, tenant_id, latest, new, actor, changes)
+            self._upsert_extras(cur, tenant_id, committed, actor)
+        self._publish_updated(tenant_id, committed, current, changes, actor)
+        return committed
+
+    def extras(self, tenant_id: UUID, agency_id: UUID) -> dict[str, Any] | None:
+        with tenant_tx(self.conn, tenant_id) as cur:
+            cur.execute(
+                "SELECT hq_city, hq_state, website FROM agency_profile_extras WHERE agency_id = %s",
+                (agency_id,),
+            )
+            row = cur.fetchone()
+        return dict(row) if row else None
+
+    def _upsert_extras(
+        self, cur: Cursor, tenant_id: UUID, committed: ProfileVersion, actor: str
+    ) -> None:
+        legal = committed.profile.legal
+        if not (legal.hq_city and legal.hq_state):
+            return
+        cur.execute(
+            "INSERT INTO agency_profile_extras"
+            " (agency_id, tenant_id, hq_city, hq_state, website, updated_at, updated_by)"
+            " VALUES (%s, %s, %s, %s, %s, now(), %s)"
+            " ON CONFLICT (agency_id) DO UPDATE SET hq_city = EXCLUDED.hq_city,"
+            " hq_state = EXCLUDED.hq_state, website = EXCLUDED.website,"
+            " updated_at = EXCLUDED.updated_at, updated_by = EXCLUDED.updated_by",
+            (
+                committed.profile.agency_id,
+                tenant_id,
+                legal.hq_city,
+                legal.hq_state,
+                legal.website,
+                actor,
+            ),
+        )
+
     def scan_stale(
         self, tenant_id: UUID, agency_id: UUID, today: date | None = None
     ) -> list[StaleFieldAlert]:

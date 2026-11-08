@@ -1,0 +1,3006 @@
+{
+  "components": {
+    "schemas": {
+      "AgencyProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "agency_id": {
+            "format": "uuid",
+            "title": "Agency Id",
+            "type": "string"
+          },
+          "approval_hierarchy": {
+            "items": {
+              "$ref": "#/components/schemas/ApprovalRule"
+            },
+            "minItems": 1,
+            "title": "Approval Hierarchy",
+            "type": "array"
+          },
+          "capacity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Capacity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compliance_calendar": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ComplianceItem"
+            },
+            "title": "Compliance Calendar",
+            "type": "array"
+          },
+          "data_governance": {
+            "$ref": "#/components/schemas/DataGovernance",
+            "default": {
+              "allow_cross_tenant_learning": false,
+              "allow_style_finetune": false,
+              "data_residency": "us"
+            }
+          },
+          "financials": {
+            "$ref": "#/components/schemas/Financials"
+          },
+          "grant_history": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/GrantHistoryItem"
+            },
+            "title": "Grant History",
+            "type": "array"
+          },
+          "legal": {
+            "$ref": "#/components/schemas/Legal"
+          },
+          "mission": {
+            "$ref": "#/components/schemas/Mission"
+          },
+          "programs": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Program"
+            },
+            "title": "Programs",
+            "type": "array"
+          },
+          "service_area": {
+            "default": [],
+            "description": "state or county names",
+            "items": {
+              "type": "string"
+            },
+            "title": "Service Area",
+            "type": "array"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "agency_id",
+          "tenant_id",
+          "version",
+          "legal",
+          "mission",
+          "financials",
+          "approval_hierarchy"
+        ],
+        "title": "AgencyProfile",
+        "type": "object"
+      },
+      "ApprovalRule": {
+        "additionalProperties": false,
+        "properties": {
+          "approver_roles": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Approver Roles",
+            "type": "array"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON Logic over the gate payload",
+            "title": "Condition"
+          },
+          "escalate_to_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalate To Role"
+          },
+          "gate": {
+            "$ref": "#/components/schemas/Gate"
+          },
+          "min_approvals": {
+            "default": 1,
+            "title": "Min Approvals",
+            "type": "integer"
+          },
+          "sla_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sla Hours"
+          }
+        },
+        "required": [
+          "gate",
+          "approver_roles"
+        ],
+        "title": "ApprovalRule",
+        "type": "object"
+      },
+      "Basics-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "ein": {
+            "pattern": "^[0-9]{2}-[0-9]{7}$",
+            "title": "Ein",
+            "type": "string"
+          },
+          "hq_city": {
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Hq City",
+            "type": "string"
+          },
+          "hq_state": {
+            "pattern": "^[A-Z]{2}$",
+            "title": "Hq State",
+            "type": "string"
+          },
+          "legal_name": {
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Legal Name",
+            "type": "string"
+          },
+          "service_area": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Service Area",
+            "type": "array"
+          },
+          "tax_status": {
+            "default": "501c3_public_charity",
+            "enum": [
+              "501c3_public_charity",
+              "501c3_private_foundation",
+              "501c4",
+              "501c6",
+              "fiscally_sponsored",
+              "government",
+              "tribal",
+              "other"
+            ],
+            "title": "Tax Status",
+            "type": "string"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "required": [
+          "legal_name",
+          "ein",
+          "hq_city",
+          "hq_state",
+          "service_area"
+        ],
+        "title": "Basics",
+        "type": "object"
+      },
+      "Basics-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "ein": {
+            "pattern": "^[0-9]{2}-[0-9]{7}$",
+            "title": "Ein",
+            "type": "string"
+          },
+          "hq_city": {
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Hq City",
+            "type": "string"
+          },
+          "hq_state": {
+            "pattern": "^[A-Z]{2}$",
+            "title": "Hq State",
+            "type": "string"
+          },
+          "legal_name": {
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Legal Name",
+            "type": "string"
+          },
+          "service_area": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Service Area",
+            "type": "array"
+          },
+          "tax_status": {
+            "default": "501c3_public_charity",
+            "enum": [
+              "501c3_public_charity",
+              "501c3_private_foundation",
+              "501c4",
+              "501c6",
+              "fiscally_sponsored",
+              "government",
+              "tribal",
+              "other"
+            ],
+            "title": "Tax Status",
+            "type": "string"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "required": [
+          "legal_name",
+          "ein",
+          "hq_city",
+          "hq_state",
+          "service_area"
+        ],
+        "title": "Basics",
+        "type": "object"
+      },
+      "BudgetForm": {
+        "additionalProperties": false,
+        "properties": {
+          "annual_operating_budget_usd": {
+            "anyOf": [
+              {
+                "maximum": 10000000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Operating Budget Usd"
+          },
+          "budget_band": {
+            "enum": [
+              "<250k",
+              "250k-1m",
+              "1m-5m",
+              "5m-25m",
+              ">25m"
+            ],
+            "title": "Budget Band",
+            "type": "string"
+          },
+          "fiscal_year_end": {
+            "default": "12-31",
+            "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Fiscal Year End",
+            "type": "string"
+          }
+        },
+        "required": [
+          "budget_band"
+        ],
+        "title": "BudgetForm",
+        "type": "object"
+      },
+      "Capacity": {
+        "additionalProperties": false,
+        "properties": {
+          "cost_share_capacity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "grant_writer_fte": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Writer Fte"
+          },
+          "max_concurrent_applications": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Concurrent Applications"
+          },
+          "monthly_hours_available": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Hours Available"
+          }
+        },
+        "title": "Capacity",
+        "type": "object"
+      },
+      "ChangeResult": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/FieldChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProfileChangeProposal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "committed",
+              "pending_approval",
+              "rejected",
+              "no_change"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "changes"
+        ],
+        "title": "ChangeResult",
+        "type": "object"
+      },
+      "Citation": {
+        "additionalProperties": false,
+        "properties": {
+          "citation_id": {
+            "description": "\"c1\", \"c2\"... unique within its parent",
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "web",
+              "profile"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "profile_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "e.g. \"mission.mission_statement\"",
+            "title": "Profile Path"
+          },
+          "quote": {
+            "description": "exact supporting text",
+            "maxLength": 500,
+            "title": "Quote",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved At"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "citation_id",
+          "kind",
+          "quote"
+        ],
+        "title": "Citation",
+        "type": "object"
+      },
+      "CompletenessReport": {
+        "additionalProperties": false,
+        "properties": {
+          "missing": {
+            "description": "dotted paths that are empty",
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
+          "score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "score",
+          "missing"
+        ],
+        "title": "CompletenessReport",
+        "type": "object"
+      },
+      "ComplianceItem": {
+        "additionalProperties": false,
+        "properties": {
+          "due_on": {
+            "format": "date",
+            "title": "Due On",
+            "type": "string"
+          },
+          "item": {
+            "enum": [
+              "sam_renewal",
+              "form_990",
+              "single_audit",
+              "state_charity_registration",
+              "insurance_renewal",
+              "nicra_renewal",
+              "board_meeting",
+              "custom"
+            ],
+            "title": "Item",
+            "type": "string"
+          },
+          "owner_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner User Id"
+          }
+        },
+        "required": [
+          "item",
+          "due_on"
+        ],
+        "title": "ComplianceItem",
+        "type": "object"
+      },
+      "DataGovernance": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_cross_tenant_learning": {
+            "default": false,
+            "title": "Allow Cross Tenant Learning",
+            "type": "boolean"
+          },
+          "allow_style_finetune": {
+            "default": false,
+            "title": "Allow Style Finetune",
+            "type": "boolean"
+          },
+          "data_residency": {
+            "default": "us",
+            "enum": [
+              "us",
+              "eu",
+              "ca"
+            ],
+            "title": "Data Residency",
+            "type": "string"
+          },
+          "retention_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retention Days"
+          }
+        },
+        "title": "DataGovernance",
+        "type": "object"
+      },
+      "DecisionBody": {
+        "properties": {
+          "artifact_hash": {
+            "title": "Artifact Hash",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "required": [
+          "artifact_hash"
+        ],
+        "title": "DecisionBody",
+        "type": "object"
+      },
+      "Demographic": {
+        "additionalProperties": false,
+        "properties": {
+          "age_range": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Range"
+          },
+          "annual_served": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Served"
+          },
+          "population": {
+            "title": "Population",
+            "type": "string"
+          }
+        },
+        "required": [
+          "population"
+        ],
+        "title": "Demographic",
+        "type": "object"
+      },
+      "FieldChange": {
+        "additionalProperties": false,
+        "properties": {
+          "new": {
+            "title": "New"
+          },
+          "old": {
+            "title": "Old"
+          },
+          "path": {
+            "description": "dotted path, e.g. financials.indirect_rate.rate_bps",
+            "title": "Path",
+            "type": "string"
+          },
+          "protected": {
+            "title": "Protected",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path",
+          "protected"
+        ],
+        "title": "FieldChange",
+        "type": "object"
+      },
+      "Financials": {
+        "additionalProperties": false,
+        "properties": {
+          "annual_operating_budget": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "budget_band": {
+            "anyOf": [
+              {
+                "enum": [
+                  "<250k",
+                  "250k-1m",
+                  "1m-5m",
+                  "5m-25m",
+                  ">25m"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Band"
+          },
+          "fiscal_year_end": {
+            "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Fiscal Year End",
+            "type": "string"
+          },
+          "fringe_rate_bps": {
+            "anyOf": [
+              {
+                "description": "basis points, e.g. 1500 = 15%",
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fringe Rate Bps"
+          },
+          "indirect_rate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IndirectRate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_audit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LastAudit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Provenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "fiscal_year_end",
+          "annual_operating_budget"
+        ],
+        "title": "Financials",
+        "type": "object"
+      },
+      "FormCompleteness": {
+        "properties": {
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
+          "score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          },
+          "suggestions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "score",
+          "missing",
+          "suggestions"
+        ],
+        "title": "FormCompleteness",
+        "type": "object"
+      },
+      "Gate": {
+        "enum": [
+          "HITL-0",
+          "HITL-1",
+          "HITL-2",
+          "HITL-3",
+          "HITL-4",
+          "HITL-5",
+          "REVIEW-ELIGIBILITY",
+          "REVIEW-PARSE"
+        ],
+        "title": "Gate",
+        "type": "string"
+      },
+      "GrantHistoryItem": {
+        "additionalProperties": false,
+        "properties": {
+          "aln": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Assistance Listing Number, e.g. 93.243",
+            "title": "Aln"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "funder_id": {
+            "title": "Funder Id",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "awarded",
+              "declined",
+              "withdrawn",
+              "pending"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period End"
+          },
+          "period_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Start"
+          },
+          "program_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Name"
+          },
+          "reviewer_feedback_artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Feedback Artifact Id"
+          }
+        },
+        "required": [
+          "funder_id",
+          "outcome"
+        ],
+        "title": "GrantHistoryItem",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IndirectRate": {
+        "additionalProperties": false,
+        "properties": {
+          "agreement_expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreement Expires On"
+          },
+          "base": {
+            "anyOf": [
+              {
+                "enum": [
+                  "MTDC",
+                  "TDC",
+                  "salaries_wages"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base"
+          },
+          "rate_bps": {
+            "anyOf": [
+              {
+                "description": "basis points, e.g. 1500 = 15%",
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Bps"
+          },
+          "type": {
+            "enum": [
+              "negotiated_nicra",
+              "de_minimis",
+              "none"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "IndirectRate",
+        "type": "object"
+      },
+      "LastAudit": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Id"
+          },
+          "findings": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Findings"
+          },
+          "fiscal_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Year"
+          },
+          "type": {
+            "enum": [
+              "single_audit",
+              "financial_audit",
+              "review",
+              "none"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "LastAudit",
+        "type": "object"
+      },
+      "Legal": {
+        "additionalProperties": false,
+        "properties": {
+          "dba": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Dba",
+            "type": "array"
+          },
+          "ein": {
+            "pattern": "^[0-9]{2}-[0-9]{7}$",
+            "title": "Ein",
+            "type": "string"
+          },
+          "fiscal_sponsor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Sponsor Id"
+          },
+          "hq_city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hq City"
+          },
+          "hq_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hq State"
+          },
+          "legal_name": {
+            "title": "Legal Name",
+            "type": "string"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Provenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sam_registration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SamRegistration"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state_of_incorporation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Of Incorporation"
+          },
+          "tax_status": {
+            "enum": [
+              "501c3_public_charity",
+              "501c3_private_foundation",
+              "501c4",
+              "501c6",
+              "fiscally_sponsored",
+              "government",
+              "tribal",
+              "other"
+            ],
+            "title": "Tax Status",
+            "type": "string"
+          },
+          "uei": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z0-9]{12}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uei"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "required": [
+          "legal_name",
+          "ein",
+          "tax_status"
+        ],
+        "title": "Legal",
+        "type": "object"
+      },
+      "Mission": {
+        "additionalProperties": false,
+        "properties": {
+          "focus_areas": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Focus Areas",
+            "type": "array"
+          },
+          "mission_statement": {
+            "maxLength": 2000,
+            "title": "Mission Statement",
+            "type": "string"
+          },
+          "ntee_codes": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Ntee Codes",
+            "type": "array"
+          },
+          "theory_of_change": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theory Of Change"
+          },
+          "values": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Values",
+            "type": "array"
+          },
+          "vision_statement": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vision Statement"
+          }
+        },
+        "required": [
+          "mission_statement"
+        ],
+        "title": "Mission",
+        "type": "object"
+      },
+      "MissionForm": {
+        "additionalProperties": false,
+        "properties": {
+          "mission_statement": {
+            "maxLength": 2000,
+            "minLength": 20,
+            "title": "Mission Statement",
+            "type": "string"
+          },
+          "values": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Values",
+            "type": "array"
+          },
+          "vision_statement": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vision Statement"
+          }
+        },
+        "required": [
+          "mission_statement"
+        ],
+        "title": "MissionForm",
+        "type": "object"
+      },
+      "Money": {
+        "properties": {
+          "amount_minor": {
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "currency": {
+            "default": "USD",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_minor"
+        ],
+        "title": "Money",
+        "type": "object"
+      },
+      "NteeCode": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "group_label": {
+            "title": "Group Label",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "group",
+          "group_label"
+        ],
+        "title": "NteeCode",
+        "type": "object"
+      },
+      "NteeProgramInput": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 2000,
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "NteeProgramInput",
+        "type": "object"
+      },
+      "NteeSearchResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NteeCode"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "NteeSearchResponse",
+        "type": "object"
+      },
+      "NteeSuggestion": {
+        "properties": {
+          "citation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Citation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "verified": {
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "reason",
+          "verified",
+          "citation"
+        ],
+        "title": "NteeSuggestion",
+        "type": "object"
+      },
+      "NteeSuggestionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "mission_statement": {
+            "maxLength": 2000,
+            "minLength": 20,
+            "title": "Mission Statement",
+            "type": "string"
+          },
+          "programs": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/NteeProgramInput"
+            },
+            "maxItems": 10,
+            "title": "Programs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mission_statement"
+        ],
+        "title": "NteeSuggestionRequest",
+        "type": "object"
+      },
+      "NteeSuggestionResponse": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "const": "suggestions_unavailable",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/NteeSuggestion"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "suggestions"
+        ],
+        "title": "NteeSuggestionResponse",
+        "type": "object"
+      },
+      "Outcome": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "metric_id": {
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "period": {
+            "title": "Period",
+            "type": "string"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Provenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "metric_id",
+          "label",
+          "value",
+          "period"
+        ],
+        "title": "Outcome",
+        "type": "object"
+      },
+      "ProfileChangeProposal": {
+        "additionalProperties": false,
+        "description": "Payload of `profile.change_proposed`; the HITL-0 artifact.",
+        "properties": {
+          "agency_id": {
+            "format": "uuid",
+            "title": "Agency Id",
+            "type": "string"
+          },
+          "base_version": {
+            "title": "Base Version",
+            "type": "integer"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/FieldChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "committed_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Committed Version"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "decision_comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Comment"
+          },
+          "patch": {
+            "additionalProperties": true,
+            "description": "RFC 7396 JSON merge patch",
+            "title": "Patch",
+            "type": "object"
+          },
+          "proposal_id": {
+            "format": "uuid",
+            "title": "Proposal Id",
+            "type": "string"
+          },
+          "proposed_at": {
+            "format": "date-time",
+            "title": "Proposed At",
+            "type": "string"
+          },
+          "proposed_by": {
+            "title": "Proposed By",
+            "type": "string"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Provenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "default": "pending",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal_id",
+          "tenant_id",
+          "agency_id",
+          "base_version",
+          "patch",
+          "changes",
+          "content_hash",
+          "proposed_by",
+          "proposed_at"
+        ],
+        "title": "ProfileChangeProposal",
+        "type": "object"
+      },
+      "ProfileForm-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "basics": {
+            "$ref": "#/components/schemas/Basics-Input"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/BudgetForm"
+          },
+          "mission": {
+            "$ref": "#/components/schemas/MissionForm"
+          },
+          "ntee_codes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Ntee Codes",
+            "type": "array"
+          },
+          "programs": {
+            "items": {
+              "$ref": "#/components/schemas/ProgramForm"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Programs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "basics",
+          "mission",
+          "ntee_codes",
+          "budget",
+          "programs"
+        ],
+        "title": "ProfileForm",
+        "type": "object"
+      },
+      "ProfileForm-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "basics": {
+            "$ref": "#/components/schemas/Basics-Output"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/BudgetForm"
+          },
+          "mission": {
+            "$ref": "#/components/schemas/MissionForm"
+          },
+          "ntee_codes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Ntee Codes",
+            "type": "array"
+          },
+          "programs": {
+            "items": {
+              "$ref": "#/components/schemas/ProgramForm"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Programs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "basics",
+          "mission",
+          "ntee_codes",
+          "budget",
+          "programs"
+        ],
+        "title": "ProfileForm",
+        "type": "object"
+      },
+      "ProfilePatchBody": {
+        "additionalProperties": false,
+        "description": "Whole top-level sections to replace; at least one.",
+        "properties": {
+          "basics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Basics-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BudgetForm"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MissionForm"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ntee_codes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 3,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ntee Codes"
+          },
+          "programs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ProgramForm"
+                },
+                "maxItems": 10,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Programs"
+          }
+        },
+        "title": "ProfilePatchBody",
+        "type": "object"
+      },
+      "ProfileVersion": {
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/AgencyProfile"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "recorded_by": {
+            "title": "Recorded By",
+            "type": "string"
+          },
+          "valid_from": {
+            "format": "date-time",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "profile",
+          "valid_from",
+          "valid_to",
+          "recorded_at",
+          "recorded_by"
+        ],
+        "title": "ProfileVersion",
+        "type": "object"
+      },
+      "ProfileView": {
+        "properties": {
+          "completeness": {
+            "$ref": "#/components/schemas/FormCompleteness"
+          },
+          "form": {
+            "$ref": "#/components/schemas/ProfileForm-Output"
+          },
+          "ntee_labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Ntee Labels",
+            "type": "object"
+          },
+          "onboarding_complete": {
+            "title": "Onboarding Complete",
+            "type": "boolean"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "title": "Updated By",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "updated_at",
+          "updated_by",
+          "onboarding_complete",
+          "form",
+          "ntee_labels",
+          "completeness"
+        ],
+        "title": "ProfileView",
+        "type": "object"
+      },
+      "Program": {
+        "additionalProperties": false,
+        "properties": {
+          "annual_cost": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "geography": {
+            "default": [],
+            "description": "FIPS or ISO-3166-2 codes",
+            "items": {
+              "type": "string"
+            },
+            "title": "Geography",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "outcomes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Outcome"
+            },
+            "title": "Outcomes",
+            "type": "array"
+          },
+          "program_id": {
+            "title": "Program Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "active",
+            "enum": [
+              "active",
+              "pilot",
+              "planned",
+              "sunset"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target_demographics": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Demographic"
+            },
+            "title": "Target Demographics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "program_id",
+          "name",
+          "description"
+        ],
+        "title": "Program",
+        "type": "object"
+      },
+      "ProgramForm": {
+        "additionalProperties": false,
+        "properties": {
+          "age_range": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Range"
+          },
+          "annual_served": {
+            "anyOf": [
+              {
+                "maximum": 100000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Served"
+          },
+          "description": {
+            "maxLength": 1000,
+            "minLength": 20,
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          },
+          "people_served": {
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "People Served",
+            "type": "string"
+          },
+          "program_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Id"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "people_served"
+        ],
+        "title": "ProgramForm",
+        "type": "object"
+      },
+      "Provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "source": {
+            "enum": [
+              "user_input",
+              "document_extraction",
+              "crm_sync",
+              "erp_sync",
+              "sam_gov",
+              "irs",
+              "system"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "source_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "artifact_id, record id or URL",
+            "title": "Source Ref"
+          },
+          "verified_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "user_id if confirmed by a human",
+            "title": "Verified By"
+          }
+        },
+        "required": [
+          "source",
+          "captured_at"
+        ],
+        "title": "Provenance",
+        "type": "object"
+      },
+      "SamRegistration": {
+        "additionalProperties": false,
+        "properties": {
+          "exclusions_flag": {
+            "default": false,
+            "title": "Exclusions Flag",
+            "type": "boolean"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "expired",
+              "pending",
+              "none"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "SamRegistration",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Hope API: profile",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/agencies": {
+      "post": {
+        "operationId": "create_agency_v1_agencies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgencyProfile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileVersion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Agency",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/v1/agencies/{agency_id}/profile": {
+      "get": {
+        "operationId": "get_profile_v1_agencies__agency_id__profile_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agency_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agency Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileVersion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Profile",
+        "tags": [
+          "profile"
+        ]
+      },
+      "patch": {
+        "description": "Unprotected changes commit (200). Protected ones return 202 pending_approval (HITL-0).",
+        "operationId": "patch_profile_v1_agencies__agency_id__profile_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agency_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agency Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "description": "RFC 7396 JSON merge patch",
+                "title": "Patch",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Profile",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/v1/agencies/{agency_id}/profile/completeness": {
+      "get": {
+        "operationId": "get_completeness_v1_agencies__agency_id__profile_completeness_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agency_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agency Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletenessReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Completeness",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/v1/agencies/{agency_id}/profile/diff": {
+      "get": {
+        "operationId": "get_diff_v1_agencies__agency_id__profile_diff_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agency_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agency Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from_version",
+            "required": true,
+            "schema": {
+              "title": "From Version",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_version",
+            "required": true,
+            "schema": {
+              "title": "To Version",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FieldChange"
+                  },
+                  "title": "Response Get Diff V1 Agencies  Agency Id  Profile Diff Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Diff",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/v1/agencies/{agency_id}/profile/history": {
+      "get": {
+        "operationId": "get_history_v1_agencies__agency_id__profile_history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agency_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agency Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProfileVersion"
+                  },
+                  "title": "Response Get History V1 Agencies  Agency Id  Profile History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get History",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/v1/agencies/{agency_id}/profile/proposals": {
+      "get": {
+        "operationId": "list_proposals_v1_agencies__agency_id__profile_proposals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agency_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agency Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "approved",
+                    "rejected"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "pending",
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProfileChangeProposal"
+                  },
+                  "title": "Response List Proposals V1 Agencies  Agency Id  Profile Proposals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Proposals",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/v1/agencies/{agency_id}/profile/proposals/{proposal_id}/approve": {
+      "post": {
+        "operationId": "approve_proposal_v1_agencies__agency_id__profile_proposals__proposal_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agency_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agency Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Proposal",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/v1/agencies/{agency_id}/profile/proposals/{proposal_id}/reject": {
+      "post": {
+        "operationId": "reject_proposal_v1_agencies__agency_id__profile_proposals__proposal_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agency_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agency Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject Proposal",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/v1/profile": {
+      "get": {
+        "operationId": "get_hackathon_profile_v1_profile_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Current profile (form shape) with version and completeness",
+        "tags": [
+          "profile",
+          "profile"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_hackathon_profile_v1_profile_patch",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfilePatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Precondition Required"
+          }
+        },
+        "summary": "Replace whole top-level sections (If-Match required)",
+        "tags": [
+          "profile",
+          "profile"
+        ]
+      },
+      "put": {
+        "operationId": "put_hackathon_profile_v1_profile_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileForm-Input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unauthorized"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Precondition Required"
+          }
+        },
+        "summary": "Create or replace the whole profile (onboarding finish)",
+        "tags": [
+          "profile",
+          "profile"
+        ]
+      }
+    },
+    "/v1/profile/ntee-codes": {
+      "get": {
+        "operationId": "search_ntee_codes_v1_profile_ntee_codes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NteeSearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Search NTEE codes; an empty q returns the 26 major groups",
+        "tags": [
+          "profile",
+          "profile"
+        ]
+      }
+    },
+    "/v1/profile/ntee-suggestions": {
+      "post": {
+        "operationId": "suggest_ntee_codes_v1_profile_ntee_suggestions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NteeSuggestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NteeSuggestionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Suggest NTEE codes from the mission and programs (one model call)",
+        "tags": [
+          "profile",
+          "profile"
+        ]
+      }
+    }
+  }
+}
