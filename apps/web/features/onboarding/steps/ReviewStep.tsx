@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { bandLabel, stateName, STEPS, TAX_STATUSES, type Errors, type StepId } from "../model";
 import type { StepProps } from "./types";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 function Section({ title, step, onEdit, disabled, children }: { title: string; step: StepId; onEdit: (s: StepId) => void; disabled: boolean; children: ReactNode }) {
   return (
@@ -33,7 +34,7 @@ export function ReviewStep({ form, errors, labels, onEdit, saving }: StepProps &
   const errorSteps = [...new Set(Object.keys(errors).map((f) => STEPS.find((s) => f.startsWith(s.id === "cause" ? "ntee_codes" : s.id))?.id))].filter(Boolean) as StepId[];
   return (
     <div className="flex flex-col gap-3">
-      {count > 0 && <ErrorSummary count={count} steps={errorSteps} errors={errors} onEdit={onEdit} />}
+      {count > 0 && <AutoDismiss key={Object.values(errors).join("|")}><ErrorSummary count={count} steps={errorSteps} errors={errors} onEdit={onEdit} /></AutoDismiss>}
       <Section title="Basics" step="basics" onEdit={onEdit} disabled={saving}>
         <Row k="Legal name" v={b.legal_name} />
         <Row k="EIN" v={b.ein} />

@@ -10,6 +10,7 @@ import { useOpportunities } from "@/lib/hope/opportunities";
 import { factStatus, oppDocs, reqStatus, type FieldKey } from "@/lib/hope/dossier";
 import { applicationId, eligibility, requirementStatus, useHope } from "@/lib/hope/store";
 import type { Application, Opportunity, TriState } from "@/lib/hope/types";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 export default function ApplicationPage({ params }: { params: Promise<{ oppId: string }> }) {
   const { oppId } = use(params);
@@ -235,9 +236,11 @@ function ApprovalPanel({ app, up }: { app: Application; up: Up }) {
           </label>
           <textarea id="approval-note" rows={2} className={input} value={note} onChange={(e) => setNote(e.target.value)} aria-invalid={err} />
           {err && (
-            <p role="alert" className="mt-1 text-sm text-red-800">
-              {a.commentRequired}
-            </p>
+            <AutoDismiss>
+              <p role="alert" className="mt-1 text-sm text-red-800">
+                {a.commentRequired}
+              </p>
+            </AutoDismiss>
           )}
         </div>
       )}

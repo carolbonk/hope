@@ -5,6 +5,7 @@ import type { NteeCode, NteeSuggestion, OnboardingApi } from "@/api/onboarding";
 import { ProblemError } from "@/api/profile";
 import { Badge, Button, Icon } from "@/components/ui";
 import { cx } from "@/lib/cx";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 const MAX = 3;
 
@@ -182,9 +183,11 @@ export function NteePicker({ api, selected, labels, onChange, mission, programs,
           </ul>
         )}
         {message && (
-          <p id={`${id}-err`} role="alert" className="text-xs font-semibold text-bad">
-            {message}
-          </p>
+          <AutoDismiss key={message}>
+            <p id={`${id}-err`} role="alert" className="text-xs font-semibold text-bad">
+              {message}
+            </p>
+          </AutoDismiss>
         )}
       </div>
 
@@ -227,9 +230,11 @@ export function NteePicker({ api, selected, labels, onChange, mission, programs,
           </Button>
         </div>
         {suggestError && (
-          <p role="alert" className="mt-2 text-sm text-warn">
-            {suggestError}
-          </p>
+          <AutoDismiss key={suggestError}>
+            <p role="alert" className="mt-2 text-sm text-warn">
+              {suggestError}
+            </p>
+          </AutoDismiss>
         )}
         {suggestions && suggestions.length === 0 && <p className="mt-2 text-sm text-ink-muted">No suggestions for this mission. Search instead.</p>}
         {suggestions && suggestions.length > 0 && (

@@ -8,6 +8,7 @@ import { applicability, factStatus, factValue, fieldsFor, GROUPS, isExpired, PRO
 import { useHopeT } from "@/lib/hope/i18n";
 import { DEMO_PROFILE, useHope } from "@/lib/hope/store";
 import type { Country, Currency, FactStatus, Opportunity, OrgProfile, ReqId, RequirementRecord, ReqStatus, TriState } from "@/lib/hope/types";
+import { AutoDismiss, NOTICE_MS } from "@/components/ui/AutoDismiss";
 
 const FOCUS = ["mentoring", "youth", "family", "mental_health", "safety", "school_based", "capacity", "arts"];
 const PURPOSES = ["general_operating", "program", "capacity", "capital"];
@@ -49,6 +50,11 @@ function ProfileWizard() {
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
+  useEffect(() => {
+    if (!savedFlash) return;
+    const t = setTimeout(() => setSavedFlash(false), NOTICE_MS);
+    return () => clearTimeout(t);
+  }, [savedFlash]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -277,9 +283,11 @@ function ProfileWizard() {
           {step === 4 && <Review profile={state.profile} onResolve={(item) => { const t = targetOf(item, state.profile); go(t.step, t.id); }} onEdit={(s) => go(s)} onSave={persist} />}
 
           {error && (
-            <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
-              {error}
-            </p>
+            <AutoDismiss key={error}>
+              <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
+                {error}
+              </p>
+            </AutoDismiss>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
@@ -442,14 +450,16 @@ function ReqRow({ id, draft, opp, put }: { id: ReqId; draft: OrgProfile; opp?: O
               <textarea id={`na-${id}`} rows={2} className={input} value={r.naReason} onChange={(e) => put({ naReason: e.target.value })} />
             </Field>
             {!r.naReason.trim() && (
-              <p className="text-xs text-red-800" role="alert">
-                {p.errNaReason(label ?? "")}{" "}
-                {a.level === "auto_na" && (
-                  <button type="button" className={`underline ${focusRing}`} onClick={() => put({ naReason: p.reason[a.reason] })}>
-                    {p.useSuggestion}
-                  </button>
-                )}
-              </p>
+              <AutoDismiss>
+                <p className="text-xs text-red-800" role="alert">
+                  {p.errNaReason(label ?? "")}{" "}
+                  {a.level === "auto_na" && (
+                    <button type="button" className={`underline ${focusRing}`} onClick={() => put({ naReason: p.reason[a.reason] })}>
+                      {p.useSuggestion}
+                    </button>
+                  )}
+                </p>
+              </AutoDismiss>
             )}
           </div>
         )}
@@ -600,9 +610,11 @@ function Review({ profile, onResolve, onEdit, onSave }: { profile: OrgProfile; o
               <input id={`rb-${k}`} className={input} value={by} placeholder={p.reviewDefaultBy} onChange={(e) => setBy(e.target.value)} />
             </Field>
             {err && (
-              <p role="alert" className="text-sm text-red-800 sm:col-span-2">
-                {p.reviewNeedNote}
-              </p>
+              <AutoDismiss className="sm:col-span-2">
+                <p role="alert" className="text-sm text-red-800 sm:col-span-2">
+                  {p.reviewNeedNote}
+                </p>
+              </AutoDismiss>
             )}
             <div className="flex gap-2 sm:col-span-2">
               <button type="button" className={btnPrimary} onClick={() => saveReview(k)}>
@@ -652,9 +664,11 @@ function Review({ profile, onResolve, onEdit, onSave }: { profile: OrgProfile; o
             {p.requestReview}
           </button>
           {profile.reviewRequest ? (
-            <p role="status" className="rounded-lg bg-[#f1ead8] px-3 py-2 text-sm text-[#6b5520]" data-testid="review-request">
-              {p.requestRecorded(new Date(profile.reviewRequest.at).toLocaleString(locale))}
-            </p>
+            <AutoDismiss key={profile.reviewRequest.at}>
+              <p role="status" className="rounded-lg bg-[#f1ead8] px-3 py-2 text-sm text-[#6b5520]" data-testid="review-request">
+                {p.requestRecorded(new Date(profile.reviewRequest.at).toLocaleString(locale))}
+              </p>
+            </AutoDismiss>
           ) : (
             <p className="text-xs text-muted">{p.requestHelp}</p>
           )}

@@ -6,6 +6,7 @@ import { SelectField, TextField } from "@/components/ui";
 import { cx } from "@/lib/cx";
 import { bandFor, bandLabel, BUDGET_BANDS } from "../model";
 import type { StepProps } from "./types";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
@@ -79,9 +80,11 @@ export function BudgetStep({ form, set, errors }: StepProps) {
           })}
         </div>
         {errors["budget.budget_band"] && (
-          <p role="alert" className="text-xs font-semibold text-bad">
-            {errors["budget.budget_band"]}
-          </p>
+          <AutoDismiss key={errors["budget.budget_band"]}>
+            <p role="alert" className="text-xs font-semibold text-bad">
+              {errors["budget.budget_band"]}
+            </p>
+          </AutoDismiss>
         )}
       </div>
       <TextField

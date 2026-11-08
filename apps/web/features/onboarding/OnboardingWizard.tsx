@@ -15,6 +15,7 @@ import { CauseStep } from "./steps/CauseStep";
 import { MissionStep } from "./steps/MissionStep";
 import { ProgramsStep } from "./steps/ProgramsStep";
 import { ReviewStep } from "./steps/ReviewStep";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 export const AFTER_ONBOARDING = "/hope/discover?onboarded=1";
 
@@ -255,9 +256,11 @@ export function OnboardingWizard({ profile, onboarding }: { profile?: ProfileApi
         </div>
 
         {offline && (
-          <div role="status" className="glass-chrome rounded-2xl border-l-4 border-warn px-4 py-3 text-sm text-ink">
-            You&rsquo;re offline. Your answers are saved on this device.
-          </div>
+          <AutoDismiss>
+            <div role="status" className="glass-chrome rounded-2xl border-l-4 border-warn px-4 py-3 text-sm text-ink">
+              You&rsquo;re offline. Your answers are saved on this device.
+            </div>
+          </AutoDismiss>
         )}
         {restored && step === startStep && <SuccessNotice>We restored your progress.</SuccessNotice>}
 
@@ -281,16 +284,20 @@ export function OnboardingWizard({ profile, onboarding }: { profile?: ProfileApi
             </div>
 
             {saveProblem?.kind === "conflict" && (
-              <div role="alert" className="glass-inset mt-4 flex flex-wrap items-center gap-3 rounded-2xl border-l-4 border-warn p-4 text-sm">
-                <p className="flex-1">Someone else saved the profile while you were editing.</p>
-                <Button onClick={() => void loadTheirs()}>Load their version</Button>
-              </div>
+              <AutoDismiss>
+                <div role="alert" className="glass-inset mt-4 flex flex-wrap items-center gap-3 rounded-2xl border-l-4 border-warn p-4 text-sm">
+                  <p className="flex-1">Someone else saved the profile while you were editing.</p>
+                  <Button onClick={() => void loadTheirs()}>Load their version</Button>
+                </div>
+              </AutoDismiss>
             )}
             {saveProblem?.kind === "failed" && (
-              <div role="alert" className="glass-inset mt-4 flex flex-wrap items-center gap-3 rounded-2xl border-l-4 border-bad p-4 text-sm">
-                <p className="flex-1">We couldn&rsquo;t save your profile. Your answers are kept on this device. Try again.</p>
-                <Button onClick={() => void finish()}>Retry</Button>
-              </div>
+              <AutoDismiss>
+                <div role="alert" className="glass-inset mt-4 flex flex-wrap items-center gap-3 rounded-2xl border-l-4 border-bad p-4 text-sm">
+                  <p className="flex-1">We couldn&rsquo;t save your profile. Your answers are kept on this device. Try again.</p>
+                  <Button onClick={() => void finish()}>Retry</Button>
+                </div>
+              </AutoDismiss>
             )}
 
             <div className="glass-chrome fixed inset-x-0 bottom-0 z-30 flex justify-end gap-3 rounded-none px-4 py-3 sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none">
