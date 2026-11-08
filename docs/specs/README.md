@@ -14,7 +14,7 @@ one PR that touches only the paths the spec owns.
 | [`API.md`](API.md) | Every `/v1` endpoint: owning spec, status, and the screens that call it |
 | [`SCREENS.md`](SCREENS.md) | Every screen: route, implementing spec, endpoints it calls |
 | [`features/`](features) | Feature specs `S00`-`S31` |
-| [`screens/`](screens) | Screen specs `SC01`-`SC23` |
+| [`screens/`](screens) | Screen specs `SC01`-`SC29` |
 | [`templates/`](templates) | Templates for new feature and screen specs |
 
 ## Rules for implementing a spec
