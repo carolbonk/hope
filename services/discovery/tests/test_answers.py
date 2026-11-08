@@ -279,6 +279,8 @@ def test_staff_answer_replaces_its_to_confirm_marker() -> None:
     assert result.to_confirm == []
     staff = [c for c in result.citations if c.get("path", "").startswith("staff.")]
     assert [c["text"] for c in staff] == [f"local data on need: {facts['local data on need']}"]
+    unsourced = [c["text"] for c in result.citations if c["kind"] == "unsourced"]
+    assert not any(facts["local data on need"] in u for u in unsourced)
 
 
 def test_unanswered_markers_stay() -> None:

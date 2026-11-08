@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { I18nProvider } from "@/components/I18nProvider";
 import { measure, type ApplicationView } from "@/lib/hope/sync/applications";
-import { ApplyWorkspace } from "./ApplyWorkspace";
+import { ApplyWorkspace, ServerNotice } from "./ApplyWorkspace";
+import { useServerApplication } from "./useServerApplication";
 
 const GRANT = "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10";
 const APP = "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d";
@@ -18,6 +19,10 @@ function view(): ApplicationView {
     stage: "drafting",
     questions_status: "found",
     version: 3,
+    updated_at: "2026-11-07T12:00:00Z",
+    approvals: {},
+    evidence: {},
+    events: [],
     requirements: { questions: [need], attachments: [{ name: "Logic model", quote: "Attachments: Logic model", url: PAGE }], budget: {}, submission: {}, eligibility: [], pages: [{ url: PAGE, status: "read" }, { url: "https://funder.example/rfp", status: "failed", reason: "403" }] },
     requirements_job: null,
     answers_job: null,
@@ -68,10 +73,21 @@ function serve(v: ApplicationView) {
 
 afterEach(() => vi.unstubAllGlobals());
 
+function Harness() {
+  const server = useServerApplication(GRANT);
+  if (!server.view) return null;
+  return (
+    <>
+      <ServerNotice notice={server.notice} onDismiss={server.clearNotice} />
+      <ApplyWorkspace view={server.view} run={server.run} />
+    </>
+  );
+}
+
 const renderIt = () =>
   render(
     <I18nProvider locale="en">
-      <ApplyWorkspace grantId={GRANT} />
+      <Harness />
     </I18nProvider>,
   );
 
@@ -119,7 +135,7 @@ test("answering a to-do once sends the version and offers a redraft", async () =
 });
 
 test("checks the grant's own rules, shows what changed, and reuses answers from other grants", async () => {
-  const v = { ...view(), stage: "eligibility" };
+  const v = { ...view(), stage: "eligibility" as const };
   const fetch = serve(v);
   renderIt();
   const fit = await screen.findByRole("region", { name: "Who can apply" });
@@ -153,3 +169,23 @@ test("checks the grant's own rules, shows what changed, and reuses answers from 
   const [, ev] = fetch.mock.calls.find(([u]) => String(u).endsWith("/evidence"))!;
   expect(JSON.parse(String(ev?.body))).toEqual({ requirement_id: "rule:elig2", status: "yes" });
 });
+
+test("keeps polling while saving's requirements job (#64) runs, then shows the result without a reload", async () => {
+  const done = view();
+  const reading = { ...done, questions_status: "reading", requirements: null, questions: [], answers: [], requirements_job: { job_id: "j1", status: "running", error: null } } as ApplicationView;
+  let gets = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+      if (url.endsWith("/v1/applications")) return json({ items: [{ application_id: APP, grant_id: GRANT }], total: 1 });
+      gets += 1;
+      return json(gets < 2 ? reading : { ...done, requirements_job: { job_id: "j1", status: "succeeded", error: null } });
+    }),
+  );
+  renderIt();
+  expect(await screen.findByText("Reading the funder's pages…")).toBeInTheDocument();
+  expect((await screen.findAllByText(/Describe the gap/, {}, { timeout: 5000 })).length).toBeGreaterThan(0);
+  expect(screen.queryByText("Reading the funder's pages…")).toBeNull();
+  expect(gets).toBe(2);
+}, 10000);

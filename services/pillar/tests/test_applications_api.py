@@ -502,3 +502,64 @@ def test_a_new_paste_replaces_the_deadline_and_shows_the_change(
     assert app["requirements"]["submission"]["deadline_date"] == "2027-03-15"
     assert [(c["what"], c["change"]) for c in app["changes"]] == [("deadline", "changed")]
     assert "March 1, 2027" in (app["changes"][0]["before"] or "")
+
+
+def test_a_failed_requirements_read_can_be_retried(
+    api: TestClient, grant: GrantCandidate, inline_jobs: pytest.MonkeyPatch
+) -> None:
+    from hope_core.model_gateway import MockProvider, ModelGateway
+    from hope_discovery import mock
+    from hope_pillar.api import applications
+
+    def crash() -> Any:
+        raise RuntimeError("reader crashed")
+
+    app = saved_app(api, grant)
+    path = f"/v1/applications/{app['application_id']}/requirements/jobs"
+    with inline_jobs.context() as patched:
+        patched.setattr(applications, "default_tools", crash)
+        body = api.post(path).json()
+    assert body["requirements_job"]["status"] == "failed"
+    assert body["questions_status"] == "unread"
+
+    inline_jobs.setattr(
+        applications,
+        "default_tools",
+        lambda: (ModelGateway([mock.register(MockProvider())]), OnePageWeb(grant.url)),
+    )
+    again = api.post(path)
+    assert again.status_code == 202, again.text
+    assert again.json()["questions_status"] == "found"
+
+
+def test_a_requirements_job_that_cannot_start_leaves_it_unread(
+    api: TestClient, grant: GrantCandidate, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from hope_pillar.api import applications
+
+    def refuse(*args: Any, **kwargs: Any) -> Any:
+        raise RuntimeError("cannot schedule new futures after shutdown")
+
+    app = saved_app(api, grant)
+    with monkeypatch.context() as patched:
+        patched.setattr(applications.jobs, "start_job", refuse)
+        with pytest.raises(RuntimeError):
+            api.post(f"/v1/applications/{app['application_id']}/requirements/jobs")
+    body = api.get(f"/v1/applications/{app['application_id']}").json()
+    assert body["questions_status"] == "unread"
+    assert body["requirements_job"]["status"] == "failed"
+
+
+def test_an_interrupted_requirements_job_shows_unread(
+    api: TestClient, grant: GrantCandidate
+) -> None:
+    app = saved_app(api, grant)
+    aid = app["application_id"]
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        job = store.create_job(tx, "requirements", aid, None)
+        store.finish_job(tx, job.job_id, error="interrupted")
+        tx.execute(
+            "UPDATE applications SET questions_status = 'reading' WHERE application_id = %s",
+            (aid,),
+        )
+    assert api.get(f"/v1/applications/{aid}").json()["questions_status"] == "unread"

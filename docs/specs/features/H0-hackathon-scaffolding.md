@@ -121,6 +121,14 @@ export function fetchOpportunities(): Promise<Opportunity[] | null>; // never re
 export type DecisionStatus = "saved" | "passed" | "new";
 export function mirrorDecision(oppId: string, decision: DecisionStatus): void; // fire-and-forget, never throws
 export function flushDecisions(): Promise<void>;                               // never rejects
+export type RemoteDecisions = {                                                // added by #60
+  decisions: Record<string, "saved" | "passed">;                               // the server's saved/passed grants
+  localIds: () => Set<string>;                                                 // decided here during the load or still in the outbox
+};
+export function loadRemoteDecisions(): Promise<RemoteDecisions | null>;        // never rejects; null = sync off or any error
+
+// lib/hope/store.ts: useHope() also returns (added by #60)
+hydrateDecisions(remote: RemoteDecisions): void; // writes mergeRemoteDecisions(latestState(), remote); never echoes
 
 // lib/hope/sync/index.ts (H0, stays H0's)
 export { online as syncEnabled } from "@/api/http"; // NEXT_PUBLIC_HOPE_API_URL set
@@ -134,6 +142,7 @@ export function HopeSync(): null;           // mounted once in app/hope/layout.t
 | `fetchOpportunities` | `Promise.resolve(null)` | `useOpportunities()`, once per mount in a `useEffect`; returns `remote ?? demoOpportunities(today)` |
 | `mirrorDecision` | returns | `useHope().decide(opp, d)` calls `mirrorDecision(opp.id, d)`; `useHope().undo()` calls `mirrorDecision(lastId, "new")` with `lastId = state.history.at(-1)`, only when there is one |
 | `flushDecisions` | `Promise.resolve()` | `HopeSync`, once after `useSession()` is `ready` |
+| `loadRemoteDecisions` | (added by #60) | `HopeSync`, once after `useSession()` is `ready`, started together with `loadRemoteProfile`; a non-null result goes to `useHope().hydrateDecisions(d)` only after the profile hydration has settled |
 
 Rules (all code, no model):
 - **Off switch.** `syncEnabled` is `online` from `api/http.ts` (`NEXT_PUBLIC_HOPE_API_URL` set). It lives there, not in
@@ -142,6 +151,15 @@ Rules (all code, no model):
   The adapters catch everything and `console.warn`. They never throw, reject or roll back browser state. The browser
   record stays the source of truth for the workspace (H4/H5).
 - **No echo.** `hydrateProfile(p)` (new in `useHope()`) writes the profile but does not call `saveRemoteProfile`.
+  `hydrateDecisions(d)` (added by #60) writes decisions but does not call `mirrorDecision`.
+- **Hydration order.** `HopeSync` starts `loadRemoteDecisions()` and `loadRemoteProfile()` together, then
+  `flushDecisions()`. The profile is hydrated first. Decisions are applied only after both loads, and that profile
+  write, have settled (`Promise.all([decisions, profile])`), so neither write overwrites the other.
+- **Local decisions win.** `mergeRemoteDecisions` (in `store.ts`) skips every grant in `localIds()`: decided in this
+  browser while the load ran, or still unsent in the outbox. Otherwise the server wins. A grant ID the server no longer
+  has as saved or passed loses its local decision, and its application too if it has no work. A server-saved grant
+  without a local application gets a new one. `history` keeps only grants that still have a decision. Non-UUID
+  (demo) IDs are never touched.
 - **One-time H0 edits outside its own files** (merged before H1-H5 branch, so nothing conflicts):
   `lib/hope/store.ts` (`hydrateProfile` and the `saveRemoteProfile` / `mirrorDecision` call sites),
   `lib/hope/opportunities.ts` (the `fetchOpportunities` effect and the `remote ?? demo` line), `api/profile/types.ts`

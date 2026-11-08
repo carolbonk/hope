@@ -8,7 +8,12 @@ from uuid import UUID
 from hope_core import jobs, store
 from hope_core.db import connect, tenant_tx
 
-from hope_pillar.api.applications import REQUIREMENTS_KIND, latest_requirements, run_requirements
+from hope_pillar.api.applications import (
+    REQUIREMENTS_KIND,
+    latest_requirements,
+    run_requirements,
+    stop_reading,
+)
 
 log = logging.getLogger(__name__)
 
@@ -74,11 +79,6 @@ def _undo(tenant_id: UUID, application_id: UUID, job_id: UUID) -> None:
     """A job that never started must not leave the workspace stuck on "reading"."""
     try:
         jobs.finish(job_id, error="Could not start the job")
-        with connect() as conn, tenant_tx(conn, tenant_id) as tx:
-            tx.execute(
-                "UPDATE applications SET questions_status = 'unread'"
-                " WHERE application_id = %s AND questions_status = 'reading'",
-                (application_id,),
-            )
+        stop_reading(tenant_id, application_id)
     except Exception:
         log.warning("could not clean up requirements job %s", job_id, exc_info=True)

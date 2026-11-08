@@ -1,18 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ProblemError } from "@/api/http";
+import { useEffect, useRef, useState } from "react";
 import { Panel, btnPrimary, btnSecondary, focusRing, input } from "@/components/hope/ui";
 import { AutoDismiss } from "@/components/ui/AutoDismiss";
 import { Badge, type Tone } from "@/components/ui/Badge";
 import type { IconName } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
-import { ErrorNotice, Loading } from "@/components/ui/States";
 import { useHopeT } from "@/lib/hope/i18n";
 import * as api from "@/lib/hope/sync/applications";
 import type { Answer, ApplicationView, Change, ChecklistItem, InputNeeded, Question, Rule, Term } from "@/lib/hope/sync/applications";
-
-type Run = (call: () => Promise<ApplicationView>, onConflict?: () => boolean) => Promise<boolean>;
+import type { Run } from "./useServerApplication";
 
 const TERM_ORDER = ["at_risk", "action_needed", "check", "have", "info"];
 const TERM_TONE: Record<string, [Tone, IconName]> = {
@@ -37,101 +34,36 @@ const RULE_TONE: Record<string, [Tone, IconName]> = {
   applies: ["info", "alert"],
   not_applicable: ["neutral", "minus"],
 };
-const POLL_MS = 2000;
-
-/** SC29: the funder's own form, translated, with drafted answers and a to-do list. */
-export function ApplyWorkspace({ grantId }: { grantId: string }) {
-  const { h } = useHopeT();
-  const t = h.apply;
-  const [view, setView] = useState<ApplicationView | null | undefined>(undefined);
-  const [loadError, setLoadError] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
-  const latest = useRef<ApplicationView | null>(null);
-
-  const show = useCallback((v: ApplicationView | null) => {
-    latest.current = v;
-    setView(v);
-  }, []);
-
-  const reload = useCallback(async () => {
-    const id = latest.current?.application_id;
-    try {
-      show(id ? await api.getApplication(id) : await api.findApplication(grantId));
-      setLoadError(false);
-    } catch {
-      setLoadError(true);
-    }
-  }, [grantId, show]);
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
-
-  const working = !!view && (api.running(view.requirements_job) || api.running(view.answers_job));
-  useEffect(() => {
-    if (!working) return;
-    const timer = setTimeout(() => void reload(), POLL_MS);
-    return () => clearTimeout(timer);
-  }, [working, view, reload]);
-
-  const run: Run = useCallback(
-    async (call, onConflict) => {
-      setNotice(null);
-      try {
-        show(await call());
-        return true;
-      } catch (err) {
-        const e = err instanceof ProblemError ? err : null;
-        if (e?.status === 412) {
-          setNotice(t.stale);
-          await reload();
-        } else if (e?.status === 409 && e.code === "human_edit" && onConflict?.()) {
-          return true;
-        } else if (e?.status === 409) setNotice(t.busy);
-        else if (e?.code === "profile_incomplete") setNotice(t.profileIncomplete);
-        else setNotice(t.failed);
-        return false;
-      }
-    },
-    [reload, show, t],
-  );
-
-  if (view === undefined && !loadError) return <Loading label={t.loading} />;
-  if (loadError)
-    return (
-      <ErrorNotice title={t.loadFailed} onRetry={() => void reload()}>
-        {t.failed}
-      </ErrorNotice>
-    );
-  if (!view)
-    return (
-      <Panel>
-        <p>{t.notOnServer}</p>
-      </Panel>
-    );
-
+/** SC29: the funder's own form, translated, with drafted answers and a to-do list. The page loads `view`
+ * with `useServerApplication` and shows its notices. */
+export function ApplyWorkspace({ view, run }: { view: ApplicationView; run: Run }) {
   return (
     <div className="space-y-4" data-testid="apply-workspace">
-      {notice && (
-        <AutoDismiss key={notice} onDismiss={() => setNotice(null)}>
-          <p role="alert" className="rounded-xl glass-panel px-3 py-2 text-sm text-navy">
-            {notice}
-          </p>
-        </AutoDismiss>
-      )}
       <FormSource view={view} run={run} />
       <ChangesPanel changes={view.changes ?? []} />
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <RulesPanel view={view} run={run} latest={latest} />
+          <RulesPanel view={view} run={run} />
           <TermsPanel terms={view.terms} />
-          <QuestionList view={view} run={run} latest={latest} />
+          <QuestionList view={view} run={run} />
           <Uploads items={view.checklist.items.filter((i) => i.kind === "attachment")} />
         </div>
-        <TodoPanel view={view} run={run} latest={latest} />
+        <TodoPanel view={view} run={run} />
       </div>
       <ReadyPanel view={view} />
     </div>
+  );
+}
+
+/** The page-level notice for server writes (stale version, the server's 409/422 message). */
+export function ServerNotice({ notice, onDismiss }: { notice: string | null; onDismiss: () => void }) {
+  if (!notice) return null;
+  return (
+    <AutoDismiss key={notice} onDismiss={onDismiss}>
+      <p role="alert" className="rounded-xl glass-panel px-3 py-2 text-sm text-navy">
+        {notice}
+      </p>
+    </AutoDismiss>
   );
 }
 
@@ -261,7 +193,7 @@ function ChangesPanel({ changes }: { changes: Change[] }) {
   );
 }
 
-function RulesPanel({ view, run, latest }: { view: ApplicationView; run: Run; latest: React.RefObject<ApplicationView | null> }) {
+function RulesPanel({ view, run }: { view: ApplicationView; run: Run }) {
   const { h } = useHopeT();
   const t = h.apply;
   if (!view.requirements) return null;
@@ -270,7 +202,7 @@ function RulesPanel({ view, run, latest }: { view: ApplicationView; run: Run; la
   return (
     <Panel title={t.rulesTitle}>
       <p className="text-sm text-muted">{t.rulesIntro}</p>
-      <AskForm view={view} run={run} latest={latest} />
+      <AskForm view={view} run={run} />
       {rules.length === 0 && <p className="mt-3 text-sm">{t.noRules}</p>}
       {kinds.map((kind) => {
         const mine = rules.filter((r) => r.kind === kind).sort((a, b) => RULE_ORDER.indexOf(a.status) - RULE_ORDER.indexOf(b.status));
@@ -282,7 +214,7 @@ function RulesPanel({ view, run, latest }: { view: ApplicationView; run: Run; la
             </h3>
             <ul className="mt-1 space-y-2">
               {mine.map((rule) => (
-                <RuleRow key={rule.key} rule={rule} view={view} run={run} latest={latest} />
+                <RuleRow key={rule.key} rule={rule} view={view} run={run} />
               ))}
             </ul>
           </section>
@@ -292,7 +224,7 @@ function RulesPanel({ view, run, latest }: { view: ApplicationView; run: Run; la
   );
 }
 
-function AskForm({ view, run, latest }: { view: ApplicationView; run: Run; latest: React.RefObject<ApplicationView | null> }) {
+function AskForm({ view, run }: { view: ApplicationView; run: Run }) {
   const { h } = useHopeT();
   const t = h.apply;
   const current = view.ask ? view.ask.amount_minor / 100 : null;
@@ -304,7 +236,7 @@ function AskForm({ view, run, latest }: { view: ApplicationView; run: Run; lates
       className="mt-3 flex flex-wrap items-end gap-2"
       onSubmit={(e) => {
         e.preventDefault();
-        if (valid) void run(() => api.setAsk(view.application_id, Math.round(dollars * 100), latest.current?.version ?? view.version));
+        if (valid) void run((v) => api.setAsk(view.application_id, Math.round(dollars * 100), v));
       }}
     >
       <label htmlFor="ask-amount" className="text-sm">
@@ -321,13 +253,13 @@ function AskForm({ view, run, latest }: { view: ApplicationView; run: Run; lates
   );
 }
 
-function RuleRow({ rule, view, run, latest }: { rule: Rule; view: ApplicationView; run: Run; latest: React.RefObject<ApplicationView | null> }) {
+function RuleRow({ rule, view, run }: { rule: Rule; view: ApplicationView; run: Run }) {
   const { h } = useHopeT();
   const t = h.apply;
   const [tone, icon] = RULE_TONE[rule.status] ?? (["neutral", "dot"] as [Tone, IconName]);
   const canConfirm = rule.status === "unknown" && (view.stage === "saved" || view.stage === "eligibility");
   const conditional = rule.kind === "conditional";
-  const confirm = (yes: boolean) => void run(() => api.confirmRule(view.application_id, rule.key, yes, latest.current?.version ?? view.version));
+  const confirm = (yes: boolean) => void run((v) => api.confirmRule(view.application_id, rule.key, yes, v));
   return (
     <li className="rounded-xl border border-line p-3 text-sm" data-rule={rule.key} data-status={rule.status}>
       <div className="flex flex-wrap items-center gap-2">
@@ -433,7 +365,7 @@ function TermRow({ term }: { term: Term }) {
   );
 }
 
-function QuestionList({ view, run, latest }: { view: ApplicationView; run: Run; latest: React.RefObject<ApplicationView | null> }) {
+function QuestionList({ view, run }: { view: ApplicationView; run: Run }) {
   const { h } = useHopeT();
   const t = h.apply;
   const drafting = api.running(view.answers_job);
@@ -453,14 +385,14 @@ function QuestionList({ view, run, latest }: { view: ApplicationView; run: Run; 
       </div>
       <ol className="space-y-2">
         {view.questions.map((q, i) => (
-          <QuestionRow key={q.key} n={i + 1} q={q} answer={answers.get(q.key)} status={status.get(q.key) ?? "missing"} view={view} run={run} latest={latest} busy={drafting} />
+          <QuestionRow key={q.key} n={i + 1} q={q} answer={answers.get(q.key)} status={status.get(q.key) ?? "missing"} view={view} run={run} busy={drafting} />
         ))}
       </ol>
     </Panel>
   );
 }
 
-function QuestionRow({ n, q, answer, status, view, run, latest, busy }: { n: number; q: Question; answer?: Answer; status: string; view: ApplicationView; run: Run; latest: React.RefObject<ApplicationView | null>; busy: boolean }) {
+function QuestionRow({ n, q, answer, status, view, run, busy }: { n: number; q: Question; answer?: Answer; status: string; view: ApplicationView; run: Run; busy: boolean }) {
   const { h } = useHopeT();
   const t = h.apply;
   const [open, setOpen] = useState(n === 1);
@@ -481,7 +413,7 @@ function QuestionRow({ n, q, answer, status, view, run, latest, busy }: { n: num
     setSaving("saving");
     clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
-      const ok = await run(() => api.editAnswer(view.application_id, q.key, value, latest.current?.version ?? view.version));
+      const ok = await run((v) => api.editAnswer(view.application_id, q.key, value, v));
       dirty.current = false;
       setSaving(ok ? "saved" : "idle");
     }, 1000);
@@ -490,7 +422,8 @@ function QuestionRow({ n, q, answer, status, view, run, latest, busy }: { n: num
   const redraft = () =>
     void run(
       () => api.draftOne(view.application_id, q.key),
-      () => {
+      (e) => {
+        if (e.code !== "human_edit") return false;
         if (window.confirm(t.confirmOverwrite)) void run(() => api.draftOne(view.application_id, q.key, true));
         return true;
       },
@@ -588,7 +521,7 @@ function Uploads({ items }: { items: ChecklistItem[] }) {
   );
 }
 
-function TodoPanel({ view, run, latest }: { view: ApplicationView; run: Run; latest: React.RefObject<ApplicationView | null> }) {
+function TodoPanel({ view, run }: { view: ApplicationView; run: Run }) {
   const { h } = useHopeT();
   const t = h.apply;
   const atRisk = view.checklist.items.filter((i) => i.kind === "prep" && i.status === "at_risk");
@@ -623,7 +556,7 @@ function TodoPanel({ view, run, latest }: { view: ApplicationView; run: Run; lat
             </h3>
             <ul className="mt-1 space-y-2">
               {mine.map((need, i) => (
-                <NeedRow key={`${need.question_key ?? ""}:${need.text}:${i}`} need={need} view={view} run={run} latest={latest} />
+                <NeedRow key={`${need.question_key ?? ""}:${need.text}:${i}`} need={need} view={view} run={run} />
               ))}
             </ul>
           </section>
@@ -633,7 +566,7 @@ function TodoPanel({ view, run, latest }: { view: ApplicationView; run: Run; lat
   );
 }
 
-function NeedRow({ need, view, run, latest }: { need: InputNeeded; view: ApplicationView; run: Run; latest: React.RefObject<ApplicationView | null> }) {
+function NeedRow({ need, view, run }: { need: InputNeeded; view: ApplicationView; run: Run }) {
   const { h } = useHopeT();
   const t = h.apply;
   const [value, setValue] = useState(need.answer ?? "");
@@ -644,13 +577,14 @@ function NeedRow({ need, view, run, latest }: { need: InputNeeded; view: Applica
   const redraft = (key: string) =>
     void run(
       () => api.draftOne(view.application_id, key),
-      () => {
+      (e) => {
+        if (e.code !== "human_edit") return false;
         if (window.confirm(t.confirmOverwrite)) void run(() => api.draftOne(view.application_id, key, true));
         return true;
       },
     );
   async function save() {
-    if (await run(() => api.supplyFact(view.application_id, need.text, value, latest.current?.version ?? view.version))) setSaved(true);
+    if (await run((v) => api.supplyFact(view.application_id, need.text, value, v))) setSaved(true);
   }
   return (
     <li className="rounded-xl border border-line p-2 text-sm" data-need={need.text}>
