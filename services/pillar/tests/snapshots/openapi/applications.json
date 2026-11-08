@@ -1,0 +1,2341 @@
+{
+  "components": {
+    "schemas": {
+      "AnswerBody": {
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "maxLength": 20000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "AnswerBody",
+        "type": "object"
+      },
+      "AnswerView": {
+        "properties": {
+          "citations": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "origin": {
+            "enum": [
+              "ai",
+              "template",
+              "human"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "question_key": {
+            "title": "Question Key",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "to_confirm": {
+            "items": {
+              "type": "string"
+            },
+            "title": "To Confirm",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          }
+        },
+        "required": [
+          "question_key",
+          "text",
+          "origin",
+          "model",
+          "prompt_version",
+          "citations",
+          "to_confirm",
+          "updated_by",
+          "updated_at"
+        ],
+        "title": "AnswerView",
+        "type": "object"
+      },
+      "ApplicationList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ApplicationList",
+        "type": "object"
+      },
+      "ApplicationSummary": {
+        "properties": {
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "deadline_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline Text"
+          },
+          "funder": {
+            "title": "Funder",
+            "type": "string"
+          },
+          "grant_id": {
+            "format": "uuid",
+            "title": "Grant Id",
+            "type": "string"
+          },
+          "questions_status": {
+            "enum": [
+              "unread",
+              "reading",
+              "found",
+              "not_found"
+            ],
+            "title": "Questions Status",
+            "type": "string"
+          },
+          "stage": {
+            "enum": [
+              "saved",
+              "eligibility",
+              "approval",
+              "drafting",
+              "ready"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "application_id",
+          "grant_id",
+          "title",
+          "funder",
+          "url",
+          "deadline",
+          "deadline_text",
+          "stage",
+          "questions_status",
+          "updated_at"
+        ],
+        "title": "ApplicationSummary",
+        "type": "object"
+      },
+      "ApplicationView": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerView"
+            },
+            "title": "Answers",
+            "type": "array"
+          },
+          "answers_job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequirementsJob"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "approvals": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Approval"
+            },
+            "propertyNames": {
+              "enum": [
+                "program",
+                "director"
+              ]
+            },
+            "title": "Approvals",
+            "type": "object"
+          },
+          "ask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checklist": {
+            "$ref": "#/components/schemas/Checklist"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "deadline_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline Text"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EventView"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "evidence": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "object"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/FactView"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "funder": {
+            "title": "Funder",
+            "type": "string"
+          },
+          "grant_id": {
+            "format": "uuid",
+            "title": "Grant Id",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "questions_status": {
+            "enum": [
+              "unread",
+              "reading",
+              "found",
+              "not_found"
+            ],
+            "title": "Questions Status",
+            "type": "string"
+          },
+          "requirements": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Requirements"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requirements_job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequirementsJob"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stage": {
+            "enum": [
+              "saved",
+              "eligibility",
+              "approval",
+              "drafting",
+              "ready"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "terms": {
+            "description": "Funder jargon in plain language, most urgent first, each with its source",
+            "items": {
+              "$ref": "#/components/schemas/TermExplained"
+            },
+            "title": "Terms",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "application_id",
+          "grant_id",
+          "title",
+          "funder",
+          "url",
+          "deadline",
+          "deadline_text",
+          "stage",
+          "questions_status",
+          "updated_at",
+          "version",
+          "requirements",
+          "requirements_job",
+          "questions",
+          "answers",
+          "facts",
+          "terms",
+          "answers_job",
+          "checklist",
+          "ask",
+          "approvals",
+          "evidence",
+          "events",
+          "created_at"
+        ],
+        "title": "ApplicationView",
+        "type": "object"
+      },
+      "Approval": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "format": "uuid",
+            "title": "By",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "required": [
+          "by",
+          "at"
+        ],
+        "title": "Approval",
+        "type": "object"
+      },
+      "ApprovalBody": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "decision": {
+            "enum": [
+              "approve",
+              "send_back"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "step": {
+            "enum": [
+              "program",
+              "director"
+            ],
+            "title": "Step",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step",
+          "decision"
+        ],
+        "title": "ApprovalBody",
+        "type": "object"
+      },
+      "Attachment": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "quote",
+          "url"
+        ],
+        "title": "Attachment",
+        "type": "object"
+      },
+      "BudgetRequirements": {
+        "properties": {
+          "format": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "indirect_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "match_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_request_amount": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "BudgetRequirements",
+        "type": "object"
+      },
+      "Checklist": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "inputs_needed": {
+            "items": {
+              "$ref": "#/components/schemas/InputNeeded"
+            },
+            "title": "Inputs Needed",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "inputs_needed",
+          "complete"
+        ],
+        "title": "Checklist",
+        "type": "object"
+      },
+      "ChecklistItem": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "question",
+              "attachment",
+              "budget",
+              "deadline",
+              "submission",
+              "prep"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Limit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "enum": [
+                  "program",
+                  "finance",
+                  "director"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "kind",
+          "key",
+          "label",
+          "status"
+        ],
+        "title": "ChecklistItem",
+        "type": "object"
+      },
+      "CommentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "CommentBody",
+        "type": "object"
+      },
+      "DraftBody": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm_overwrite": {
+            "default": false,
+            "title": "Confirm Overwrite",
+            "type": "boolean"
+          }
+        },
+        "title": "DraftBody",
+        "type": "object"
+      },
+      "EventView": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "created",
+              "stage",
+              "comment",
+              "evidence",
+              "approval",
+              "send_back",
+              "requirements",
+              "draft",
+              "edit",
+              "fact"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          }
+        },
+        "required": [
+          "kind",
+          "actor",
+          "payload",
+          "at"
+        ],
+        "title": "EventView",
+        "type": "object"
+      },
+      "Evidence": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "format": "uuid",
+            "title": "By",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "status": {
+            "enum": [
+              "yes",
+              "no",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "by",
+          "at"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "EvidenceBody": {
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "requirement_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "yes",
+              "no",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "status"
+        ],
+        "title": "EvidenceBody",
+        "type": "object"
+      },
+      "FactBody": {
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "default": "",
+            "description": "Empty removes the fact",
+            "maxLength": 4000,
+            "title": "Answer",
+            "type": "string"
+          },
+          "need": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Need",
+            "type": "string"
+          }
+        },
+        "required": [
+          "need"
+        ],
+        "title": "FactBody",
+        "type": "object"
+      },
+      "FactView": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "need": {
+            "title": "Need",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          }
+        },
+        "required": [
+          "need",
+          "answer",
+          "updated_by",
+          "updated_at"
+        ],
+        "title": "FactView",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "InputNeeded": {
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What staff supplied; redraft to use it",
+            "title": "Answer"
+          },
+          "owner": {
+            "enum": [
+              "program",
+              "finance",
+              "director"
+            ],
+            "title": "Owner",
+            "type": "string"
+          },
+          "question_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Key"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "owner",
+          "text"
+        ],
+        "title": "InputNeeded",
+        "type": "object"
+      },
+      "Limit": {
+        "properties": {
+          "includes_spaces": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Includes Spaces"
+          },
+          "max": {
+            "title": "Max",
+            "type": "integer"
+          },
+          "unit": {
+            "enum": [
+              "words",
+              "characters",
+              "pages"
+            ],
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit",
+          "max"
+        ],
+        "title": "Limit",
+        "type": "object"
+      },
+      "Money": {
+        "properties": {
+          "amount_minor": {
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "currency": {
+            "default": "USD",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_minor"
+        ],
+        "title": "Money",
+        "type": "object"
+      },
+      "PageRead": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "read",
+              "failed",
+              "no_info"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "status"
+        ],
+        "title": "PageRead",
+        "type": "object"
+      },
+      "PasteBody": {
+        "additionalProperties": false,
+        "properties": {
+          "pdf_base64": {
+            "anyOf": [
+              {
+                "maxLength": 10666670,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Base64"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 60000,
+                "minLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "PasteBody",
+        "type": "object"
+      },
+      "Question": {
+        "properties": {
+          "conflict": {
+            "default": false,
+            "title": "Conflict",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Limit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limit_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Text"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "required": {
+            "default": true,
+            "title": "Required",
+            "type": "boolean"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "source": {
+            "default": "page",
+            "enum": [
+              "page",
+              "pasted",
+              "standard"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "prompt",
+          "url"
+        ],
+        "title": "Question",
+        "type": "object"
+      },
+      "Requirements": {
+        "properties": {
+          "attachments": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Attachment"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/BudgetRequirements",
+            "default": {}
+          },
+          "eligibility": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Sourced"
+            },
+            "title": "Eligibility",
+            "type": "array"
+          },
+          "pages": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PageRead"
+            },
+            "title": "Pages",
+            "type": "array"
+          },
+          "prompt_version": {
+            "default": "requirements-2",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "questions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "submission": {
+            "$ref": "#/components/schemas/Submission",
+            "default": {}
+          },
+          "terms": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TermUse"
+            },
+            "title": "Terms",
+            "type": "array"
+          }
+        },
+        "title": "Requirements",
+        "type": "object"
+      },
+      "RequirementsJob": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "job_id": {
+            "format": "uuid",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "error",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "RequirementsJob",
+        "type": "object"
+      },
+      "Sourced": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "url"
+        ],
+        "title": "Sourced",
+        "type": "object"
+      },
+      "StageBody": {
+        "additionalProperties": false,
+        "properties": {
+          "override_reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Reason"
+          },
+          "to": {
+            "enum": [
+              "saved",
+              "eligibility",
+              "approval",
+              "drafting",
+              "ready"
+            ],
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to"
+        ],
+        "title": "StageBody",
+        "type": "object"
+      },
+      "Submission": {
+        "properties": {
+          "deadline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deadline_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline Date"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "Submission",
+        "type": "object"
+      },
+      "TermExplained": {
+        "description": "One funder term for staff: the funder's words, what they mean, and who says so.",
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "explained_by": {
+            "enum": [
+              "official",
+              "hope",
+              "funder",
+              "ai"
+            ],
+            "title": "Explained By",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "lead_days": {
+            "default": 0,
+            "title": "Lead Days",
+            "type": "integer"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "enum": [
+                  "program",
+                  "finance",
+                  "director"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "plain": {
+            "title": "Plain",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "status": {
+            "default": "info",
+            "enum": [
+              "have",
+              "check",
+              "action_needed",
+              "at_risk",
+              "info"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "term": {
+            "title": "Term",
+            "type": "string"
+          },
+          "todo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Todo"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "term",
+          "plain",
+          "explained_by",
+          "quote",
+          "url"
+        ],
+        "title": "TermExplained",
+        "type": "object"
+      },
+      "TermUse": {
+        "description": "A term the funder uses, with their sentence. `meaning` is set only when the term isn't\nin the glossary: the funder's own definition (`source=\"funder\"`) or a model reading.",
+        "properties": {
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "meaning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meaning"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "source": {
+            "default": "glossary",
+            "enum": [
+              "glossary",
+              "funder",
+              "ai"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "term": {
+            "title": "Term",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "term",
+          "quote",
+          "url"
+        ],
+        "title": "TermUse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Hope API: applications",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/applications": {
+      "get": {
+        "operationId": "list_applications_v1_applications_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Applications",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}": {
+      "get": {
+        "operationId": "get_application_v1_applications__application_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Application",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/answers/draft-all": {
+      "post": {
+        "operationId": "draft_all_v1_applications__application_id__answers_draft_all_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Draft All",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/answers/{question_key}": {
+      "patch": {
+        "description": "A staff edit. Bumps the application version so two editors can't silently collide.",
+        "operationId": "edit_answer_v1_applications__application_id__answers__question_key__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "question_key",
+            "required": true,
+            "schema": {
+              "title": "Question Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Answer",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/answers/{question_key}/draft": {
+      "post": {
+        "description": "Draft one answer to the funder's own question. A staff edit is never overwritten\nunless `confirm_overwrite` is set.",
+        "operationId": "draft_answer_v1_applications__application_id__answers__question_key__draft_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "question_key",
+            "required": true,
+            "schema": {
+              "title": "Question Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/DraftBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Draft Answer",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/approvals": {
+      "post": {
+        "description": "Simulated internal review: program, then director. Never a funder decision.",
+        "operationId": "review_v1_applications__application_id__approvals_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/comments": {
+      "post": {
+        "description": "Comments append to the activity log and don't change the version.",
+        "operationId": "comment_v1_applications__application_id__comments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Comment",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/evidence": {
+      "post": {
+        "operationId": "record_evidence_v1_applications__application_id__evidence_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Evidence",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/export.md": {
+      "get": {
+        "description": "Every question with its limit and answer, attachments and deadline, ready to paste\ninto the funder's own portal. Hope never submits.",
+        "operationId": "export_application_v1_applications__application_id__export_md_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Application",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/facts": {
+      "post": {
+        "description": "Staff answer a [TO CONFIRM] item once (e.g. the timeline); redrafts use it as a fact.\nAnswers staff already edited stay as they are.",
+        "operationId": "supply_fact_v1_applications__application_id__facts_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Supply Fact",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/requirements/jobs": {
+      "post": {
+        "description": "Start (or restart) reading this grant's application requirements from its pages.",
+        "operationId": "read_requirements_v1_applications__application_id__requirements_jobs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Requirements",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/requirements/paste": {
+      "post": {
+        "description": "Staff paste the funder's form, or upload its PDF, when the questions sit behind a login.",
+        "operationId": "paste_requirements_v1_applications__application_id__requirements_paste_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Paste Requirements",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/stage": {
+      "post": {
+        "operationId": "move_stage_v1_applications__application_id__stage_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StageBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Move Stage",
+        "tags": [
+          "applications"
+        ]
+      }
+    }
+  }
+}

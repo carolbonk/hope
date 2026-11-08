@@ -442,6 +442,7 @@ export function DiscoveryPanel({
             d.summary.found(found),
             d.summary.fresh(fresh),
             counts.skipped_expired ? d.summary.expired(counts.skipped_expired) : "",
+            counts.skipped_poor_fit ? d.summary.poorFit(counts.skipped_poor_fit) : "",
             secs ? d.summary.took(d.duration(Math.floor(secs / 60), secs % 60)) : "",
           ]
             .filter(Boolean)

@@ -43,6 +43,11 @@
             "title": "Skipped Not Grant",
             "type": "integer"
           },
+          "skipped_poor_fit": {
+            "default": 0,
+            "title": "Skipped Poor Fit",
+            "type": "integer"
+          },
           "urls_found": {
             "default": 0,
             "title": "Urls Found",

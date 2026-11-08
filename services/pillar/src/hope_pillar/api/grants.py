@@ -17,6 +17,8 @@ from hope_core.money import Money
 from hope_core.schemas import Citation, GrantCandidate
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from hope_pillar.api.applications import ensure_application
+
 router = APIRouter(prefix="/v1", tags=["grants"])
 
 Status = Literal["new", "saved", "passed"]
@@ -376,6 +378,8 @@ def _set_status(
                 reason_text=body.reason_text if body else None,
                 actor=principal.user_id,
             )
+        if status == "saved":
+            ensure_application(tx, gid, principal.user_id)
     return StatusChange(
         grant_id=gid, status=status, previous_status=previous, changed=previous != status
     )

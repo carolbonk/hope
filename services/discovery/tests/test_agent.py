@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 from hope_core.model_gateway import RunBudget
-from hope_discovery.agent import SEARCH_UNAVAILABLE, DiscoveryFailed
+from hope_discovery.agent import PROGRAM_TOTAL_CONCERN, SEARCH_UNAVAILABLE, DiscoveryFailed
 from hope_discovery.mock import (
     CLOSED,
     DEMO_QUERIES,
@@ -15,7 +15,7 @@ from hope_discovery.mock import (
     ScriptedWeb,
     extract_responder,
 )
-from hope_discovery.models import PageExtraction
+from hope_discovery.models import FitAssessment, PageExtraction
 
 DEMO_TITLES = {
     "Rural Oral Health Access Grant 2027",
@@ -113,3 +113,31 @@ def test_logs_have_no_page_text(run_agent: Any, caplog: pytest.LogCaptureFixture
     assert caplog.records
     for phrase in UNQUOTED:
         assert phrase not in caplog.text
+
+
+def test_poor_fit_and_ineligible_skipped(run_agent: Any) -> None:
+    def weak(messages: Any, schema: Any) -> dict[str, Any]:
+        return {"fit_score": 20, "reasons": [{"text": "Barely related", "refs": []}]}
+
+    repo, result = run_agent(overrides={FitAssessment: weak})
+    assert repo.candidates == {}
+    assert result["counts"]["skipped_poor_fit"] == len(DEMO_TITLES)
+    assert any(e["text"].endswith("weak fit (20)") for e in repo.events if e["kind"] == "skip")
+
+    def blocked(messages: Any, schema: Any) -> dict[str, Any]:
+        return {
+            "fit_score": 90,
+            "reasons": [{"text": "Strong match", "refs": ["W1"]}],
+            "eligibility_blocker": "W1",
+        }
+
+    repo, result = run_agent(web=ScriptedWeb(hits=[ORAL]), overrides={FitAssessment: blocked})
+    assert repo.candidates == {} and result["counts"]["skipped_poor_fit"] == 1
+    assert any(e["text"].endswith("not eligible") for e in repo.events if e["kind"] == "skip")
+
+
+def test_program_total_amount_dropped(run_agent: Any) -> None:
+    repo, _ = run_agent(web=ScriptedWeb(hits=[ORAL]), max_award_budget_ratio=0)
+    (grant,) = repo.candidates.values()
+    assert grant.amount_max is None
+    assert PROGRAM_TOTAL_CONCERN in grant.concerns

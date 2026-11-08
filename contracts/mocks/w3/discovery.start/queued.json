@@ -31,6 +31,7 @@
       "candidates_updated": 0,
       "skipped_expired": 0,
       "skipped_not_grant": 0,
+      "skipped_poor_fit": 0,
       "skipped_known": 0,
       "failed_pages": 0,
       "queries_failed": 0

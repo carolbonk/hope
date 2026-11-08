@@ -136,6 +136,12 @@ def test_cors_allows_only_web_origin(hope_api: TestClient) -> None:
     assert "access-control-allow-origin" not in denied.headers
 
 
+def test_cors_exposes_etag_to_the_web_origin(hope_api: TestClient) -> None:
+    response = hope_api.get("/v1/me", headers={"Origin": "http://localhost:3000"})
+    exposed = response.headers.get("access-control-expose-headers", "").lower()
+    assert "etag" in exposed
+
+
 def test_missing_session_secret_is_a_clear_503(
     hope_api: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

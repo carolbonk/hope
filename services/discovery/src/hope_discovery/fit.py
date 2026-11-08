@@ -29,6 +29,7 @@ class FitResult:
     reasons: list[str]
     concerns: list[str]
     citations: list[Citation] = field(default_factory=list)
+    blocked: bool = False
 
 
 def _trim(text: str, limit: int = 120) -> str:
@@ -94,4 +95,10 @@ def postprocess_fit(
     concerns.extend(extra_concerns or [])
     for ref in always_cite or []:
         cite(ref)
-    return FitResult(score=score, reasons=reasons, concerns=concerns, citations=citations)
+    return FitResult(
+        score=score,
+        reasons=reasons,
+        concerns=concerns,
+        citations=citations,
+        blocked=blocker in web_by_ref,
+    )

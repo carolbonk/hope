@@ -16,7 +16,10 @@ from hope_core.schemas.agency_profile import AgencyProfile
 from hope_core.schemas.hackathon import DiscoveryProgress, GrantCandidate, JobStatus
 from hope_core.web import Page, RecordedWebTools, SearchResult
 
+from hope_discovery.answers import AnswerDraft, mock_answer
 from hope_discovery.models import FitAssessment, PageExtraction, QueryPlan
+from hope_discovery.requirements import RequirementsExtraction
+from hope_discovery.requirements import mock_responder as requirements_mock_responder
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "web"
 
@@ -172,6 +175,8 @@ def register(provider: MockProvider) -> MockProvider:
     provider.register(QueryPlan, plan_responder)
     provider.register(PageExtraction, extract_responder)
     provider.register(FitAssessment, fit_responder)
+    provider.register(RequirementsExtraction, requirements_mock_responder)
+    provider.register(AnswerDraft, mock_answer)
     return provider
 
 

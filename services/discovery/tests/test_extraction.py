@@ -119,3 +119,10 @@ def test_injection_page_untrusted_and_no_effect(run_agent: Any) -> None:
     assert start < prompt.index("Ignore all previous instructions") < end
     assert not any("Ignore all previous" in p for p in seen["fit"])
     assert not any(u in p for p in seen["fit"] for u in UNQUOTED)
+
+
+def test_null_or_long_lists_are_clipped_not_rejected() -> None:
+    base = {"kind": "open_opportunity", "is_grant_opportunity": True, "confidence": 0.9}
+    assert PageExtraction.model_validate(base | {"eligibility": None}).eligibility == []
+    many = [{"text": f"Rule {i}", "page": 1} for i in range(10)]
+    assert len(PageExtraction.model_validate(base | {"eligibility": many}).eligibility) == 5
