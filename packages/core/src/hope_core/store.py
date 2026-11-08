@@ -74,6 +74,12 @@ def create_user(tx: Tx, email: str, password_hash: str, display_name: str) -> Us
     return UserRecord.model_validate(tx.fetchone())
 
 
+def set_password_hash(tx: Tx, user_id: UUID | str, password_hash: str) -> None:
+    tx.execute(
+        "UPDATE users SET password_hash = %s WHERE user_id = %s", (password_hash, str(user_id))
+    )
+
+
 def get_user(tx: Tx, user_id: UUID | str) -> UserRecord | None:
     tx.execute("SELECT * FROM users WHERE user_id = %s", (str(user_id),))
     row = tx.fetchone()
