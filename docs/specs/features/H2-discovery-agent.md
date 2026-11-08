@@ -170,6 +170,14 @@ Steps and their exact `current_step` texts:
        by`, `no later than`, `LOI`…) and no past wording (`were due`, `closed`, `last year`), else a rolling
        clause. Dates found this way never mark a grant expired (pages often mention last cycle); only the
        model's quote with past-only dates does (step 8). Year-less quotes are replaced when a full date is found.
+     - Year-less deadline (`The deadline is August 15.`): `infer_deadline(quote, pages, today)` dates it only
+       from the page. If the quote repeats (`each year`, `annually`) → the next such date on or after today
+       (for a window `March 1 through June 1`, the closing date). Otherwise the page's **one** cycle year
+       (`2027 grant cycle`, `2027 Applications`, `Grant 2027`, `FY 2027`; spans like `2026-2027` and two
+       different years don't count). No year on the page, or a past result → still unknown with the
+       year-less concern. Order: stated future date (quote, then page) → inferred (quote, then page
+       clause) → rolling. An inferred date adds the concern "The page gives the deadline without a year;
+       Hope took the year from the page. Check it." and `deadline_text` keeps the page's words.
      - The quote code used becomes `amount_text` / `deadline_text` (≤ 300 chars, exact page text) and a W#
        source for call 3, so the card's numbers are always backed by a page quote.
 8. **Drop expired** (code). Expired = every parsed date is before today, or call 2 said `closed_or_past`.
