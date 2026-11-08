@@ -132,6 +132,74 @@ class ProfileRepository:
         self._publish_updated(tenant_id, created, None, changes, created_by)
         return created
 
+    def save_direct(
+        self,
+        tenant_id: UUID,
+        agency_id: UUID,
+        data: dict[str, Any],
+        actor: str,
+        expected_version: int | None,
+    ) -> ProfileVersion:
+        """Hackathon save (H1): commit a whole profile without HITL-0, even for protected paths.
+
+        `expected_version` is the version the caller edited (0 or None before the first save);
+        a mismatch raises `VersionConflictError`. A no-op save returns the current version.
+        """
+        try:
+            return self._save_direct(tenant_id, agency_id, data, actor, expected_version)
+        except psycopg.errors.UniqueViolation as e:  # a concurrent first save won the race
+            raise VersionConflictError("profile was created concurrently") from e
+
+    def _save_direct(
+        self,
+        tenant_id: UUID,
+        agency_id: UUID,
+        data: dict[str, Any],
+        actor: str,
+        expected_version: int | None,
+    ) -> ProfileVersion:
+        with tenant_tx(self.conn, tenant_id) as cur:
+            cur.execute(
+                f"SELECT {_VERSION_COLS} FROM agency_profile_versions WHERE agency_id = %s"
+                " ORDER BY version DESC LIMIT 1 FOR UPDATE",
+                (agency_id,),
+            )
+            row = cur.fetchone()
+            latest = _version(row) if row else None
+            current = latest.version if latest else 0
+            if expected_version is not None and expected_version != current:
+                raise VersionConflictError(f"expected version {expected_version}, at {current}")
+            if latest is None:
+                new = self._normalize({**data, "agency_id": str(agency_id)}, version=1)
+                cur.execute(
+                    "INSERT INTO agencies (agency_id, tenant_id, legal_name) VALUES (%s, %s, %s)"
+                    " ON CONFLICT (agency_id) DO UPDATE SET legal_name = EXCLUDED.legal_name",
+                    (agency_id, tenant_id, new["legal"]["legal_name"]),
+                )
+                committed = self._insert_version(cur, tenant_id, new, actor)
+                changes = diff({}, new)
+                self._audit(
+                    cur,
+                    tenant_id,
+                    actor,
+                    "profile.updated",
+                    agency_id,
+                    {"version": 1, "paths": [c.path for c in changes]},
+                )
+            else:
+                old = latest.profile.model_dump(mode="json")
+                new = self._normalize(
+                    {**data, "agency_id": str(agency_id)}, version=latest.version + 1
+                )
+                changes = diff(old, new)
+                if not changes:
+                    return latest
+                committed = self._commit(cur, tenant_id, latest, new, actor, changes)
+        self._publish_updated(
+            tenant_id, committed, latest.version if latest else None, changes, actor
+        )
+        return committed
+
     def current(self, tenant_id: UUID, agency_id: UUID) -> ProfileVersion:
         return self.as_of(tenant_id, agency_id, None)
 

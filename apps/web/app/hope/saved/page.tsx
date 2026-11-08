@@ -22,7 +22,7 @@ function SavedList() {
   const { state } = useHope();
   const apps = Object.values(state.applications)
     .map((a) => ({ a, o: opps.find((o) => o.id === a.opportunityId) }))
-    .filter((x) => x.o)
+    .filter((x) => x.o && state.decisions[x.a.opportunityId]?.decision !== "passed")
     .sort((x, y) => x.o!.deadline.localeCompare(y.o!.deadline));
 
   return (
@@ -46,7 +46,7 @@ function SavedList() {
                     <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{o!.funder}</p>
                     <p className="mt-2 font-display text-[1.75rem] leading-tight">{o!.name}</p>
                   </div>
-                  <span className="rounded-full bg-[#f1ead8] px-2.5 py-1 text-xs font-semibold text-[#6b5520]">{h.demo}</span>
+                  {o!.source.kind === "demo" && <span className="rounded-full bg-[#f1ead8] px-2.5 py-1 text-xs font-semibold text-[#6b5520]">{h.demo}</span>}
                 </div>
                 <p className="mt-1 text-sm">
                   {money(o!.amountMax, o!.currency, locale)} · {h.discover.due(o!.deadline, daysUntil(o!.deadline, today))}

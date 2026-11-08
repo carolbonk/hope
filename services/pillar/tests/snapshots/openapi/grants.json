@@ -104,6 +104,29 @@
         "title": "CitedItem",
         "type": "object"
       },
+      "Counts": {
+        "properties": {
+          "new": {
+            "title": "New",
+            "type": "integer"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "integer"
+          },
+          "saved": {
+            "title": "Saved",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "new",
+          "saved",
+          "passed"
+        ],
+        "title": "Counts",
+        "type": "object"
+      },
       "GrantCard": {
         "properties": {
           "amount_max": {
@@ -503,7 +526,7 @@
       "GrantListPage": {
         "properties": {
           "counts": {
-            "$ref": "#/components/schemas/StatusCounts"
+            "$ref": "#/components/schemas/Counts"
           },
           "hidden_past": {
             "title": "Hidden Past",
@@ -572,43 +595,6 @@
         "title": "Money",
         "type": "object"
       },
-      "PassBody": {
-        "additionalProperties": false,
-        "properties": {
-          "reason": {
-            "anyOf": [
-              {
-                "enum": [
-                  "not_a_fit",
-                  "too_small",
-                  "deadline_too_soon",
-                  "not_eligible",
-                  "other"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "reason_text": {
-            "anyOf": [
-              {
-                "maxLength": 300,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason Text"
-          }
-        },
-        "title": "PassBody",
-        "type": "object"
-      },
       "StatusChange": {
         "properties": {
           "changed": {
@@ -646,29 +632,6 @@
           "changed"
         ],
         "title": "StatusChange",
-        "type": "object"
-      },
-      "StatusCounts": {
-        "properties": {
-          "new": {
-            "title": "New",
-            "type": "integer"
-          },
-          "passed": {
-            "title": "Passed",
-            "type": "integer"
-          },
-          "saved": {
-            "title": "Saved",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "new",
-          "saved",
-          "passed"
-        ],
-        "title": "StatusCounts",
         "type": "object"
       },
       "ValidationError": {
@@ -721,6 +684,7 @@
   "paths": {
     "/v1/grants": {
       "get": {
+        "description": "Grant cards. Values are checked here, so a bad one returns 422 `invalid_query` naming it.",
         "operationId": "list_grants_v1_grants_get",
         "parameters": [
           {
@@ -728,14 +692,15 @@
             "name": "status",
             "required": false,
             "schema": {
-              "default": "new",
-              "enum": [
-                "new",
-                "saved",
-                "passed"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
               ],
-              "title": "Status",
-              "type": "string"
+              "title": "Status"
             }
           },
           {
@@ -743,15 +708,15 @@
             "name": "sort",
             "required": false,
             "schema": {
-              "default": "fit",
-              "enum": [
-                "fit",
-                "deadline",
-                "amount",
-                "newest"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
               ],
-              "title": "Sort",
-              "type": "string"
+              "title": "Sort"
             }
           },
           {
@@ -761,8 +726,6 @@
             "schema": {
               "anyOf": [
                 {
-                  "maxLength": 100,
-                  "minLength": 1,
                   "type": "string"
                 },
                 {
@@ -779,9 +742,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "maximum": 365,
-                  "minimum": 1,
-                  "type": "integer"
+                  "type": "string"
                 },
                 {
                   "type": "null"
@@ -795,9 +756,15 @@
             "name": "include_past",
             "required": false,
             "schema": {
-              "default": false,
-              "title": "Include Past",
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Include Past"
             }
           },
           {
@@ -805,11 +772,15 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 20,
-              "maximum": 100,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
             }
           },
           {
@@ -817,10 +788,15 @@
             "name": "offset",
             "required": false,
             "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Offset"
             }
           }
         ],
@@ -861,7 +837,6 @@
             "name": "grant_id",
             "required": true,
             "schema": {
-              "format": "uuid",
               "title": "Grant Id",
               "type": "string"
             }
@@ -904,7 +879,6 @@
             "name": "grant_id",
             "required": true,
             "schema": {
-              "format": "uuid",
               "title": "Grant Id",
               "type": "string"
             }
@@ -914,18 +888,45 @@
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/PassBody"
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "not_a_fit",
+                          "too_small",
+                          "deadline_too_soon",
+                          "not_eligible",
+                          "other"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Reason"
                   },
-                  {
-                    "type": "null"
+                  "reason_text": {
+                    "anyOf": [
+                      {
+                        "maxLength": 300,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Reason Text"
                   }
-                ],
-                "title": "Body"
+                },
+                "title": "PassBody",
+                "type": "object"
               }
             }
-          }
+          },
+          "required": false
         },
         "responses": {
           "200": {
@@ -964,7 +965,6 @@
             "name": "grant_id",
             "required": true,
             "schema": {
-              "format": "uuid",
               "title": "Grant Id",
               "type": "string"
             }
@@ -1007,7 +1007,6 @@
             "name": "grant_id",
             "required": true,
             "schema": {
-              "format": "uuid",
               "title": "Grant Id",
               "type": "string"
             }

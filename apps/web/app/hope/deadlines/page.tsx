@@ -28,7 +28,7 @@ function Deadlines() {
   const [view, setView] = useState<DeadlineView>("table");
   const items: DeadlineItem[] = Object.values(state.applications)
     .map((a) => ({ a, o: opps.find((o) => o.id === a.opportunityId)! }))
-    .filter((x) => x.o && x.a.stage !== "ready")
+    .filter((x) => x.o && x.a.stage !== "ready" && state.decisions[x.a.opportunityId]?.decision !== "passed")
     .map(({ a, o }) => ({ id: a.id, oppId: o.id, name: o.name, funder: o.funder, stage: a.stage, deadline: o.deadline, days: daysUntil(o.deadline, today) }))
     .sort((x, y) => x.days - y.days);
 

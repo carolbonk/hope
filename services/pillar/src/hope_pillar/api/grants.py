@@ -1,94 +1,34 @@
-"""Grant candidate routes (H3): list, detail, and save / pass / reset of `grant_candidates`.
-
-No model or web calls and no SQL here: every read and write goes through `hope_core.store`, and
-every derived value (`days_left`, `urgency`, `fit_band`, `unverified`, sort, counts) is code.
-"""
+"""Grant candidate routes (H3): list, detail, and save / pass / reset. All code, no model calls."""
 
 from __future__ import annotations
 
+import json
 import re
-from collections.abc import Callable, Coroutine, Iterable, Iterator
-from contextlib import contextmanager
 from datetime import UTC, date, datetime
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, NoReturn, cast, get_args
 from urllib.parse import urlparse
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, Query, Request, Response
-from fastapi.exceptions import RequestValidationError
-from fastapi.routing import APIRoute
+from fastapi import APIRouter, Depends, Query, Request
 from hope_core import store
 from hope_core.auth import Principal, ProblemException, get_principal
 from hope_core.db import connect, tenant_tx
 from hope_core.money import Money
-from hope_core.schemas.common import Contract
-from hope_core.schemas.hackathon import CandidateStatus, Citation, GrantCandidate
-from pydantic import BaseModel, Field, model_validator
+from hope_core.schemas import Citation, GrantCandidate
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+router = APIRouter(prefix="/v1", tags=["grants"])
+
+Status = Literal["new", "saved", "passed"]
 Urgency = Literal["past", "urgent", "soon", "later", "rolling", "unknown"]
 FitBand = Literal["strong", "good", "weak"]
-GrantSort = Literal["fit", "deadline", "amount", "newest"]
 PassReason = Literal["not_a_fit", "too_small", "deadline_too_soon", "not_eligible", "other"]
 
 LIST_ITEMS = 3
-MAX_CANDIDATES = 500
+SCAN_LIMIT = 500
 _TRAILING_MARKER = re.compile(r"\s*\[(c\d+)\](?=\s*(\[c\d+\]\s*)*$)")
 _ANY_MARKER = re.compile(r"\s*\[(c\d+)\]")
 _ROLLING = re.compile(r"rolling|ongoing|open until", re.IGNORECASE)
-_WORD = re.compile(r"\w+")
-
-
-# --- errors ------------------------------------------------------------------------------------
-
-
-class InvalidQuery(ProblemException):
-    """422 `invalid_query`; `detail` names the offending query parameter."""
-
-    def __init__(self, parameter: str) -> None:
-        super().__init__(422, "invalid_query", "Invalid query")
-        self.parameter = parameter
-
-    def body(self) -> dict[str, Any]:
-        return super().body() | {"detail": self.parameter}
-
-
-def grant_not_found() -> ProblemException:
-    return ProblemException(404, "grant_not_found", "Grant not found")
-
-
-def invalid_reason() -> ProblemException:
-    return ProblemException(422, "invalid_reason", "Invalid reason")
-
-
-class _GrantsRoute(APIRoute):
-    """Maps FastAPI's request validation errors onto this router's problem codes."""
-
-    def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
-        handler = super().get_route_handler()
-
-        async def route(request: Request) -> Response:
-            try:
-                return await handler(request)
-            except RequestValidationError as exc:
-                raise _problem_for(exc) from exc
-
-        return route
-
-
-def _problem_for(exc: RequestValidationError) -> ProblemException:
-    locations = [tuple(err.get("loc", ())) for err in exc.errors()]
-    for loc in locations:
-        if loc and loc[0] == "query":
-            return InvalidQuery(str(loc[1]) if len(loc) > 1 else "query")
-    if any(loc and loc[0] == "path" for loc in locations):
-        return grant_not_found()
-    return invalid_reason()
-
-
-router = APIRouter(prefix="/v1", tags=["grants"], route_class=_GrantsRoute)
-
-
-# --- endpoint models ---------------------------------------------------------------------------
 
 
 class CitedItem(BaseModel):
@@ -115,7 +55,7 @@ class GrantCard(BaseModel):
     reasons: list[CitedItem]
     concerns: list[CitedItem]
     citations: list[Citation]
-    status: CandidateStatus
+    status: Status
     discovered_at: datetime
 
 
@@ -128,7 +68,7 @@ class GrantDetail(GrantCard):
     view_original_url: str
 
 
-class StatusCounts(BaseModel):
+class Counts(BaseModel):
     new: int
     saved: int
     passed: int
@@ -139,18 +79,20 @@ class GrantListPage(BaseModel):
     total: int
     limit: int
     offset: int
-    counts: StatusCounts
+    counts: Counts
     hidden_past: int
 
 
 class StatusChange(BaseModel):
     grant_id: UUID
-    status: CandidateStatus
-    previous_status: CandidateStatus
+    status: Status
+    previous_status: Status
     changed: bool
 
 
-class PassBody(Contract):
+class PassBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     reason: PassReason | None = None
     reason_text: str | None = Field(None, max_length=300)
 
@@ -161,35 +103,39 @@ class PassBody(Contract):
         return self
 
 
-# --- derived fields (code only) ------------------------------------------------------------------
+class _QueryProblem(ProblemException):
+    def __init__(self, param: str) -> None:
+        super().__init__(422, "invalid_query", "Invalid query")
+        self.param = param
+
+    def body(self) -> dict[str, Any]:
+        return super().body() | {"detail": self.param}
 
 
 def _today() -> date:
     return datetime.now(UTC).date()
 
 
+# --- derived fields (code decides) ------------------------------------------------------------
+
+
 def days_left(deadline: date | None, today: date) -> int | None:
     return None if deadline is None else (deadline - today).days
 
 
-def urgency(days: int | None, deadline_text: str | None) -> Urgency:
+def urgency(deadline: date | None, deadline_text: str | None, today: date) -> Urgency:
+    days = days_left(deadline, today)
     if days is None:
         return "rolling" if deadline_text and _ROLLING.search(deadline_text) else "unknown"
     if days < 0:
         return "past"
     if days <= 7:
         return "urgent"
-    if days <= 21:
-        return "soon"
-    return "later"
+    return "soon" if days <= 21 else "later"
 
 
 def fit_band(score: int) -> FitBand:
-    if score >= 75:
-        return "strong"
-    if score >= 55:
-        return "good"
-    return "weak"
+    return "strong" if score >= 75 else "good" if score >= 55 else "weak"
 
 
 def domain(url: str) -> str:
@@ -197,220 +143,281 @@ def domain(url: str) -> str:
     return host.removeprefix("www.")
 
 
-def parse_cited(raw: str, known: set[str]) -> CitedItem:
-    """Strip trailing `[cN]` markers; unknown or missing markers make the item unverified."""
+def cited_item(raw: str, known: set[str]) -> CitedItem:
+    """Parse trailing `[cN]` markers; unknown ones are dropped and mark the item unverified."""
     markers = [m.group(1) for m in _TRAILING_MARKER.finditer(raw)]
-    text = _TRAILING_MARKER.sub("", raw).rstrip()
-    ids = _unique(m for m in markers if m in known)
+    ids = list(dict.fromkeys(m for m in markers if m in known))
+    text = _TRAILING_MARKER.sub("", raw).strip()
     unverified = not markers or len(ids) < len(set(markers))
     return CitedItem(text=text, citation_ids=ids, unverified=unverified)
 
 
-def summary_markers(summary: str, known: set[str]) -> tuple[str, list[str]]:
-    ids = _unique(m.group(1) for m in _ANY_MARKER.finditer(summary) if m.group(1) in known)
-    return _ANY_MARKER.sub("", summary).strip(), ids
+def _summary(raw: str, known: set[str]) -> tuple[str, list[str]]:
+    ids = [m.group(1) for m in _ANY_MARKER.finditer(raw) if m.group(1) in known]
+    return _ANY_MARKER.sub("", raw).strip(), list(dict.fromkeys(ids))
 
 
-def first_quoting(citations: list[Citation], text: str | None) -> str | None:
-    """The first citation whose quote contains `text`, or failing that every word of it."""
-    if not text or not text.strip():
+def _quoting(citations: list[Citation], text: str | None) -> str | None:
+    if not text:
         return None
-    needle = " ".join(text.lower().split())
-    for c in citations:
-        if needle in " ".join(c.quote.lower().split()):
-            return c.citation_id
-    words = set(_WORD.findall(needle))
-    for c in citations:
-        if words <= set(_WORD.findall(c.quote.lower())):
-            return c.citation_id
-    return None
+    needle = text.casefold()
+    return next((c.citation_id for c in citations if needle in c.quote.casefold()), None)
 
 
-def _unique(values: Iterable[str]) -> list[str]:
-    return list(dict.fromkeys(values))
+def _card_fields(g: GrantCandidate, today: date, items: int | None) -> dict[str, Any]:
+    known = {c.citation_id for c in g.citations}
+    reasons = [cited_item(r, known) for r in g.fit_reasons[:items]]
+    concerns = [cited_item(c, known) for c in g.concerns[:items]]
+    summary, summary_ids = _summary(g.summary, known)
+    return {
+        "grant_id": g.grant_id,
+        "title": g.title,
+        "funder": g.funder,
+        "url": g.url,
+        "domain": domain(g.url),
+        "summary": summary,
+        "amount_text": g.amount_text,
+        "amount_max": g.amount_max,
+        "deadline_text": g.deadline_text,
+        "deadline": g.deadline,
+        "days_left": days_left(g.deadline, today),
+        "urgency": urgency(g.deadline, g.deadline_text, today),
+        "fit_score": g.fit_score,
+        "fit_band": fit_band(g.fit_score),
+        "reasons": reasons,
+        "concerns": concerns,
+        "citations": g.citations,
+        "status": g.status,
+        "discovered_at": g.discovered_at,
+        "summary_citation_ids": summary_ids,
+    }
 
 
-def _utc(value: datetime) -> datetime:
-    return value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
+def to_card(g: GrantCandidate, today: date) -> GrantCard:
+    fields = _card_fields(g, today, LIST_ITEMS)
+    used = set(fields.pop("summary_citation_ids"))
+    for item in (*fields["reasons"], *fields["concerns"]):
+        used.update(item.citation_ids)
+    fields["citations"] = [c for c in g.citations if c.citation_id in used]
+    return GrantCard(**fields)
 
 
-def to_detail(candidate: GrantCandidate, today: date) -> GrantDetail:
-    known = {c.citation_id for c in candidate.citations}
-    reasons = [parse_cited(r, known) for r in candidate.fit_reasons]
-    concerns = [parse_cited(c, known) for c in candidate.concerns]
-    summary, summary_ids = summary_markers(candidate.summary, known)
-    days = days_left(candidate.deadline, today)
+def to_detail(g: GrantCandidate, today: date) -> GrantDetail:
     return GrantDetail(
-        grant_id=candidate.grant_id,
-        title=candidate.title,
-        funder=candidate.funder,
-        url=candidate.url,
-        domain=domain(candidate.url),
-        summary=summary,
-        amount_text=candidate.amount_text,
-        amount_max=candidate.amount_max,
-        deadline_text=candidate.deadline_text,
-        deadline=candidate.deadline,
-        days_left=days,
-        urgency=urgency(days, candidate.deadline_text),
-        fit_score=candidate.fit_score,
-        fit_band=fit_band(candidate.fit_score),
-        reasons=reasons,
-        concerns=concerns,
-        citations=list(candidate.citations),
-        status=candidate.status,
-        discovered_at=_utc(candidate.discovered_at),
-        eligibility_summary=candidate.eligibility_summary,
-        summary_citation_ids=summary_ids,
-        amount_citation_id=first_quoting(candidate.citations, candidate.amount_text),
-        deadline_citation_id=first_quoting(candidate.citations, candidate.deadline_text),
-        found_by_job_id=candidate.found_by_job_id,
-        view_original_url=candidate.url,
+        **_card_fields(g, today, None),
+        eligibility_summary=g.eligibility_summary,
+        amount_citation_id=_quoting(g.citations, g.amount_text),
+        deadline_citation_id=_quoting(g.citations, g.deadline_text),
+        found_by_job_id=g.found_by_job_id,
+        view_original_url=g.url,
     )
 
 
-def to_card(detail: GrantDetail) -> GrantCard:
-    reasons, concerns = detail.reasons[:LIST_ITEMS], detail.concerns[:LIST_ITEMS]
-    used = {i for item in (*reasons, *concerns) for i in item.citation_ids}
-    used |= set(detail.summary_citation_ids)
-    card = {k: getattr(detail, k) for k in GrantCard.model_fields}
-    card |= {
-        "reasons": reasons,
-        "concerns": concerns,
-        "citations": [c for c in detail.citations if c.citation_id in used],
-    }
-    return GrantCard(**card)
+# --- listing ----------------------------------------------------------------------------------
+
+Sort = Literal["fit", "deadline", "amount", "newest"]
+_DEADLINE_RANK = {"rolling": 1, "unknown": 2}
 
 
-# --- sorting and filtering -----------------------------------------------------------------------
+def _sort_key(sort: Sort) -> Any:
+    def by_deadline(c: GrantCard) -> tuple[int, int]:
+        return (c.days_left, 0) if c.days_left is not None else (10**6, 1)
+
+    def amount(c: GrantCard) -> int | None:
+        usd = c.amount_max is not None and c.amount_max.currency == "USD"
+        return c.amount_max.amount_minor if usd and c.amount_max else None
+
+    if sort == "fit":
+        return lambda c: (-c.fit_score, *by_deadline(c), str(c.grant_id))
+    if sort == "deadline":
+        return lambda c: (
+            0 if c.days_left is not None else _DEADLINE_RANK.get(c.urgency, 2),
+            c.days_left or 0,
+            -c.fit_score,
+            str(c.grant_id),
+        )
+    if sort == "amount":
+        return lambda c: (amount(c) is None, -(amount(c) or 0), -c.fit_score, str(c.grant_id))
+    return lambda c: (-c.discovered_at.timestamp(), -c.fit_score, str(c.grant_id))
 
 
-def _sort_key(sort: GrantSort) -> Callable[[GrantDetail], tuple[Any, ...]]:
-    def fit(g: GrantDetail) -> tuple[Any, ...]:
-        return (-g.fit_score, g.deadline is None, g.deadline or date.max, str(g.grant_id))
-
-    def deadline(g: GrantDetail) -> tuple[Any, ...]:
-        rank = 0 if g.deadline else (1 if g.urgency == "rolling" else 2)
-        return (rank, g.deadline or date.max, -g.fit_score, str(g.grant_id))
-
-    def amount(g: GrantDetail) -> tuple[Any, ...]:
-        usd = g.amount_max is not None and g.amount_max.currency == "USD"
-        minor = g.amount_max.amount_minor if g.amount_max and usd else 0
-        return (not usd, -minor, -g.fit_score, str(g.grant_id))
-
-    def newest(g: GrantDetail) -> tuple[Any, ...]:
-        return (-g.discovered_at.timestamp(), str(g.grant_id))
-
-    keys: dict[str, Callable[[GrantDetail], tuple[Any, ...]]] = {
-        "fit": fit,
-        "deadline": deadline,
-        "amount": amount,
-        "newest": newest,
-    }
-    return keys[sort]
+def _choice(params: dict[str, str], name: str, options: tuple[str, ...], default: str) -> str:
+    value = params.get(name, default)
+    if value not in options:
+        raise _QueryProblem(name)
+    return value
 
 
-def _matches(g: GrantDetail, q: str) -> bool:
-    needle = q.casefold()
-    return any(needle in field.casefold() for field in (g.title, g.funder, g.summary, g.domain))
+def _int(params: dict[str, str], name: str, low: int, high: int | None) -> int | None:
+    raw = params.get(name)
+    if raw is None:
+        return None
+    if (
+        not re.fullmatch(r"[0-9]{1,9}", raw)
+        or int(raw) < low
+        or (high is not None and int(raw) > high)
+    ):
+        raise _QueryProblem(name)
+    return int(raw)
 
 
-# --- routes --------------------------------------------------------------------------------------
+def _bool(params: dict[str, str], name: str) -> bool:
+    raw = params.get(name, "false").lower()
+    if raw not in ("true", "false", "1", "0"):
+        raise _QueryProblem(name)
+    return raw in ("true", "1")
 
-PrincipalDep = Annotated[Principal, Depends(get_principal)]
+
+def _matches(card: GrantCard, q: str) -> bool:
+    haystack = (card.title, card.funder, card.summary, card.domain)
+    return any(q in field.casefold() for field in haystack)
 
 
-@contextmanager
-def _tx(principal: Principal) -> Iterator[store.Tx]:
-    with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
-        yield tx
+QueryParam = Annotated[str | None, Query()]
 
 
 @router.get("/grants")
 def list_grants(
-    principal: PrincipalDep,
-    status: CandidateStatus = "new",
-    sort: GrantSort = "fit",
-    q: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
-    deadline_within_days: Annotated[int | None, Query(ge=1, le=365)] = None,
-    include_past: bool = False,
-    limit: Annotated[int, Query(ge=1, le=100)] = 20,
-    offset: Annotated[int, Query(ge=0)] = 0,
+    principal: Annotated[Principal, Depends(get_principal)],
+    status: QueryParam = None,
+    sort: QueryParam = None,
+    q: QueryParam = None,
+    deadline_within_days: QueryParam = None,
+    include_past: QueryParam = None,
+    limit: QueryParam = None,
+    offset: QueryParam = None,
 ) -> GrantListPage:
-    with _tx(principal) as tx:
-        rows = store.list_candidates(tx, status, "fit", limit=MAX_CANDIDATES, offset=0)
-        counts = store.count_candidates(tx)
+    """Grant cards. Values are checked here, so a bad one returns 422 `invalid_query` naming it."""
+    raw = {
+        "status": status,
+        "sort": sort,
+        "deadline_within_days": deadline_within_days,
+        "include_past": include_past,
+        "limit": limit,
+        "offset": offset,
+    }
+    params = {k: v for k, v in raw.items() if v is not None}
+    want = cast(Status, _choice(params, "status", get_args(Status), "new"))
+    order = cast(Sort, _choice(params, "sort", get_args(Sort), "fit"))
+    if q is not None and not 1 <= len(q.strip()) <= 100:
+        raise _QueryProblem("q")
+    within = _int(params, "deadline_within_days", 1, 365)
+    past = _bool(params, "include_past")
+    page_size = _int(params, "limit", 1, 100) or 20
+    start = _int(params, "offset", 0, None) or 0
+
     today = _today()
-    grants = [to_detail(c, today) for c in rows]
+    with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
+        rows = store.list_candidates(tx, want, "fit", limit=SCAN_LIMIT, offset=0)
+        counts = store.count_candidates(tx)
+
+    cards = [to_card(g, today) for g in rows]
     if q is not None:
-        grants = [g for g in grants if _matches(g, q)]
+        needle = q.strip().casefold()
+        cards = [c for c in cards if _matches(c, needle)]
     hidden_past = 0
-    if status != "passed" and not include_past:
-        hidden_past = sum(g.urgency == "past" for g in grants)
-        grants = [g for g in grants if g.urgency != "past"]
-    if deadline_within_days is not None:
-        grants = [
-            g
-            for g in grants
-            if g.days_left is not None and 0 <= g.days_left <= deadline_within_days
-        ]
-    grants.sort(key=_sort_key(sort))
+    if want != "passed" and not past:
+        hidden_past = sum(c.urgency == "past" for c in cards)
+        cards = [c for c in cards if c.urgency != "past"]
+    if within is not None:
+        cards = [c for c in cards if c.days_left is not None and 0 <= c.days_left <= within]
+    cards.sort(key=_sort_key(order))
     return GrantListPage(
-        items=[to_card(g) for g in grants[offset : offset + limit]],
-        total=len(grants),
-        limit=limit,
-        offset=offset,
-        counts=StatusCounts(**counts),
+        items=cards[start : start + page_size],
+        total=len(cards),
+        limit=page_size,
+        offset=start,
+        counts=Counts(**counts),
         hidden_past=hidden_past,
     )
 
 
+# --- detail and status ------------------------------------------------------------------------
+
+
+def _not_found() -> NoReturn:
+    raise ProblemException(404, "grant_not_found", "Grant not found")
+
+
+def _grant_uuid(grant_id: str) -> UUID:
+    try:
+        return UUID(grant_id)
+    except ValueError:
+        _not_found()
+
+
 @router.get("/grants/{grant_id}")
-def get_grant(grant_id: UUID, principal: PrincipalDep) -> GrantDetail:
-    with _tx(principal) as tx:
-        candidate = store.get_candidate(tx, grant_id)
-    if candidate is None:
-        raise grant_not_found()
-    return to_detail(candidate, _today())
+def get_grant(
+    grant_id: str, principal: Annotated[Principal, Depends(get_principal)]
+) -> GrantDetail:
+    gid = _grant_uuid(grant_id)
+    with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
+        grant = store.get_candidate(tx, gid)
+    if grant is None:
+        _not_found()
+    return to_detail(grant, _today())
 
 
 def _set_status(
-    principal: Principal,
-    grant_id: UUID,
-    status: CandidateStatus,
-    body: PassBody | None = None,
+    principal: Principal, grant_id: str, status: Status, body: PassBody | None = None
 ) -> StatusChange:
-    with _tx(principal) as tx:
-        current = store.get_candidate(tx, grant_id)
-        if current is None:
-            raise grant_not_found()
-        changed = current.status != status
-        if changed:
+    gid = _grant_uuid(grant_id)
+    with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
+        grant = store.get_candidate(tx, gid)
+        if grant is None:
+            _not_found()
+        previous = grant.status
+        if previous != status:
             store.set_candidate_status(
                 tx,
-                grant_id,
+                gid,
                 status,
                 reason=body.reason if body else None,
                 reason_text=body.reason_text if body else None,
                 actor=principal.user_id,
             )
     return StatusChange(
-        grant_id=grant_id, status=status, previous_status=current.status, changed=changed
+        grant_id=gid, status=status, previous_status=previous, changed=previous != status
     )
 
 
+async def _pass_body(request: Request) -> PassBody | None:
+    """Optional JSON body; anything but a valid `PassBody` is 422 `invalid_reason`."""
+    raw = await request.body()
+    if not raw.strip():
+        return None
+    try:
+        return PassBody.model_validate(json.loads(raw))
+    except (ValueError, ValidationError):
+        raise ProblemException(422, "invalid_reason", "Invalid reason") from None
+
+
+_PASS_BODY_DOC: dict[str, Any] = {
+    "requestBody": {
+        "required": False,
+        "content": {"application/json": {"schema": PassBody.model_json_schema()}},
+    }
+}
+
+
 @router.post("/grants/{grant_id}/save")
-def save_grant(grant_id: UUID, principal: PrincipalDep) -> StatusChange:
+def save_grant(
+    grant_id: str, principal: Annotated[Principal, Depends(get_principal)]
+) -> StatusChange:
     return _set_status(principal, grant_id, "saved")
 
 
-@router.post("/grants/{grant_id}/pass")
+@router.post("/grants/{grant_id}/pass", openapi_extra=_PASS_BODY_DOC)
 def pass_grant(
-    grant_id: UUID, principal: PrincipalDep, body: Annotated[PassBody | None, Body()] = None
+    grant_id: str,
+    principal: Annotated[Principal, Depends(get_principal)],
+    body: Annotated[PassBody | None, Depends(_pass_body)],
 ) -> StatusChange:
     return _set_status(principal, grant_id, "passed", body)
 
 
 @router.post("/grants/{grant_id}/reset")
-def reset_grant(grant_id: UUID, principal: PrincipalDep) -> StatusChange:
+def reset_grant(
+    grant_id: str, principal: Annotated[Principal, Depends(get_principal)]
+) -> StatusChange:
     return _set_status(principal, grant_id, "new")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from typing import Any
 
 import psycopg
 import pytest
@@ -47,3 +48,51 @@ def pillar() -> InMemoryPillar:
 @pytest.fixture
 def repo(conn: Conn, pillar: InMemoryPillar) -> ProfileRepository:
     return ProfileRepository(conn, pillar)
+
+
+INVITE = "test-invite-code-0123456789"
+SIGNUP = {
+    "email": "demo@hope.org",
+    "password": "correct-horse-battery",
+    "display_name": "Dana Okafor",
+    "invite_code": INVITE,
+}
+
+
+@pytest.fixture
+def hope_api(migrated_db: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[Any]:
+    """The hackathon API (H0 app) with an empty profile and users table, not signed in."""
+    from fastapi.testclient import TestClient
+    from hope_core import store
+    from hope_core.settings import get_settings
+    from hope_pillar.api import create_app
+    from hope_profile import api as profile_api
+    from hope_profile.ntee import RateLimiter
+
+    monkeypatch.setenv("HOPE_INVITE_CODE", INVITE)
+    monkeypatch.setenv("HOPE_SESSION_SECRET", "test-session-secret-0123456789")
+    monkeypatch.delenv("HOPE_OPENAI_API_KEY", raising=False)
+    get_settings.cache_clear()
+    settings = get_settings()
+    store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)
+    with psycopg.connect(migrated_db) as admin:
+        admin.execute("DELETE FROM users WHERE tenant_id = %s", (settings.tenant_id,))
+        admin.execute(
+            "DELETE FROM agency_profile_versions WHERE agency_id = %s", (settings.agency_id,)
+        )
+        admin.execute(
+            "DELETE FROM profile_change_proposals WHERE agency_id = %s", (settings.agency_id,)
+        )
+    app = create_app()
+    limiter = RateLimiter()
+    app.dependency_overrides[profile_api.get_rate_limiter] = lambda: limiter
+    with TestClient(app, base_url="https://testserver") as client:
+        yield client
+    get_settings.cache_clear()
+
+
+@pytest.fixture
+def signed_in(hope_api: Any) -> Any:
+    response = hope_api.post("/v1/auth/signup", json=SIGNUP)
+    assert response.status_code == 201, response.text
+    return hope_api

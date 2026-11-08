@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { onboardingApi as defaultOnboardingApi, type OnboardingApi } from "@/api/onboarding";
 import { profileApi as defaultProfileApi, ProblemError, type ProfileApi, type ProfileForm } from "@/api/profile";
+import { invalidateSession } from "@/api/session";
 import { Button, Card, ErrorNotice, SuccessNotice } from "@/components/ui";
 import { cx } from "@/lib/cx";
 import { clearDraft, loadDraft, saveDraft } from "./useOnboardingDraft";
@@ -18,6 +19,7 @@ import { ReviewStep } from "./steps/ReviewStep";
 import { AutoDismiss } from "@/components/ui/AutoDismiss";
 
 export const AFTER_ONBOARDING = "/hope/discover?onboarded=1";
+export const LOGIN_AGAIN = `/login?next=${encodeURIComponent("/onboarding")}`;
 
 type SaveProblem = { kind: "conflict" } | { kind: "failed" } | null;
 
@@ -59,10 +61,12 @@ export function OnboardingWizard({ profile, onboarding }: { profile?: ProfileApi
       setStartStep(firstIncomplete(initial));
       setRestored(!!draft);
       return null;
-    } catch {
-      setLoadError(true);
+    } catch (err) {
+      if (err instanceof ProblemError && err.status === 401) router.replace(LOGIN_AGAIN);
+      else setLoadError(true);
       return null;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the router is stable; a new one must not reload the form
   }, [profileApi]);
 
   useEffect(() => {
@@ -136,6 +140,7 @@ export function OnboardingWizard({ profile, onboarding }: { profile?: ProfileApi
       await profileApi.saveProfile(form, etag);
       seedHopeProfile(form);
       clearDraft();
+      invalidateSession();
       router.replace(AFTER_ONBOARDING);
     } catch (err) {
       if (err instanceof ProblemError && err.status === 422) {
@@ -156,7 +161,7 @@ export function OnboardingWizard({ profile, onboarding }: { profile?: ProfileApi
         }
         setSaveProblem({ kind: "failed" });
       } else if (err instanceof ProblemError && err.status === 409) setSaveProblem({ kind: "conflict" });
-      else if (err instanceof ProblemError && err.status === 401) router.replace(`/login?returnTo=${encodeURIComponent("/onboarding")}`);
+      else if (err instanceof ProblemError && err.status === 401) router.replace(LOGIN_AGAIN);
       else setSaveProblem({ kind: "failed" });
     } finally {
       setSaving(false);

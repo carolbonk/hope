@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ClientOnly, DemoTag, PageIntro, btnPrimary, btnSecondary, daysUntil, display, eyebrow, focusRing, input, money } from "@/components/hope/ui";
+import { DiscoveryPanel } from "@/components/hope/discovery/DiscoveryPanel";
 import { useToday } from "@/components/useToday";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
@@ -118,6 +119,7 @@ function Deck() {
         <Link href="/hope/profile" className={`${btnSecondary} w-full justify-between`}>
           {L.editProfile} <span aria-hidden>↗</span>
         </Link>
+        <DiscoveryPanel />
         <div className="hidden space-y-4 lg:grid">{filterFields("fd")}</div>
         <details className="rounded-xl glass-panel p-4 lg:hidden">
           <summary className={`cursor-pointer font-semibold ${focusRing}`}>
