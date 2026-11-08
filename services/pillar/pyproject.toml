@@ -19,6 +19,7 @@ dependencies = [
 hope-pillar-relay = "hope_pillar.workers:relay"
 hope-pillar-projector = "hope_pillar.workers:projector"
 hope-demo-seed = "hope_pillar.demo:main"
+hope-create-user = "hope_pillar.admin:main"
 
 [tool.uv.sources]
 hope-core = { workspace = true }

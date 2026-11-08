@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hmac
 
-import psycopg
 from fastapi import APIRouter, Response, status
 from hope_core import store
 from hope_core.auth import (
@@ -21,14 +20,15 @@ from hope_core.schemas import UserView
 from hope_core.settings import HopeSettings, get_settings
 from pydantic import BaseModel, Field
 
+from hope_pillar.accounts import EMAIL_PATTERN, MIN_PASSWORD, EmailTaken, create_user, weak_password
+
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
 
-MIN_PASSWORD = 8
 MIN_INVITE_CODE = 16
 
 
 class SignupBody(BaseModel):
-    email: str = Field(min_length=3, max_length=320, pattern=r"^[^@\s]+@[^@\s]+$")
+    email: str = Field(min_length=3, max_length=320, pattern=EMAIL_PATTERN)
     password: str = Field(max_length=1024)
     display_name: str = Field(min_length=1, max_length=200)
     invite_code: str = Field(default="", max_length=200)
@@ -72,7 +72,7 @@ def signup(body: SignupBody, response: Response) -> UserOut:
     require_session_secret(settings)
     if not _invite_ok(body.invite_code, settings):
         raise ProblemException(403, "signup_closed", "Sign-up is invite-only")
-    if len(body.password) < MIN_PASSWORD:
+    if weak_password(body.password):
         raise ProblemException(
             422,
             "weak_password",
@@ -85,11 +85,10 @@ def signup(body: SignupBody, response: Response) -> UserOut:
                 }
             ],
         )
-    password_hash = hash_password(body.password)
     try:
         with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
-            user = store.create_user(tx, body.email, password_hash, body.display_name.strip())
-    except psycopg.errors.UniqueViolation as exc:
+            user = create_user(tx, body.email, body.password, body.display_name)
+    except EmailTaken as exc:
         raise ProblemException(409, "email_taken", "Email already registered") from exc
     _set_cookie(response, user, settings)
     return UserOut(user=_view(user))

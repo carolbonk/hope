@@ -50,3 +50,18 @@ docker run --network host -e DATABASE_URL=postgresql://postgres:pw@localhost:543
 NEXT_PUBLIC_HOPE_API_URL=/ HOPE_API_ORIGIN=http://localhost:8001 pnpm --filter @hope/web build
 PORT=3001 pnpm --filter @hope/web start
 ```
+
+## Create accounts
+
+The live site has no sign-up form. An admin adds each team member from a shell with database access:
+
+```bash
+railway run hope-create-user --email ana@example.org --name "Ana"    # or: uv run hope-create-user ...
+railway run hope-create-user --email ana@example.org --reset-password # new password for an existing account
+```
+
+- The password is asked for twice at a hidden prompt. For scripts, pipe it in with `--password-stdin`.
+  It is never an argument, and the command never prints it.
+- The rules match sign-up: at least 8 characters, a lowercased email, one account per email in the single tenant.
+  An existing email fails with a non-zero exit, and `--reset-password` fails for an unknown one.
+- The output is only the email and the new account's user id.
