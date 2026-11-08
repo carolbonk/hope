@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from typing import Any
-from uuid import NAMESPACE_URL, UUID, uuid5
+from uuid import UUID
 
 import psycopg
 import pytest
 from hope_core import store
 from hope_core.model_gateway import MockProvider, ModelGateway
 from hope_discovery import mock, repo
-from hope_discovery.agent import DiscoveryAgent
+from hope_discovery.agent import DiscoveryAgent, grant_id_for
 from hope_discovery.demo import DEMO_REQUEST, _DemoRepo, demo_profile
 from hope_discovery.mock import ORAL, UNQUOTED
 from hope_discovery.settings import DiscoverySettings
@@ -40,7 +40,7 @@ def test_rerun_keeps_status_and_is_new(clean_db: str) -> None:
     events = repo.with_tx(lambda tx: repo.list_events(tx, first))
     saved = [e for e in events if e["kind"] == "candidate"]
     assert len(saved) == 3 and all(e["is_new"] for e in saved)
-    oral = uuid5(NAMESPACE_URL, ORAL)
+    oral = grant_id_for(ORAL)
     assert oral in {e["grant_id"] for e in saved}
     repo.with_tx(lambda tx: store.set_candidate_status(tx, oral, "saved"))
 

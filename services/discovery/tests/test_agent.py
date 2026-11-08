@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from uuid import UUID
 
 import pytest
 from hope_core.model_gateway import RunBudget
-from hope_discovery.agent import PROGRAM_TOTAL_CONCERN, SEARCH_UNAVAILABLE, DiscoveryFailed
+from hope_discovery.agent import (
+    PROGRAM_TOTAL_CONCERN,
+    SEARCH_UNAVAILABLE,
+    DiscoveryFailed,
+    grant_id_for,
+)
 from hope_discovery.mock import (
     CLOSED,
     DEMO_QUERIES,
@@ -141,3 +147,10 @@ def test_program_total_amount_dropped(run_agent: Any) -> None:
     (grant,) = repo.candidates.values()
     assert grant.amount_max is None
     assert PROGRAM_TOTAL_CONCERN in grant.concerns
+
+
+def test_grant_id_is_stable_per_tenant() -> None:
+    url = "https://example.org/grants/oral-health"
+    a, b = UUID(int=1), UUID(int=2)
+    assert grant_id_for(url, a) == grant_id_for(url, a)
+    assert grant_id_for(url, a) != grant_id_for(url, b)

@@ -23,6 +23,7 @@ from hope_core.model_gateway import (
 )
 from hope_core.schemas.agency_profile import AgencyProfile
 from hope_core.schemas.hackathon import DiscoveryProgress, GrantCandidate, JobStatus
+from hope_core.settings import get_settings
 from hope_core.web import FetchError, Link, Page, SearchResult, WebTools
 
 from hope_discovery import prompts
@@ -69,6 +70,11 @@ class DiscoveryFailed(RuntimeError):
 
 def empty_counts() -> dict[str, int]:
     return dict.fromkeys(COUNT_KEYS, 0)
+
+
+def grant_id_for(url: str, tenant_id: UUID | None = None) -> UUID:
+    """Stable per tenant: `grant_id` is a global key, but URLs are only unique per tenant."""
+    return uuid5(NAMESPACE_URL, f"{tenant_id or get_settings().tenant_id}:{url}")
 
 
 def format_elapsed(seconds: float) -> str:
@@ -394,7 +400,7 @@ class DiscoveryAgent:
             o.events.append(_Event("skip", f"Skipping {v.title}: {why}", {"url": final_url}))
             return
         o.candidate = GrantCandidate(
-            grant_id=uuid5(NAMESPACE_URL, final_url),
+            grant_id=grant_id_for(final_url),
             title=v.title,
             funder=v.funder,
             url=final_url,

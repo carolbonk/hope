@@ -11,7 +11,7 @@
 
 ## Goal
 
-A nonprofit signs in with the team's invite code. It describes itself in the 6-step onboarding wizard
+A nonprofit signs in with an account its admin created. It describes itself in the 6-step onboarding wizard
 (under five minutes), then keeps working in the Hope screens under `/hope/*`. The profile is stored on the
 server (`/v1/profile`), so the discovery agent (H2) reads the same facts the user typed. In the hackathon
 every save commits directly: there are no HITL-0 proposals and no roles.
@@ -269,7 +269,7 @@ class NteeSuggestionOut(BaseModel):
 
 ### 9. Web: SC01 sign-in (to build)
 
-`app/login/page.tsx`: liquid glass, invite-code sign-up, built with `components/ui` and H0's `api/session`. Full spec: [SC01](../screens/SC01-sign-in.md).
+`app/login/page.tsx`: liquid glass, sign-in only (no sign-up form), built with `components/ui` and H0's `api/session`. Full spec: [SC01](../screens/SC01-sign-in.md).
 - After sign-in it calls `invalidateSession()`, then `me()`.
 - It goes to `/onboarding` when `onboarding_complete` is false, otherwise to `safeNext(next)` (`/hope/discover` by default).
 - The guard sends signed-out users to `/login?next=<path>`.
@@ -498,7 +498,7 @@ history and capacity on the server, password reset, team management, and syncing
 
 ## Decisions
 
-- **D1 Open sign-up?** No. Sign-up needs the team's invite code (H0 section 1); there is no email allowlist; the seeded demo user can always sign in.
+- **D1 Open sign-up?** No. `/login` has no sign-up form; an admin creates accounts through `POST /v1/auth/signup`, which needs the server's invite code (H0 section 1). There is no email allowlist; the seeded demo user can always sign in.
 - **D2 Wizard progress:** a localStorage draft (`hope.onboarding.v1`) and one `PUT` at the end (built).
 - **D3 NTEE suggestions:** included, labelled "Suggested from your mission", applied only on click (built).
 - **D4 After onboarding:** `/hope/discover?onboarded=1` (built).
