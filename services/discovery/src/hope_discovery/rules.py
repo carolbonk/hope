@@ -141,7 +141,11 @@ def _sam(p: AgencyProfile, _q: str, deadline: date | None) -> Result:
 def _uei(p: AgencyProfile, _q: str, _d: date | None) -> Result:
     if p.legal.uei:
         return "met", f"UEI {p.legal.uei} is in your profile.", None
-    return "not_met", "No UEI in your profile.", "Request a UEI at SAM.gov (it's free)."
+    return (
+        "unknown",
+        "Your profile doesn't record a UEI.",
+        "Find your UEI at SAM.gov, or request one (it's free).",
+    )
 
 
 def _place(p: AgencyProfile, q: str, _d: date | None) -> Result:
