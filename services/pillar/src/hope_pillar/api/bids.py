@@ -144,9 +144,10 @@ class BidList(BaseModel):
 
 
 class Member(BaseModel):
+    """Display names only: anyone signed in can list the team, so emails stay private."""
+
     user_id: UUID
     display_name: str
-    email: str
 
 
 class MemberList(BaseModel):
@@ -581,5 +582,5 @@ def record_submission(
 def list_members(principal: PrincipalDep) -> MemberList:
     """The team, for assigning requirements."""
     with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
-        tx.execute("SELECT user_id, display_name, email FROM users ORDER BY display_name, email")
+        tx.execute("SELECT user_id, display_name FROM users ORDER BY display_name, user_id")
         return MemberList(items=[Member.model_validate(r) for r in tx.fetchall()])

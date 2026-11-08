@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { applicationId, emptyProfile, HOPE_KEY, ORG_ID } from "@/lib/hope/store";
 import type { ApplicationView } from "@/lib/hope/sync/applications";
 import type { Application, HopeState } from "@/lib/hope/types";
@@ -10,6 +10,8 @@ const ME = "11111111-2222-4333-8444-555555555555";
 const TODAY = new Date("2026-11-07T12:00:00");
 
 const unknowns = vi.hoisted(() => ({ on: false }));
+const bids = vi.hoisted(() => ({ ids: new Set<string>() }));
+vi.mock("@/components/hope/bids/useBidIds", () => ({ useBidIds: () => bids.ids }));
 vi.mock("@/lib/hope/opportunities", async () => {
   const { demoOpportunities } = await import("@/lib/hope/demo");
   const opp = demoOpportunities(new Date("2026-11-07T12:00:00")).find((o) => o.id === "opp-sunrise-ops")!;
@@ -132,6 +134,7 @@ const c3 = () => screen.getByText("501(c)(3)", { selector: "legend" }).closest("
 beforeEach(() => {
   window.localStorage.clear();
   unknowns.on = false;
+  bids.ids = new Set();
 });
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -263,4 +266,16 @@ test("a saved check card shows its unknown amount and date honestly, never as pa
   expect(header).not.toHaveTextContent("$");
   expect(header).not.toHaveTextContent(/Invalid|NaN/);
   expect(within(header).getByText(/Rolling/)).not.toHaveClass("text-red-800");
+});
+
+it("links the header to the bid only when the grant has one", async () => {
+  serve(serverView());
+  seed();
+  await renderPage(true);
+  expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Open bid/ })).toBeNull();
+  cleanup();
+  bids.ids = new Set([GRANT]);
+  await renderPage(true);
+  expect(await screen.findByRole("link", { name: /Open bid/ })).toHaveAttribute("href", `/hope/bids/${GRANT}`);
 });

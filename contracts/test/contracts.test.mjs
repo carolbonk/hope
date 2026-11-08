@@ -61,8 +61,8 @@ test("every endpoint a hackathon screen spec calls is in the contract", () => {
 
 test("every workflow lists its screens, spec, ticket and classified steps", () => {
   for (const w of manifest.workflows) {
-    assert.match(w.spec, /^H[0-5]$/);
-    assert.ok(Number.isInteger(w.issue));
+    assert.match(w.spec, /^H[0-7]$/);
+    assert.ok(Number.isInteger(w.issue) || (w.issue === null && w.spec === "H7"), `${w.id}: issue`);
     assert.ok(w.screens.length > 0);
     for (const s of w.steps) assert.ok(["code", "llm", "web"].includes(s.kind), `${w.id}: ${s.name}`);
   }

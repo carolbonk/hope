@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { btnPrimary, btnSecondary, daysUntil, focusRing, input, Panel } from "@/components/hope/ui";
 import { useToday } from "@/components/useToday";
 import { AutoDismiss } from "@/components/ui/AutoDismiss";
@@ -101,9 +101,7 @@ export function BidWorkspace({ grantId }: { grantId: string }) {
 
       {notice && (
         <AutoDismiss key={notice.text} onDismiss={clearNotice}>
-          <p role={notice.ok ? "status" : "alert"} className={`rounded-xl border p-3 text-sm ${notice.ok ? "border-teal-ink/30 bg-[#eef6f3] text-teal-ink" : "border-red-200 bg-red-50 text-red-800"}`}>
-            {notice.text}
-          </p>
+          <Notice text={notice.text} ok={notice.ok} />
         </AutoDismiss>
       )}
       {ctx.closed && <p className="rounded-xl bg-gold/15 px-3 py-2 text-sm">{t.readOnly}</p>}
@@ -174,6 +172,22 @@ function Requirements({ ctx, members, open, setOpen }: { ctx: Ctx; members: Memb
 
 const FIELDS = ["owner", "due", "status", "note", "evidence_ref"] as const;
 
+/** A failed write (stale copy, conflict) can land while the user is scrolled far down a long form:
+ * bring it into view and focus it so it's read before it dismisses. */
+function Notice({ text, ok }: { text: string; ok: boolean }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (ok || !ref.current) return;
+    ref.current.scrollIntoView?.({ block: "center" });
+    ref.current.focus();
+  }, [text, ok]);
+  return (
+    <p ref={ref} tabIndex={-1} role={ok ? "status" : "alert"} className={`rounded-xl border p-3 text-sm ${focusRing} ${ok ? "border-teal-ink/30 bg-[#eef6f3] text-teal-ink" : "border-red-200 bg-red-50 text-red-800"}`}>
+      {text}
+    </p>
+  );
+}
+
 function ItemCard({ ctx, item, members, open, toggle }: { ctx: Ctx; item: BidItem; members: Member[]; open: boolean; toggle: () => void }) {
   const { bid, run, busy, closed, who, when, t } = ctx;
   const initial = { owner: item.owner ?? "", due: item.due ?? "", status: item.status, note: item.note, evidence_ref: item.evidence_ref };
@@ -231,6 +245,22 @@ function ItemCard({ ctx, item, members, open, toggle }: { ctx: Ctx; item: BidIte
             </a>
           )}
         </blockquote>
+      )}
+      {closed && (item.evidence_ref || item.note) && (
+        <dl className="mt-3 space-y-1 text-sm" data-testid="item-record">
+          {item.evidence_ref && (
+            <div>
+              <dt className="font-semibold text-navy">{t.evidence}</dt>
+              <dd className="break-words">{item.evidence_ref}</dd>
+            </div>
+          )}
+          {item.note && (
+            <div>
+              <dt className="font-semibold text-navy">{t.note}</dt>
+              <dd className="whitespace-pre-line break-words">{item.note}</dd>
+            </div>
+          )}
+        </dl>
       )}
       {!closed && (
         <button type="button" className={`mt-3 text-sm text-teal-ink underline ${focusRing}`} aria-expanded={open} onClick={toggle}>

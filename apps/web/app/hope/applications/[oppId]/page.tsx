@@ -4,6 +4,8 @@ import Link from "next/link";
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ClientOnly, Panel, StageBar, btnPrimary, btnSecondary, focusRing, input } from "@/components/hope/ui";
 import { useGrantFacts } from "@/components/hope/discovery/facts";
+import { useBidsCopy } from "@/components/hope/bids/copy";
+import { useBidIds } from "@/components/hope/bids/useBidIds";
 import { DraftPanel, type Up } from "@/components/hope/draft/DraftPanel";
 import { ApplyWorkspace, ServerNotice } from "@/components/hope/apply/ApplyWorkspace";
 import { ReadyGate } from "@/components/hope/apply/ReadyGate";
@@ -196,14 +198,23 @@ function Body({ opp, app, actions, eligible, eligibility, draft, view, who, noti
   const { state } = useHope();
   const facts = useGrantFacts();
   const days = facts.days(opp);
+  const bidIds = useBidIds();
+  const openBid = useBidsCopy().matrix.open;
   const canAdvance = !actions.busy && (app.stage === "saved" || (app.stage === "eligibility" && eligible) || app.stage === "drafting");
 
   return (
     <div className="space-y-4">
       <header className="space-y-1">
-        <Link href="/hope/saved" className={`text-sm text-teal-ink underline ${focusRing}`}>
-          ← {h.saved.title}
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Link href="/hope/saved" className={`text-sm text-teal-ink underline ${focusRing}`}>
+            ← {h.saved.title}
+          </Link>
+          {bidIds.has(opp.id) && (
+            <Link href={`/hope/bids/${opp.id}`} className={`text-sm font-semibold text-teal-ink underline ${focusRing}`}>
+              {openBid} ↗
+            </Link>
+          )}
+        </div>
         <p className="pt-3 text-[11px] uppercase tracking-[0.16em] text-muted">
           {opp.funder}
           {opp.source.kind === "demo" && (

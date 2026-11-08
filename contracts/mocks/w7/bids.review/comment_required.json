@@ -1,0 +1,12 @@
+{
+  "status": 422,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Add a comment explaining what to change.",
+    "status": 422,
+    "code": "comment_required"
+  }
+}

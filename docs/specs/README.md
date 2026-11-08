@@ -111,6 +111,7 @@ each, and finish by day 2 noon. Day 2 afternoon is integration and demo rehearsa
 | [H4](features/H4-eligibility-and-approval.md) | Eligibility checklist, required documents, simulated Program/Director approval | SC27 `/hope/applications/[oppId]` | H0 | none | Built (PR #34) |
 | [H5](features/H5-application-draft.md) | 6-section draft (`POST /api/hope/draft`, AI or template), edit, copy/.md, mark ready | SC28 `/hope/applications/[oppId]` | H0 | none | Built (PR #34) |
 | [H6](features/H6-application-help.md) | Application help: reads each saved grant's own questions, limits and attachments, drafts answers from the profile, stores the application on the server (`/v1/applications`) | SC27/SC28 `/hope/applications/[oppId]` (SC29 workspace) | H0-H3 | 0720-0729 | Built (PR #53) |
+| [H7](features/H7-bids.md) | Opportunity matrix (sample score) and My bids: owners, internal dates, reviews, blockers, final review, recorded receipt (`/v1/bids`, `/v1/members`) | SC30 `/hope/matrix`, SC31 `/hope/bids`, SC32 `/hope/bids/[oppId]` | H0, H3, H6 | 0730-0739 | Built (PR #78, #80) |
 
 **Frontend (PR #34):** `apps/web` follows the Hope frontend zip: `app/`, `components/`, `lib/` at the package root, routes under `/hope/*` (`/hope/discover`, `/hope/saved`, `/hope/deadlines`, `/hope/profile`, `/hope/applications/[oppId]`), plus SC11 `/onboarding` and the liquid-glass CSS. H4/H5 follow the zip's application flow; their state lives in the browser (`hope:state:v1`) until the backend track lands.
 

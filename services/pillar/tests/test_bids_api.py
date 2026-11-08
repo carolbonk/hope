@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
+import os
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -24,6 +27,7 @@ from hope_pillar.api.applications import save_requirements
 
 INVITE = "test-invite-code-0123456789"  # set by the hope_api fixture
 URL = "https://ccf.example.org/apply"
+MOCKS = Path(__file__).resolve().parents[3] / "contracts" / "mocks" / "w7"
 
 
 def problem(response: Any, status: int, code: str) -> dict[str, Any]:
@@ -113,7 +117,7 @@ def call(
 
 def me(api: TestClient) -> str:
     (member,) = api.get("/v1/members").json()["items"]
-    assert member["display_name"] == "Bea"
+    assert member["display_name"] == "Bea" and "email" not in member
     return str(member["user_id"])
 
 
@@ -304,3 +308,84 @@ def test_another_tenant_cannot_see_the_bid(api: TestClient, grant: GrantCandidat
 def test_bids_need_a_session(hope_api: TestClient) -> None:
     assert hope_api.get("/v1/bids").status_code == 401
     assert hope_api.get("/v1/members").status_code == 401
+
+
+def shape(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {k: shape(v) for k, v in sorted(value.items())}
+    if isinstance(value, list):
+        return [shape(v) for v in value[:1]]
+    return type(value).__name__
+
+
+def same(response: Any, name: str) -> dict[str, Any]:
+    """The response has the status, keys and value types of `contracts/mocks/w7/<name>.json`."""
+    body: dict[str, Any] = response.json()
+    path = MOCKS / f"{name}.json"
+    if os.environ.get("UPDATE_CONTRACT_MOCKS"):
+        headers = (
+            {"content-type": "application/problem+json"} if response.status_code >= 400 else {}
+        )
+        mock = {"status": response.status_code, "headers": headers, "body": body}
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(mock, indent=2) + "\n")
+    expected = json.loads(path.read_text())
+    assert response.status_code == expected["status"], (name, response.text)
+    assert shape(body) == shape(expected["body"]), name
+    if "code" in expected["body"]:
+        assert body["code"] == expected["body"]["code"], name
+    return body
+
+
+def test_responses_match_the_contract_mocks(api: TestClient, grant: GrantCandidate) -> None:
+    owner = same(api.get("/v1/members"), "members.list/ok")["items"][0]["user_id"]
+    same(api.get("/v1/bids"), "bids.list/empty")
+    same(api.post("/v1/bids", json={"grant_id": str(uuid4())}), "bids.start/not_found")
+    read(
+        same(api.post("/v1/bids", json={"grant_id": str(grant.grant_id)}), "bids.start/created"),
+        requirements(deadline=date.today() + timedelta(days=30)),
+    )
+    same(api.post("/v1/bids", json={"grant_id": str(grant.grant_id)}), "bids.start/existing")
+    same(api.get(f"/v1/bids/{uuid4()}"), "bids.get/not_found")
+    bid = same(api.get(f"/v1/bids/{grant.grant_id}"), "bids.get/ok")
+    same(call(api, bid, "final-review", {}), "bids.final_review/blocked")
+    same(
+        call(
+            api,
+            bid,
+            "submission",
+            {"receipt": "R-1", "portal": "x", "submitted_at": "2026-11-20T10:00:00Z"},
+        ),
+        "bids.submission/not_final_reviewed",
+    )
+    same(call(api, bid, "items/need/review", {"decision": "approved"}), "bids.review/not_ready")
+    same(call(api, bid, "items/need", {"owner": str(uuid4())}, "PUT"), "bids.item/unknown_member")
+    same(
+        call(api, bid | {"version": 0}, "items/need", {"note": "x"}, "PUT"),
+        "bids.item/version_mismatch",
+    )
+    bid = same(
+        call(
+            api,
+            bid,
+            "items/need",
+            {"owner": owner, "status": "ready", "evidence_ref": "Drive: Need.docx"},
+            "PUT",
+        ),
+        "bids.item/ok",
+    )
+    same(
+        call(api, bid, "items/need/review", {"decision": "changes_requested"}),
+        "bids.review/comment_required",
+    )
+    bid = same(call(api, bid, "items/need/review", {"decision": "approved"}), "bids.review/ok")
+    bid = prepare(api, bid, owner)
+    bid = same(call(api, bid, "final-review", {"comment": "Ready to send"}), "bids.final_review/ok")
+    receipt = {
+        "receipt": "CCF-2026-0042",
+        "portal": "CCF online portal",
+        "submitted_at": "2026-11-20T10:00:00Z",
+    }
+    bid = same(call(api, bid, "submission", receipt), "bids.submission/ok")
+    same(call(api, bid, "items/need", {"note": "x"}, "PUT"), "bids.item/submitted")
+    same(api.get("/v1/bids"), "bids.list/ok")

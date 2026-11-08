@@ -1,0 +1,30 @@
+{
+  "status": 409,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Clear every blocker first.",
+    "status": 409,
+    "code": "bid_blocked",
+    "errors": [
+      {
+        "code": "no_owner",
+        "key": "need"
+      },
+      {
+        "code": "not_ready",
+        "key": "need"
+      },
+      {
+        "code": "no_owner",
+        "key": "irs_501c3"
+      },
+      {
+        "code": "not_ready",
+        "key": "irs_501c3"
+      }
+    ]
+  }
+}

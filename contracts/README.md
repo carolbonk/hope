@@ -56,5 +56,6 @@ Each response carries `x-mock-scenario: <endpoint>=<scenario>`, so you can see w
 - The profile is `GET/PUT/PATCH /v1/profile`. `/v1/agencies/{agency_id}/profile` is Phase 1, not the hackathon.
 - The app-shell grant badge is `GET /v1/grants?status=new&limit=1` -> `counts.new` (`limit` is 1-100).
 - W5 (H4 eligibility + simulated approval) has no `/v1` endpoints: it is browser state (`hope:state:v1`) in `apps/web`.
+- W7 (H7 bids) is `/v1/bids*` and `/v1/members`; `services/pillar/tests/test_bids_api.py` checks the real responses against `mocks/w7/**`.
 - W6 (H5 draft) uses the Next.js route `POST /api/hope/draft`, listed under `next_routes` in `manifest.json`. `pnpm mock` does not serve it;
   its `mode: "template"` is the offline stand-in, and no key returns `503 missing_openai_key`.
