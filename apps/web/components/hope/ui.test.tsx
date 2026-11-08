@@ -84,3 +84,28 @@ it("orders links by the grant journey and keeps the profile in the account menu"
   expect(screen.queryByRole("link", { name: "Our profile" })).not.toBeInTheDocument();
   expect(account).toHaveFocus();
 });
+
+it("signing out goes to /login without next, even with the guard mounted", async () => {
+  const fetch = vi.fn((url: string) => Promise.resolve(url.endsWith("/v1/auth/logout") ? w1("auth.logout/ok") : w1("me.get/onboarded")));
+  vi.stubGlobal("fetch", fetch);
+  vi.resetModules();
+  vi.stubEnv("NEXT_PUBLIC_HOPE_API_URL", "http://api.test");
+  const { HopeNav } = await import("./ui");
+  const { RequireSession } = await import("@/api/session/RequireSession");
+  render(
+    <>
+      <HopeNav />
+      <RequireSession>
+        <p>page content</p>
+      </RequireSession>
+    </>,
+  );
+  await act(async () => {});
+  expect(screen.getByText("page content")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: /Dana Okafor/ }));
+  await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
+  await act(async () => {});
+  expect(nav.replace).toHaveBeenCalledWith("/login");
+  expect(nav.replace).not.toHaveBeenCalledWith(expect.stringContaining("next="));
+  expect(fetch.mock.calls.filter(([url]) => String(url).endsWith("/v1/me"))).toHaveLength(1);
+});

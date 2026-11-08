@@ -13,16 +13,17 @@ export function RequireSession({ children }: { children: React.ReactNode }) {
 }
 
 function OnlineGuard({ children }: { children: React.ReactNode }) {
-  const { status, me, retry } = useSession();
+  const { status, me, retry, signedOut } = useSession();
   const { h } = useHopeT();
   const router = useRouter();
   const path = usePathname();
   const notOnboarded = status === "ready" && !me?.onboarding_complete;
 
   useEffect(() => {
-    if (status === "signed_out") router.replace(`/login?next=${encodeURIComponent(path + window.location.search)}`);
+    if (status === "signed_out")
+      router.replace(signedOut ? "/login" : `/login?next=${encodeURIComponent(path + window.location.search)}`);
     else if (notOnboarded) router.replace("/onboarding");
-  }, [status, notOnboarded, path, router]);
+  }, [status, signedOut, notOnboarded, path, router]);
 
   if (status === "ready" && !notOnboarded) return <>{children}</>;
   if (status === "unreachable") {

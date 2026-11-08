@@ -20,7 +20,8 @@ export function safeNext(next: string | null | undefined): string {
 }
 
 export type SessionStatus = "offline" | "loading" | "signed_out" | "unreachable" | "ready";
-type Snapshot = { status: SessionStatus; me?: Me };
+/** `signedOut` = the user clicked Sign out (go to `/login`), not an expired session (keep `next`). */
+type Snapshot = { status: SessionStatus; me?: Me; signedOut?: boolean };
 
 // One cached `me()` shared by every component.
 let snapshot: Snapshot = online ? { status: "loading" } : { status: "offline" };
@@ -68,6 +69,13 @@ function subscribe(listener: () => void) {
 export function invalidateSession() {
   loaded = false;
   if (online) set({ status: "loading" });
+}
+
+/** Sign out: `POST /v1/auth/logout`, then drop the cached session without refetching it. */
+export async function signOut(): Promise<void> {
+  await logout();
+  loaded = true;
+  set({ status: "signed_out", signedOut: true });
 }
 
 export function useSession(): Snapshot & { retry: () => void } {
