@@ -41,7 +41,7 @@ def test_put_creates_profile_with_defaults(signed_in: Any, migrated_db: str) -> 
     assert created.status_code == 201, created.text
     assert created.headers["ETag"] == '"1"'
     body = created.json()
-    assert body["version"] == 1 and body["updated_by"] == "demo@hope.org"
+    assert body["version"] == 1 and body["updated_by"] == "dana@riverbend.example.org"
     assert body["onboarding_complete"] is True
     assert body["form"] == demo_form()
     assert body["ntee_labels"] == {"E32": "Community Clinics", "F30": "Mental Health Treatment"}

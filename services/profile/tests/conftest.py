@@ -52,7 +52,7 @@ def repo(conn: Conn, pillar: InMemoryPillar) -> ProfileRepository:
 
 INVITE = "test-invite-code-0123456789"
 SIGNUP = {
-    "email": "demo@hope.org",
+    "email": "dana@riverbend.example.org",
     "password": "correct-horse-battery",
     "display_name": "Dana Okafor",
     "invite_code": INVITE,
@@ -76,7 +76,8 @@ def hope_api(migrated_db: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[Any]
     settings = get_settings()
     store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)
     with psycopg.connect(migrated_db) as admin:
-        admin.execute("DELETE FROM users WHERE tenant_id = %s", (settings.tenant_id,))
+        for table in ("grant_candidates", "jobs", "users"):
+            admin.execute(f"DELETE FROM {table} WHERE tenant_id = %s", (settings.tenant_id,))
         admin.execute(
             "DELETE FROM agency_profile_versions WHERE agency_id = %s", (settings.agency_id,)
         )
