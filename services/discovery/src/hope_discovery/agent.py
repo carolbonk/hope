@@ -38,6 +38,7 @@ from hope_discovery.parse import (
     find_amount,
     find_deadline,
     has_money,
+    infer_deadline,
     parse_deadline,
     pick_award,
 )
@@ -51,6 +52,9 @@ log = logging.getLogger(__name__)
 SEARCH_UNAVAILABLE = "Web search is unavailable right now. Try again in a few minutes."
 SOMETHING_WRONG = "Something went wrong while searching. Your earlier results are safe."
 YEARLESS_CONCERN = "Deadline year not stated. Check the funder page."
+INFERRED_YEAR_CONCERN = (
+    "The page gives the deadline without a year; Hope took the year from the page. Check it."
+)
 PROGRAM_TOTAL_CONCERN = "The amount on the page looks like total program funding, not one award."
 COUNT_KEYS = (
     "urls_found",
@@ -393,6 +397,8 @@ class DiscoveryAgent:
             return
         if deadline is not None and deadline.yearless and deadline.date is None:
             concerns.append(YEARLESS_CONCERN)
+        if deadline is not None and deadline.inferred:
+            concerns.append(INFERRED_YEAR_CONCERN)
         rolling = (v.rolling or bool(deadline and deadline.rolling)) and (
             deadline is None or deadline.date is None
         )
@@ -456,12 +462,18 @@ class DiscoveryAgent:
         self, v: VerifiedExtraction, pages: list[str], today: date
     ) -> DeadlineParse | None:
         """Code decides the deadline: the model's verified quote if it gives a future date, else the
-        earliest future deadline clause code finds on the pages, else whatever the quote said
-        (rolling, year-less, or only past dates, which skips the grant)."""
+        earliest future deadline clause code finds on the pages, else a year-less date the page
+        itself dates (`infer_deadline`), else whatever the quote said (rolling, year-less, or only
+        past dates, which skips the grant)."""
         deadline = parse_deadline(v.deadline.text, today) if v.deadline else None
         if deadline is not None and deadline.date is not None:
             return deadline
         found = find_deadline(pages, today)
+        if found and found[1].date is not None and not found[1].inferred:
+            v.deadline = VerifiedQuote(found[0].text, found[0].page)
+            return found[1]
+        if v.deadline and (guess := infer_deadline(v.deadline.text, pages, today)):
+            return guess
         if found and (found[1].date is not None or deadline is None):
             v.deadline = VerifiedQuote(found[0].text, found[0].page)
             return found[1]

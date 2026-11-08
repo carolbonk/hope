@@ -74,6 +74,9 @@ class DeadlineParse:
     rolling: bool = False
     all_dates: list[_dt.date] = field(default_factory=list)
     yearless: bool = False
+    inferred: bool = (
+        False  # the page left out the year; code took it from the page (`infer_deadline`)
+    )
 
 
 def _amounts(text: str) -> list[tuple[Money, int, int]]:
@@ -132,6 +135,59 @@ def parse_deadline(quote: str | None, today: date) -> DeadlineParse:
     future = sorted(d for d in dates if d >= today)
     yearless = not dates and bool(DATE_YEARLESS.search(quote))
     return DeadlineParse(future[0] if future else None, rolling, dates, yearless)
+
+
+MONTH_DAY = re.compile(
+    r"\b(?P<month>" + _MONTH_RX + r")\.?\s+(?P<day>\d{1,2})(?:st|nd|rd|th)?\b(?!,?\s*\d{4})", re.I
+)
+WINDOW_TO = re.compile(r"\s*(?:through|thru|until|to|-|\u2013|\u2014)\s*", re.I)
+ANNUAL = re.compile(r"\b(?:each|every) year\b|\bannually\b|\byearly\b", re.I)
+CYCLE_YEAR = re.compile(
+    r"(?<![-\u2013/\d])\b(?P<a>20\d\d)\b(?![-\u2013/]\d)\s+(?:grant\s+|funding\s+)?(?:applications?"
+    r"|cycle|round|call for proposals|request for proposals|RFP|grants? program)\b"
+    r"|\b(?:grants?|program|cycle|round|fiscal year|FY)\s+(?P<b>20\d\d)\b(?![-\u2013/]\d)",
+    re.I,
+)
+
+
+def _month_days(quote: str) -> list[tuple[int, int]]:
+    """Year-less `March 1` dates, minus a window's opening date (`March 1 through June 1`)."""
+    found = list(MONTH_DAY.finditer(quote))
+    out = []
+    for i, m in enumerate(found):
+        if i + 1 < len(found) and WINDOW_TO.fullmatch(quote[m.end() : found[i + 1].start()]):
+            continue
+        out.append((MONTHS[m.group("month").lower().rstrip(".")], int(m.group("day"))))
+    return out
+
+
+def cycle_year(pages: list[str]) -> int | None:
+    """The one funding-cycle year the pages name (`2027 grant cycle`, `Grant 2027`), else None."""
+    years = {int(m.group("a") or m.group("b")) for t in pages for m in CYCLE_YEAR.finditer(t)}
+    return years.pop() if len(years) == 1 else None
+
+
+def infer_deadline(quote: str, pages: list[str], today: date) -> DeadlineParse | None:
+    """A year-less deadline gets its year only from the page: the next date when the quote says it
+    repeats (`each year`, `annually`), or the page's one cycle year. Never a guess: no year on the
+    page, or a past result, gives None (the deadline stays unknown)."""
+    days = _month_days(quote) if not _dates(quote) else []
+    year = None if ANNUAL.search(quote) else cycle_year(pages)
+    if not days or (year is None and not ANNUAL.search(quote)):
+        return None
+    out = []
+    for month, day in days:
+        for y in (year,) if year else (today.year, today.year + 1):
+            try:
+                d = date(y, month, day)
+            except ValueError:
+                continue
+            if d >= today:
+                out.append(d)
+                break
+    if not out:
+        return None
+    return DeadlineParse(min(out), all_dates=sorted(out), inferred=True)
 
 
 def has_money(text: str) -> bool:
@@ -258,11 +314,13 @@ def find_amount(pages: list[str]) -> tuple[Found, AmountParse] | None:
 
 
 def find_deadline(pages: list[str], today: date) -> tuple[Found, DeadlineParse] | None:
-    """The earliest future date the pages give as a deadline, else a rolling statement.
+    """The earliest future date the pages give as a deadline, else one `infer_deadline` can date
+    from the page, else a rolling statement.
 
     Only clauses with deadline wording count. Past dates found this way never mark a grant expired:
     pages often mention last cycle's dates."""
     dated: tuple[date, Found] | None = None
+    inferred: tuple[DeadlineParse, Found] | None = None
     rolling: Found | None = None
     for page_no, text in enumerate(pages, start=1):
         for clause in clauses(text):
@@ -274,10 +332,15 @@ def find_deadline(pages: list[str], today: date) -> tuple[Found, DeadlineParse] 
             if future and DEADLINE_WORDS.search(clause):
                 if dated is None or min(future) < dated[0]:
                     dated = (min(future), Found(_clip(clause, 0, len(clause)), page_no))
+            elif DEADLINE_WORDS.search(clause) and (guess := infer_deadline(clause, pages, today)):
+                if inferred is None or (guess.date or today) < (inferred[0].date or today):
+                    inferred = (guess, Found(_clip(clause, 0, len(clause)), page_no))
             elif rolling is None and ROLLING.search(clause) and not _dates(clause):
                 rolling = Found(_clip(clause, 0, len(clause)), page_no)
     if dated:
         return dated[1], parse_deadline(dated[1].text, today)
+    if inferred:
+        return inferred[1], inferred[0]
     if rolling:
         return rolling, DeadlineParse(None, rolling=True)
     return None

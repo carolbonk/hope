@@ -5,8 +5,10 @@ from datetime import date
 import pytest
 from hope_discovery.parse import (
     context_of,
+    cycle_year,
     find_amount,
     find_deadline,
+    infer_deadline,
     parse_amount,
     parse_deadline,
     pick_award,
@@ -152,3 +154,51 @@ def test_cumulative_awarded_reads_as_total() -> None:
     assert find_amount(["Grants Awarded $5,921,817.32"]) is None
     pick = pick_award("Up to $5,000 will be awarded per organization.")
     assert pick is not None and not pick.total
+
+
+@pytest.mark.parametrize(
+    ("quote", "pages", "want"),
+    [
+        ("Applications are accepted each year from March 1 through June 1.", [], date(2027, 6, 1)),
+        ("Proposals are due annually on December 1.", [], date(2026, 12, 1)),
+        ("The deadline is August 15.", ["Now Accepting 2027 Applications"], date(2027, 8, 15)),
+        ("Due March 3.", ["Rural Oral Health Access Grant 2027."], date(2027, 3, 3)),
+        ("LOIs due February 1 and proposals due April 1 each year.", [], date(2027, 2, 1)),
+    ],
+)
+def test_infer_deadline_takes_the_year_from_the_page(
+    quote: str, pages: list[str], want: date
+) -> None:
+    got = infer_deadline(quote, pages, TODAY)
+    assert got is not None and got.inferred and got.date == want
+
+
+@pytest.mark.parametrize(
+    ("quote", "pages"),
+    [
+        ("The deadline is August 15.", []),  # no year anywhere
+        ("The deadline is August 15.", ["Now Accepting 2026 Applications"]),  # that date has passed
+        ("The deadline is August 15.", ["2026 Applications", "2027 grant cycle"]),  # two years
+        ("The deadline is August 15.", ["2026-2027 grant cycle"]),  # a span names no one year
+        ("Applications due March 3, 2027.", ["2027 grant cycle"]),  # has its year: not inferred
+        ("Apply any time.", ["2027 grant cycle"]),
+    ],
+)
+def test_infer_deadline_never_guesses(quote: str, pages: list[str]) -> None:
+    assert infer_deadline(quote, pages, TODAY) is None
+
+
+def test_cycle_year() -> None:
+    assert cycle_year(["The 2027 grant cycle opens soon."]) == 2027
+    assert cycle_year(["FY 2027 funding"]) == 2027
+    assert cycle_year(["Founded in 2004.", "Annual report 2025"]) is None
+
+
+def test_find_deadline_prefers_stated_years_then_inferred_then_rolling() -> None:
+    page = "2027 grant cycle. Applications are rolling. Full proposals are due May 1."
+    found = find_deadline([page], TODAY)
+    assert found is not None and found[1].date == date(2027, 5, 1) and found[1].inferred
+    assert found[0].text == "Full proposals are due May 1."
+    stated = page + " Letters of intent due January 15, 2027."
+    found = find_deadline([stated], TODAY)
+    assert found is not None and found[1].date == date(2027, 1, 15) and not found[1].inferred
