@@ -314,8 +314,9 @@ H5 the "Hope grant writer" agent in `app/api/hope/draft/route.ts` (OpenAI Agents
   with `NEXT_PUBLIC_HOPE_API_URL=http://localhost:8000`.
 - The seed creates `demo@hope.org` / `hope-demo` and calls `hope_profile.demo.seed()`, then `hope_discovery.demo.seed()`.
   Each seed is idempotent.
-- With no `HOPE_OPENAI_API_KEY`, everything runs on `MockProvider` and `RecordedWebTools`, so the demo always works.
-  When it is set, `make demo` also passes it to the web process as `OPENAI_API_KEY` (H5's route), unless that is already set.
+- With no `HOPE_OPENAI_API_KEY` or `OPENAI_API_KEY`, everything runs on `MockProvider` and `RecordedWebTools`, so the demo
+  always works. The API reads `HOPE_OPENAI_API_KEY` (`hope_core.settings`) and H5's web route reads `OPENAI_API_KEY`;
+  `make demo` sets whichever is missing from the other (the org secret is `OPENAI_API_KEY`) and never prints either.
 - It sets `HOPE_COOKIE_SECURE=false` (plain `http://localhost`). If `.env` has no `HOPE_INVITE_CODE`, it writes one
   (`secrets.token_urlsafe(16)`) to `.env` and prints it once.
 - `pnpm --filter @hope/web dev` alone (no API URL) is still the offline demo on browser state.

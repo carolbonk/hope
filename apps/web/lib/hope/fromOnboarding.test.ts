@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { ProfileForm } from "@/api/profile/types";
 import { DEMO_FORM } from "@/api/profile/fixture";
 import { formFromProfile, profileFromOnboarding, seedHopeProfile } from "./fromOnboarding";
-import { HOPE_KEY, emptyProfile } from "./store";
+import { HOPE_KEY, PROFILE_STEPS, emptyProfile } from "./store";
 import type { OrgProfile } from "./types";
 
 const form: ProfileForm = {
@@ -33,6 +33,7 @@ describe("profileFromOnboarding", () => {
     expect(p.focusAreas).toEqual(expect.arrayContaining(["youth", "mentoring", "education"]));
     expect(p.programs).toEqual([{ id: "p-1", name: "Mentors", description: "One-to-one mentoring", outcomes: "", served: 120 }]);
     expect(p.completedSteps).toBe(3);
+    expect(profileFromOnboarding(form, emptyProfile(), true).completedSteps).toBe(PROFILE_STEPS);
   });
 
   it("does not claim 501(c)(3) for other tax statuses", () => {
@@ -50,6 +51,7 @@ describe("seedHopeProfile", () => {
     const state = JSON.parse(window.localStorage.getItem(HOPE_KEY)!);
     expect(state.decisions).toEqual({ "opp-1": "saved" });
     expect(state.profile.legalName).toBe("Tidepath Youth Alliance");
+    expect(state.profile.completedSteps).toBe(PROFILE_STEPS);
   });
 });
 

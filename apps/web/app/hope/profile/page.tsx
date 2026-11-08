@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { online } from "@/api/http";
 import { useEffect, useMemo, useState } from "react";
 import { btnPrimary, btnSecondary, ClientOnly, focusRing, input, PageIntro, Panel } from "@/components/hope/ui";
 import { demoOpportunities } from "@/lib/hope/demo";
@@ -149,7 +150,7 @@ function ProfileWizard() {
       <PageIntro kicker={h.look.profileEyebrow} title={h.look.profileHeading} sub={p.intro} />
       <h2 className="sr-only">{p.title}</h2>
       <p className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-navy" data-testid="not-cert">
-        {p.notCert} <span className="text-muted">{p.storage}</span>
+        {p.notCert} <span className="text-muted">{p.storage(online)}</span>
       </p>
       {done > 0 && done < PROFILE_STEPS && <p className="rounded-xl bg-sage px-3 py-2 text-sm text-navy">{p.resume(done, PROFILE_STEPS)}</p>}
 

@@ -107,7 +107,7 @@ function OnlineAccount() {
   const signOut = () => {
     setFailed(false);
     endSession().then(
-      () => router.replace("/login"),
+      () => router.replace("/login?signedOut=1"),
       () => setFailed(true),
     );
   };
