@@ -65,7 +65,7 @@ Hackathon migration ranges: H0 `0002`, H1 profile `0310-0319`, discovery `0700-0
 
 - The Hope UI is built: the zip frontend under `/hope/*` and SC11 `/onboarding`. Don't rebuild screens. Keep the
   liquid-glass `app/globals.css` and `features/onboarding/**`; map any new colour names onto glass tokens.
-- There is no `src/`: `app/`, `components/`, `lib/`, `features/`, `api/` sit at the root, and `@/*` maps to `./*`.
+- There is no `src/`: `app/`, `components/`, `lib/` (API clients in `lib/api/`), `features/` sit at the root, and `@/*` maps to `./*`.
 - The seam: pages call `useHope()` / `useOpportunities()` only. Backends plug in through `lib/hope/sync/<name>.ts`
   (profile H1, opportunities H2, decisions H3) without changing hook signatures or pages.
   H0 creates the three no-op stubs and wires them once, before H1-H5 start. H1-H3 replace only their stub's body

@@ -1,4 +1,4 @@
-import { ProblemError } from "@/api/profile/types";
+import { ProblemError } from "@/lib/api/profile/types";
 import type { NteeCode, NteeSuggestionInput, NteeSuggestionResponse, OnboardingApi } from "./types";
 
 export class HttpOnboardingApi implements OnboardingApi {

@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@/components/I18nProvider";
-import { ProblemError } from "@/api/http";
+import { ProblemError } from "@/lib/api/http";
 import type { Locale } from "@/lib/locale";
 import { LoginScreen } from "./LoginScreen";
 
@@ -46,9 +46,9 @@ const session = vi.hoisted(() => ({
   calls: [] as unknown[],
 }));
 
-vi.mock("@/api/session", async () => {
-  const real = await vi.importActual<typeof import("@/api/session")>("@/api/session");
-  const { ProblemError: PE } = await vi.importActual<typeof import("@/api/http")>("@/api/http");
+vi.mock("@/lib/api/session", async () => {
+  const real = await vi.importActual<typeof import("@/lib/api/session")>("@/lib/api/session");
+  const { ProblemError: PE } = await vi.importActual<typeof import("@/lib/api/http")>("@/lib/api/http");
   const user = { user_id: "u1", email: "demo@hope.org", display_name: "Dana Okafor" };
   const net = () => {
     if (session.state.network) throw new PE(0, "network_error", "Failed to fetch");
@@ -71,7 +71,7 @@ vi.mock("@/api/session", async () => {
   };
 });
 
-const { invalidateSession } = await import("@/api/session");
+const { invalidateSession } = await import("@/lib/api/session");
 
 function renderLogin(query = "", locale: Locale = "en") {
   act(() => nav.set(query));

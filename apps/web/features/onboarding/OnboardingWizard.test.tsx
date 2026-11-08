@@ -1,9 +1,9 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { FixtureOnboardingApi } from "@/api/onboarding/fixture";
-import { DEMO_FORM, FixtureProfileApi } from "@/api/profile/fixture";
-import { ProblemError } from "@/api/http";
-import { invalidateSession } from "@/api/session";
+import { FixtureOnboardingApi } from "@/lib/api/onboarding/fixture";
+import { DEMO_FORM, FixtureProfileApi } from "@/lib/api/profile/fixture";
+import { ProblemError } from "@/lib/api/http";
+import { invalidateSession } from "@/lib/api/session";
 import { AFTER_ONBOARDING, LOGIN_AGAIN, OnboardingWizard } from "./OnboardingWizard";
 import { DRAFT_KEY } from "./useOnboardingDraft";
 
@@ -40,7 +40,7 @@ vi.mock("next/navigation", async () => {
   };
 });
 
-vi.mock("@/api/session", async (orig) => ({ ...(await orig<typeof import("@/api/session")>()), invalidateSession: vi.fn() }));
+vi.mock("@/lib/api/session", async (orig) => ({ ...(await orig<typeof import("@/lib/api/session")>()), invalidateSession: vi.fn() }));
 
 const renderWizard = (profile = new FixtureProfileApi("empty"), onboarding = new FixtureOnboardingApi()) => {
   render(<OnboardingWizard profile={profile} onboarding={onboarding} />);

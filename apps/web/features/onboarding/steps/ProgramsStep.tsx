@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ProgramForm } from "@/api/profile";
+import type { ProgramForm } from "@/lib/api/profile";
 import { Button, TextArea, TextField } from "@/components/ui";
 import { emptyProgram } from "../model";
 import type { StepProps } from "./types";

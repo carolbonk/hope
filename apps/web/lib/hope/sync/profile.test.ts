@@ -1,13 +1,13 @@
-import { ProblemError } from "@/api/http";
-import { DEMO_FORM } from "@/api/profile/fixture";
-import type { ProfileApi, ProfileView } from "@/api/profile";
+import { ProblemError } from "@/lib/api/http";
+import { DEMO_FORM } from "@/lib/api/profile/fixture";
+import type { ProfileApi, ProfileView } from "@/lib/api/profile";
 import { HOPE_KEY } from "../store";
 import type { OrgProfile } from "../types";
 
 const h = vi.hoisted(() => ({ online: true, api: null as unknown as ProfileApi }));
 
-vi.mock("@/api/http", async (orig) => {
-  const real = await orig<typeof import("@/api/http")>();
+vi.mock("@/lib/api/http", async (orig) => {
+  const real = await orig<typeof import("@/lib/api/http")>();
   return {
     ...real,
     get online() {
@@ -15,7 +15,7 @@ vi.mock("@/api/http", async (orig) => {
     },
   };
 });
-vi.mock("@/api/profile", async (orig) => ({ ...(await orig<typeof import("@/api/profile")>()), profileApi: () => h.api }));
+vi.mock("@/lib/api/profile", async (orig) => ({ ...(await orig<typeof import("@/lib/api/profile")>()), profileApi: () => h.api }));
 
 const view = (version: number, form = DEMO_FORM, updated_at = "2026-11-07T21:40:12Z"): ProfileView => ({
   version,

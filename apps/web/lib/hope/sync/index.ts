@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { online } from "@/api/http";
-import { useSession } from "@/api/session";
+import { online } from "@/lib/api/http";
+import { useSession } from "@/lib/api/session";
 import { useHope } from "../store";
 import { flushDecisions, loadRemoteDecisions } from "./decisions";
 import { loadRemoteProfile } from "./profile";
 
-export { online as syncEnabled } from "@/api/http";
+export { online as syncEnabled } from "@/lib/api/http";
 
 const warn = (err: unknown) => console.warn("hope sync:", err);
 

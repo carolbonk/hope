@@ -1,4 +1,4 @@
-import { NTEE_CODES } from "@/api/onboarding/ntee";
+import { NTEE_CODES } from "@/lib/api/onboarding/ntee";
 import { ProblemError, type ProfileApi, type ProfileForm, type ProfileSections, type ProfileView } from "./types";
 
 export type ProfileFixtureMode = "empty" | "existing" | "invalid" | "conflict" | "network";

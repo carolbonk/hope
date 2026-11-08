@@ -249,7 +249,7 @@ class NteeSuggestionOut(BaseModel):
 
 **Offline fixture.**
 - `ntee_mock.ntee_responder(messages, schema)` reads only the `<untrusted>` blocks of the user message and applies
-  the same keyword rules as `apps/web/api/onboarding/fixture.ts`:
+  the same keyword rules as `apps/web/lib/api/onboarding/fixture.ts`:
   - `clinic` / `dental` / `preventive care` → E32
   - `mental health` → F30
   - `youth` / `mentor` → O50
@@ -400,7 +400,7 @@ db/migrations/0310_profile_extras.sql
 apps/web/app/login/**                    (page.tsx, LoginScreen.tsx, copy.ts, tests)
 apps/web/app/onboarding/**               (no change planned)
 apps/web/features/onboarding/**          (only the two fixes in section 11, plus tests)
-apps/web/api/profile/**, apps/web/api/onboarding/**
+apps/web/lib/api/profile/**, apps/web/lib/api/onboarding/**
 apps/web/lib/hope/fromOnboarding.ts (+ .test.ts)
 apps/web/lib/hope/sync/profile.ts (+ .test.ts)  (function bodies only; H0 creates it)
 apps/web/app/hope/profile/**             (owned so nobody else edits it; no change planned)
@@ -508,7 +508,7 @@ history and capacity on the server, password reset, team management, and syncing
 
 ## References
 
-- `apps/web/features/onboarding/*`, `apps/web/api/profile/*`, `apps/web/api/onboarding/*`, `apps/web/lib/hope/fromOnboarding.ts`, `apps/web/lib/hope/store.ts` (`useHope`, `normalizeProfile`), `apps/web/app/hope/profile/page.tsx`
+- `apps/web/features/onboarding/*`, `apps/web/lib/api/profile/*`, `apps/web/lib/api/onboarding/*`, `apps/web/lib/hope/fromOnboarding.ts`, `apps/web/lib/hope/store.ts` (`useHope`, `normalizeProfile`), `apps/web/app/hope/profile/page.tsx`
 - `apps/web/docs/hope/file-ownership.md`, `apps/web/docs/hope/data-contract.md`, `contracts/manifest.json` (W1, W2)
 - `services/profile/src/hope_profile/api.py`, `repository.py`, `validators.py`; `packages/core/src/hope_core/model_gateway.py`
 - NTEE core codes: NCCS, https://nccs.urban.org/project/national-taxonomy-exempt-entities-ntee-codes

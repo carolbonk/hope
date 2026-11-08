@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ProblemError } from "@/api/http";
+import { ProblemError } from "@/lib/api/http";
 import { useHopeT } from "@/lib/hope/i18n";
 import * as api from "@/lib/hope/sync/applications";
 import type { ApplicationView } from "@/lib/hope/sync/applications";

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProfileForm } from "@/api/profile";
+import type { ProfileForm } from "@/lib/api/profile";
 
 export const DRAFT_KEY = "hope.onboarding.v1";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, type KeyboardEvent } from "react";
-import type { BudgetBand } from "@/api/profile";
+import type { BudgetBand } from "@/lib/api/profile";
 import { SelectField, TextField } from "@/components/ui";
 import { cx } from "@/lib/cx";
 import { bandFor, bandLabel, BUDGET_BANDS } from "../model";

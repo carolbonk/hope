@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { online } from "@/api/http";
+import { online } from "@/lib/api/http";
 import { ErrorNotice, Loading } from "@/components/ui";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useSession } from "./index";

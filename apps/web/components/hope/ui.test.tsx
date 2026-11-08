@@ -1,6 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { w1 } from "@/api/session/testing";
+import { w1 } from "@/lib/api/session/testing";
 
 const nav = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -91,7 +91,7 @@ it("signing out goes to /login?signedOut=1 without next, even with the guard mou
   vi.resetModules();
   vi.stubEnv("NEXT_PUBLIC_HOPE_API_URL", "http://api.test");
   const { HopeNav } = await import("./ui");
-  const { RequireSession } = await import("@/api/session/RequireSession");
+  const { RequireSession } = await import("@/lib/api/session/RequireSession");
   render(
     <>
       <HopeNav />

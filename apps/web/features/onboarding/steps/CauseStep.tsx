@@ -1,6 +1,6 @@
 "use client";
 
-import type { OnboardingApi } from "@/api/onboarding";
+import type { OnboardingApi } from "@/lib/api/onboarding";
 import { NteePicker } from "../NteePicker";
 import type { StepProps } from "./types";
 

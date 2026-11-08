@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { ProblemError } from "@/api/http";
+import { ProblemError } from "@/lib/api/http";
 import { I18nProvider } from "@/components/I18nProvider";
 import { DiscoveryProblem } from "./api";
 import { DiscoveryPanel } from "./DiscoveryPanel";

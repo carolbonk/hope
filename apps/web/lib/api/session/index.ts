@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useSyncExternalStore } from "react";
-import { apiFetch, online, ProblemError, UNAUTHORIZED_EVENT } from "@/api/http";
+import { apiFetch, online, ProblemError, UNAUTHORIZED_EVENT } from "@/lib/api/http";
 
 // Mirror contracts/mocks/w1/**.
 export type User = { user_id: string; email: string; display_name: string };

@@ -3,9 +3,9 @@
 import { seedHopeProfile } from "@/lib/hope/fromOnboarding";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { onboardingApi as defaultOnboardingApi, type OnboardingApi } from "@/api/onboarding";
-import { profileApi as defaultProfileApi, ProblemError, type ProfileApi, type ProfileForm } from "@/api/profile";
-import { invalidateSession } from "@/api/session";
+import { onboardingApi as defaultOnboardingApi, type OnboardingApi } from "@/lib/api/onboarding";
+import { profileApi as defaultProfileApi, ProblemError, type ProfileApi, type ProfileForm } from "@/lib/api/profile";
+import { invalidateSession } from "@/lib/api/session";
 import { Button, Card, ErrorNotice, SuccessNotice } from "@/components/ui";
 import { cx } from "@/lib/cx";
 import { clearDraft, loadDraft, saveDraft } from "./useOnboardingDraft";

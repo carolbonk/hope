@@ -43,7 +43,7 @@ services/<svc>/tests/test_<feature>.py
 services/pillar/src/hope_pillar/api/<router>.py
 services/pillar/tests/snapshots/openapi/<router>.json
 apps/web/features/<feature>/**
-apps/web/api/<feature>/**
+apps/web/lib/api/<feature>/**
 apps/web/app/<route>/page.tsx
 db/migrations/<reserved>.sql
 docs/specs/README.md (this spec's status row only)

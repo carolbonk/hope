@@ -1,4 +1,4 @@
-import { API_URL, online } from "@/api/http";
+import { API_URL, online } from "@/lib/api/http";
 import { FixtureProfileApi } from "./fixture";
 import { HttpProfileApi } from "./http";
 import type { ProfileApi } from "./types";

@@ -1,5 +1,5 @@
 import type { Money } from "@hope/schemas";
-import { apiFetch, online } from "@/api/http";
+import { apiFetch, online } from "@/lib/api/http";
 import type { Currency, Opportunity, Purpose } from "../types";
 
 /** One `GET /v1/grants` item (H3's `GrantCard`); only the fields this adapter reads. */

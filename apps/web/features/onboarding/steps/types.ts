@@ -1,4 +1,4 @@
-import type { ProfileForm } from "@/api/profile";
+import type { ProfileForm } from "@/lib/api/profile";
 import type { Errors } from "../model";
 
 export interface StepProps {
