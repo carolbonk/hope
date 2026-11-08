@@ -555,6 +555,11 @@ are. Don't touch `app/globals.css`, `components/ui/**`, `features/onboarding/**`
 | AC21 | `services/discovery/tests/test_parse.py::test_pick_award_prefers_one_award_over_totals`, `::test_find_amount_and_deadline_on_page`, `::test_find_deadline_rolling_none_and_past_only`, `::test_context_of_finds_the_clause`; `test_agent.py::test_code_finds_amount_and_deadline_the_model_missed`, `::test_program_total_quote_replaced_by_award_on_page` | unit |
 | AC22 | `apps/web/lib/hope/sync/opportunities.test.ts::keeps what is known and leaves the rest unknown`, `::sync off or error gives none`, `::lists only undecided incomplete grants and shares the reads with the deck` | web unit |
 
+Live check (needs a key, not run in CI): `HOPE_OPENAI_API_KEY=... uv run python -m hope_discovery.live_check
+[--json out.json]` runs the demo profile in memory (`MemoryRepo`, no database) against real OpenAI and the live
+web, and prints the counts, each grant's amount and deadline (complete vs check cards), and fetch failures by
+`FetchError.code` and site. Offline test: `services/discovery/tests/test_live_check.py`.
+
 Commands: `uv run pytest -q services/discovery services/pillar`, the lint/mypy commands in `AGENTS.md`, and
 `pnpm --filter @hope/web typecheck && pnpm --filter @hope/web lint && pnpm --filter @hope/web test`.
 
@@ -573,6 +578,12 @@ Commands: `uv run pytest -q services/discovery services/pillar`, the lint/mypy c
 6. **H3 (optional):** `eligibility_summary` on `GrantCard` in `GET /v1/grants`. Fallback: the generic
    `funder_eligibility` requirement label.
 7. **Shared parsing:** promote `parse_amount` / `parse_deadline` into `hope_core` only if another spec needs them.
+8. **H0 (`hope_core.web`, information only):** in live runs about 2 in 3 failed pages are `http_403` from
+   Cloudflare / Pantheon bot protection (e.g. `confluencehealth.org`, `hca.wa.gov`, `arcorafoundation.org`,
+   `hrsa.gov`). The same URLs return 200 to `curl` with the same `User-Agent`, and 403 to plain `httpx`, so
+   the block is on the client fingerprint, not the headers or the IP pinning. No header change fixes it, and
+   Hope shouldn't work around bot protection. Other failures: `network` (one site's TLS chain is incomplete),
+   `http_429`, and `unsupported_content_type` for `.docx` application forms. Nothing for H0 to change now.
 
 ## Out of scope
 
