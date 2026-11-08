@@ -261,6 +261,14 @@
               }
             ]
           },
+          "changes": {
+            "description": "What the last read changed from the one before",
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
           "checklist": {
             "$ref": "#/components/schemas/Checklist"
           },
@@ -359,6 +367,25 @@
               }
             ]
           },
+          "requirements_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirements Revision"
+          },
+          "rules": {
+            "description": "This grant's eligibility, budget and conditional rules, checked by code",
+            "items": {
+              "$ref": "#/components/schemas/RuleCheck"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
           "stage": {
             "enum": [
               "saved",
@@ -415,6 +442,9 @@
           "facts",
           "terms",
           "answers_job",
+          "rules",
+          "changes",
+          "requirements_revision",
           "checklist",
           "ask",
           "approvals",
@@ -493,6 +523,28 @@
           "decision"
         ],
         "title": "ApprovalBody",
+        "type": "object"
+      },
+      "AskBody": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_minor": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000000000.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "currency": {
+            "const": "USD",
+            "default": "USD",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_minor"
+        ],
+        "title": "AskBody",
         "type": "object"
       },
       "Attachment": {
@@ -574,6 +626,55 @@
         "title": "BudgetRequirements",
         "type": "object"
       },
+      "Change": {
+        "description": "What differs between two reads of the same grant's requirements.",
+        "properties": {
+          "before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "change": {
+            "enum": [
+              "added",
+              "removed",
+              "changed"
+            ],
+            "title": "Change",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "what": {
+            "enum": [
+              "question",
+              "limit",
+              "upload",
+              "deadline",
+              "max_request",
+              "eligibility",
+              "rule"
+            ],
+            "title": "What",
+            "type": "string"
+          }
+        },
+        "required": [
+          "what",
+          "change",
+          "text"
+        ],
+        "title": "Change",
+        "type": "object"
+      },
       "Checklist": {
         "properties": {
           "complete": {
@@ -638,7 +739,8 @@
               "budget",
               "deadline",
               "submission",
-              "prep"
+              "prep",
+              "rule"
             ],
             "title": "Kind",
             "type": "string"
@@ -767,7 +869,8 @@
               "requirements",
               "draft",
               "edit",
-              "fact"
+              "fact",
+              "ask"
             ],
             "title": "Kind",
             "type": "string"
@@ -899,6 +1002,12 @@
             "title": "Need",
             "type": "string"
           },
+          "shared": {
+            "default": false,
+            "description": "Given on another application and reused here",
+            "title": "Shared",
+            "type": "boolean"
+          },
           "updated_at": {
             "format": "date-time",
             "title": "Updated At",
@@ -953,6 +1062,18 @@
             "description": "What staff supplied; redraft to use it",
             "title": "Answer"
           },
+          "fact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The saved fact that answers it, if any",
+            "title": "Fact"
+          },
           "owner": {
             "enum": [
               "program",
@@ -972,6 +1093,18 @@
               }
             ],
             "title": "Question Key"
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The grant rule this comes from, if any",
+            "title": "Rule"
           },
           "text": {
             "title": "Text",
@@ -1193,6 +1326,14 @@
             "$ref": "#/components/schemas/BudgetRequirements",
             "default": {}
           },
+          "conditions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Sourced"
+            },
+            "title": "Conditions",
+            "type": "array"
+          },
           "eligibility": {
             "default": [],
             "items": {
@@ -1210,7 +1351,7 @@
             "type": "array"
           },
           "prompt_version": {
-            "default": "requirements-2",
+            "default": "requirements-3",
             "title": "Prompt Version",
             "type": "string"
           },
@@ -1305,6 +1446,87 @@
           "finished_at"
         ],
         "title": "RequirementsJob",
+        "type": "object"
+      },
+      "RuleCheck": {
+        "properties": {
+          "confirmed_by_staff": {
+            "default": false,
+            "title": "Confirmed By Staff",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "eligibility",
+              "budget",
+              "conditional"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "owner": {
+            "enum": [
+              "program",
+              "finance",
+              "director"
+            ],
+            "title": "Owner",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "met",
+              "not_met",
+              "unknown",
+              "applies",
+              "not_applicable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "todo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Todo"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "label",
+          "status",
+          "reason",
+          "quote",
+          "url",
+          "owner"
+        ],
+        "title": "RuleCheck",
         "type": "object"
       },
       "Sourced": {
@@ -1935,6 +2157,75 @@
           }
         },
         "summary": "Review",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/ask": {
+      "post": {
+        "description": "How much the nonprofit is requesting; the budget and conditional rules use it.",
+        "operationId": "set_ask_v1_applications__application_id__ask_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Ask",
         "tags": [
           "applications"
         ]

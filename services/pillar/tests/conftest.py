@@ -90,7 +90,7 @@ def hope_api(migrated_db: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[Test
     settings = get_settings()
     store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)
     with psycopg.connect(migrated_db) as conn:
-        for table in ("grant_candidates", "jobs", "users"):
+        for table in ("grant_candidates", "jobs", "users", "org_facts"):
             conn.execute(f"DELETE FROM {table} WHERE tenant_id = %s", (settings.tenant_id,))
         conn.execute(
             "DELETE FROM agency_profile_versions WHERE agency_id = %s", (settings.agency_id,)

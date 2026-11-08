@@ -398,3 +398,104 @@ def test_staff_facts_replace_to_confirm_on_redraft(
 
     app = call(api, app, "facts", {"need": fact["need"], "answer": ""}).json()
     assert app["facts"] == []
+
+
+RULES_FORM = (
+    PASTED_FORM
+    + "\nApplicants must be 501(c)(3) nonprofits located in Washington."
+    + "\nApplicants requesting more than $50,000 must submit an audit."
+)
+
+
+def test_grant_rules_are_checked_and_changes_shown(
+    api: TestClient, grant: GrantCandidate, drafting: pytest.MonkeyPatch
+) -> None:
+    app = saved_app(api, grant)
+    base = f"/v1/applications/{app['application_id']}"
+    app = api.post(f"{base}/requirements/paste", json={"text": RULES_FORM}).json()
+    assert app["changes"] == [] and app["requirements_revision"] == 1
+    rules = {r["kind"]: r for r in app["rules"]}
+    assert rules["eligibility"]["status"] == "met"
+    assert rules["eligibility"]["quote"] == (
+        "Applicants must be 501(c)(3) nonprofits located in Washington."
+    )
+    assert rules["conditional"]["status"] == "unknown"
+
+    problem(call(api, app, "ask", {"amount_minor": 0}), 422, "validation_failed")
+    app = call(api, app, "ask", {"amount_minor": 6_000_000}).json()
+    assert app["ask"] == {"amount_minor": 6_000_000, "currency": "USD"}
+    audit = next(r for r in app["rules"] if r["kind"] == "conditional")
+    assert audit["status"] == "applies" and audit["owner"] == "finance"
+    assert any(
+        n["text"] == f"Required for you: {audit['quote']}"
+        for n in app["checklist"]["inputs_needed"]
+    )
+
+    more = "Applicants must be located in Ohio.\nUpload your board list."
+    app = api.post(f"{base}/requirements/paste", json={"text": more}).json()
+    assert app["requirements_revision"] == 2
+    assert [(c["what"], c["change"], c["text"]) for c in app["changes"]] == [
+        ("upload", "added", "board list"),
+        ("eligibility", "added", "Applicants must be located in Ohio."),
+    ]
+    ohio = next(r for r in app["rules"] if "Ohio" in r["quote"])
+    assert ohio["status"] == "not_met" and "Washington" not in ohio["reason"]
+
+    app = call(api, app, "stage", {"to": "eligibility"}).json()
+    body = problem(call(api, app, "stage", {"to": "approval"}), 409, "stage_blocked")
+    assert "Location" in body["errors"][0]["message"]
+    app = call(
+        api, app, "evidence", {"requirement_id": ohio["key"], "status": "yes", "note": "HQ moved"}
+    ).json()
+    ohio = next(r for r in app["rules"] if r["key"] == ohio["key"])
+    assert (ohio["status"], ohio["reason"]) == ("met", "Confirmed by staff: HQ moved")
+    assert call(api, app, "stage", {"to": "approval"}).status_code == 200
+
+
+def test_staff_facts_are_reused_on_other_grants(
+    api: TestClient, grant: GrantCandidate, drafting: pytest.MonkeyPatch
+) -> None:
+    first = saved_app(api, grant)
+    fact = {"need": "local data on need", "answer": "38% of residents live 30+ miles away."}
+    call(api, first, "facts", fact)
+
+    other = GrantCandidate(
+        grant_id=uuid4(),
+        title="Rural Clinic Fund",
+        funder="Another Foundation",
+        summary="Rural clinics.",
+        url=f"https://another.example.org/{uuid4().hex[:6]}",
+        fit_score=70,
+        discovered_at=datetime(2026, 11, 7, 15, tzinfo=UTC),
+    )
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        store.upsert_candidate(tx, other)
+    assert api.post(f"/v1/grants/{other.grant_id}/save").status_code == 200
+    second_id = next(
+        i["application_id"]
+        for i in api.get("/v1/applications").json()["items"]
+        if i["grant_id"] == str(other.grant_id)
+    )
+    base = f"/v1/applications/{second_id}"
+    app = api.get(base).json()
+    assert [(f["need"], f["shared"]) for f in app["facts"]] == [(fact["need"], True)]
+
+    app = api.post(f"{base}/requirements/paste", json={"text": PASTED_FORM}).json()
+    need = app["questions"][0]["key"]
+    app = api.post(f"{base}/answers/{need}/draft").json()
+    answer = next(a for a in app["answers"] if a["question_key"] == need)
+    assert answer["to_confirm"] == []
+
+
+def test_a_new_paste_replaces_the_deadline_and_shows_the_change(
+    api: TestClient, grant: GrantCandidate, drafting: pytest.MonkeyPatch
+) -> None:
+    app = saved_app(api, grant)
+    base = f"/v1/applications/{app['application_id']}"
+    form = "What problem will this grant address? (200 words)\nApplications are due March 1, 2027."
+    api.post(f"{base}/requirements/paste", json={"text": form})
+    later = form.replace("March 1, 2027", "March 15, 2027")
+    app = api.post(f"{base}/requirements/paste", json={"text": later}).json()
+    assert app["requirements"]["submission"]["deadline_date"] == "2027-03-15"
+    assert [(c["what"], c["change"]) for c in app["changes"]] == [("deadline", "changed")]
+    assert "March 1, 2027" in (app["changes"][0]["before"] or "")
