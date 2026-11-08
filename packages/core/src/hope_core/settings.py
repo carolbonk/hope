@@ -29,6 +29,7 @@ class HopeSettings(BaseSettings):
     agency_id: UUID = UUID("2c3d4e5f-6a7b-4c8d-9e0f-a1b2c3d4e5f6")
     session_secret: str | None = None  # required to sign in; `make demo` writes one to .env
     invite_code: str | None = None
+    open_login: bool = False  # temporary: any new email signs in and gets an account
     cookie_secure: bool = True
     web_origin: str = "http://localhost:3000"
     openai_api_key: str | None = None

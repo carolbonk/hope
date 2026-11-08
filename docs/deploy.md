@@ -26,6 +26,7 @@ browser ── https://<web>/v1/* ──▶ Vercel (Next.js rewrite) ──▶ R
 | `HOPE_SESSION_SECRET` | random, 32+ bytes |
 | `HOPE_INVITE_CODE` | shared with people allowed to sign up |
 | `HOPE_WEB_ORIGIN` | the production web URL, e.g. `https://hope.vercel.app` |
+| `HOPE_OPEN_LOGIN` | optional, temporary: `true` lets any new email sign in and creates its account (existing emails still need their password). Leave unset for invite/admin-only accounts. |
 | `HOPE_MODEL_PROVIDER`, `HOPE_OPENAI_API_KEY` | `openai` and the key (leave unset for the offline mock) |
 | `HOPE_SEED_DEMO` | `1` to keep `demo@hope.org` / `hope-demo` available |
 
