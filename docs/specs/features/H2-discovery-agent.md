@@ -13,7 +13,8 @@
 
 One click turns the nonprofit's profile into real, open grants in the Discover deck. A background job:
 1. plans web searches from the profile (LLM)
-2. searches the web (OpenAI web search, through H0's `hope_core.web.search`)
+2. searches the web (OpenAI web search, through H0's `hope_core.web.search`), plus Grants.gov for posted
+   federal notices (`hope_discovery.grantsgov`, below)
 3. reads each result page live (code, no LLM)
 4. keeps only open grant opportunities and pulls out funder, amount, deadline and eligibility, each backed
    by an exact quote (LLM suggests, code verifies)
@@ -560,6 +561,35 @@ are. Don't touch `app/globals.css`, `components/ui/**`, `features/onboarding/**`
 | AC20 | `apps/web/components/hope/discovery/api.test.ts::parses every w3 mock` (no `OPENAI` / key in client bundle imports) | web unit |
 | AC21 | `services/discovery/tests/test_parse.py::test_pick_award_prefers_one_award_over_totals`, `::test_find_amount_and_deadline_on_page`, `::test_find_deadline_rolling_none_and_past_only`, `::test_context_of_finds_the_clause`; `test_agent.py::test_code_finds_amount_and_deadline_the_model_missed`, `::test_program_total_quote_replaced_by_award_on_page` | unit |
 | AC22 | `apps/web/lib/hope/sync/opportunities.test.ts::keep what is known and leave the rest null, never a guess`, `::join the catalog with the complete ones, saved and passed included` | web unit |
+
+### Grants.gov, the second source for federal grants
+
+Federal agency sites (hrsa.gov and others) answer Hope's HTTP client with a bot-protection 403, so their
+notices never reached extraction. Hope doesn't get around those blocks. It reads the same notices from the
+official public Grants.gov API (no key), through `hope_discovery.grantsgov.GrantsGovWeb`, which wraps the
+normal `WebTools` (`runner.default_tools()` and `live_check` use it; offline tests use `ScriptedWeb`):
+
+- **Search:** each `search(query)` calls
+  `POST https://api.grants.gov/v1/api/search2` with the query's topic words (`keywords()` drops filler such
+  as "grants", "funding", "nonprofit" and years), `oppStatuses=posted`, `eligibilities=12|13|25|99`
+  (501(c)(3)s, other nonprofits, "others", unrestricted), `fundingInstruments=G|CA`, and
+  `rows=grantsgov_per_query` (default 2). At most `grantsgov_max` (default 6) notices are added per run;
+  `HOPE_DISCOVERY_GRANTSGOV_MAX=0` turns the source off. Each hit becomes
+  `https://www.grants.gov/search-results-detail/{id}`. They come before the web hits in the query's list, so the
+  `max_candidate_urls` cap (round-robin by rank) can't push them out. A Grants.gov failure (HTTP error, `errorcode != 0`)
+  is logged by exception type only and the web hits are used alone. If the web search fails but Grants.gov
+  answers, its hits are used. The response `token` is never read, logged or stored.
+- **Fetch:** a Grants.gov notice URL is read with `POST .../fetchOpportunity` and rendered as page text from
+  the API's own fields, one `Label: value.` line each: title, `Funder:` (agency), opportunity number,
+  `Summary:` (synopsis, HTML stripped), `Awards: up to $X per award.` (or `$floor to $ceiling`) from
+  `awardCeiling`/`awardFloor` when they are positive whole dollars, `Deadline: Applications due {date}.`
+  from `responseDateStr`, eligible applicant types and the eligibility text. Missing fields leave the line
+  out, so an unknown amount or deadline stays unknown and the grant becomes a check card. A record with no
+  `synopsis` (a forecast) fails as `unsupported_content_type`; an HTTP error as `network`. Other URLs go to
+  the wrapped `fetch`.
+- The page then goes through the same extract, quote check, code-parsed amount and deadline (integer minor
+  units), fit and save as any other page. Offline tests: `services/discovery/tests/test_grantsgov.py`, with
+  trimmed API responses in `tests/fixtures/grantsgov/`.
 
 Live check (needs a key, not run in CI): `HOPE_OPENAI_API_KEY=... uv run python -m hope_discovery.live_check
 [--json out.json]` runs the demo profile in memory (`MemoryRepo`, no database) against real OpenAI and the live

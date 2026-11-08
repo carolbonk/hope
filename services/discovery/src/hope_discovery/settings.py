@@ -26,6 +26,8 @@ class DiscoverySettings(BaseSettings):
     min_fit_score: int = 40  # below this a grant is not worth a nonprofit's time
     max_award_budget_ratio: int = 10  # larger "awards" are program totals
     daily_limit: int = 20
+    grantsgov_per_query: int = 2  # federal notices added to each web search (Grants.gov API)
+    grantsgov_max: int = 6  # per run; 0 turns Grants.gov off
     tz: str = "America/New_York"
 
 

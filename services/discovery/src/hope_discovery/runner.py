@@ -10,6 +10,7 @@ from hope_core.web import RealWebTools, WebTools
 
 from hope_discovery import mock
 from hope_discovery.agent import DiscoveryAgent
+from hope_discovery.grantsgov import GrantsGovWeb
 from hope_discovery.repo import DbRepo
 
 
@@ -22,7 +23,7 @@ def default_tools() -> tuple[ModelGateway, WebTools]:
     gateway = default_gateway()
     if any(isinstance(p, MockProvider) for p in gateway.providers):
         return offline_tools()
-    return gateway, RealWebTools()
+    return gateway, GrantsGovWeb(RealWebTools())
 
 
 def run_discovery(job_id: UUID) -> dict[str, Any]:
