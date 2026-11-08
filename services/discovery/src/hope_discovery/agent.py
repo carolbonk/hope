@@ -41,6 +41,7 @@ log = logging.getLogger(__name__)
 SEARCH_UNAVAILABLE = "Web search is unavailable right now. Try again in a few minutes."
 SOMETHING_WRONG = "Something went wrong while searching. Your earlier results are safe."
 YEARLESS_CONCERN = "Deadline year not stated. Check the funder page."
+PROGRAM_TOTAL_CONCERN = "The amount on the page looks like total program funding, not one award."
 COUNT_KEYS = (
     "urls_found",
     "pages_read",
@@ -48,6 +49,7 @@ COUNT_KEYS = (
     "candidates_updated",
     "skipped_expired",
     "skipped_not_grant",
+    "skipped_poor_fit",
     "skipped_known",
     "failed_pages",
     "queries_failed",
@@ -91,6 +93,7 @@ class _Outcome:
     failed: bool = False
     skipped_expired: bool = False
     skipped_not_grant: bool = False
+    skipped_poor_fit: bool = False
     candidate: GrantCandidate | None = None
     fit_score: int | None = None
     stop: bool = False  # budget ran out inside this page
@@ -175,6 +178,7 @@ class DiscoveryAgent:
             raise DiscoveryFailed("Finish your profile first")
         keywords, location = self.repo.load_request(self.job_id)
         digest = build_digest(profile, location)
+        self.annual_budget_minor = profile.financials.annual_operating_budget.amount_minor
 
         queries = self._plan(digest, keywords, location, today)
         self.repo.set_queries(self.job_id, queries)
@@ -291,6 +295,7 @@ class DiscoveryAgent:
         self.counts["failed_pages"] += int(o.failed)
         self.counts["skipped_expired"] += int(o.skipped_expired)
         self.counts["skipped_not_grant"] += int(o.skipped_not_grant)
+        self.counts["skipped_poor_fit"] += int(o.skipped_poor_fit)
 
     def _read_one(self, link: tuple[str, str], digest: ProfileDigest, today: date) -> _Outcome:
         url, hint = link
@@ -362,6 +367,9 @@ class DiscoveryAgent:
         amount = parse_amount(v.amount.text) if v.amount else None
         deadline = parse_deadline(v.deadline.text, today) if v.deadline else None
         concerns = list(v.concerns)
+        if amount and amount.max and self._is_program_total(amount.max.amount_minor):
+            amount = None
+            concerns.append(PROGRAM_TOTAL_CONCERN)
         if deadline is not None and deadline.all_dates and deadline.date is None:
             o.skipped_expired = True
             o.events.append(
@@ -379,6 +387,11 @@ class DiscoveryAgent:
         result = self._fit(digest, v, sources, concerns)
         if result is None:
             o.events.append(_Event("warning", f"Couldn't score {v.title}", {"url": final_url}))
+            return
+        if result.blocked or result.score < self.s.min_fit_score:
+            o.skipped_poor_fit = True
+            why = "not eligible" if result.blocked else f"weak fit ({result.score})"
+            o.events.append(_Event("skip", f"Skipping {v.title}: {why}", {"url": final_url}))
             return
         o.candidate = GrantCandidate(
             grant_id=uuid5(NAMESPACE_URL, final_url),
@@ -403,6 +416,10 @@ class DiscoveryAgent:
         o.events.append(
             _Event("candidate", f"Saved: {v.title} (fit {result.score})", {"url": final_url})
         )
+
+    def _is_program_total(self, amount_minor: int) -> bool:
+        budget = getattr(self, "annual_budget_minor", 0)
+        return budget > 0 and amount_minor > budget * self.s.max_award_budget_ratio
 
     def _take_detail(self) -> bool:
         with self._detail_lock:

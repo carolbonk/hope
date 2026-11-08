@@ -26,6 +26,8 @@ PAYWALLED = (
     "foundationdirectory.org",
     "candid.org/find-funding",
 )
+# Laws and regulations name grant programs but are never a call for applications.
+STATUTE_HOSTS = ("uscode.house.gov", "law.cornell.edu", "ecfr.gov", "govinfo.gov")
 _SECOND_LEVEL = {"co", "com", "org", "net", "gov", "edu", "ac", "gob", "or", "ne"}
 
 
@@ -71,7 +73,7 @@ def same_site(a: str, b: str) -> bool:
 
 def is_blocked(canonical: str) -> bool:
     host = domain(canonical)
-    if any(host == h or host.endswith("." + h) for h in SOCIAL_HOSTS):
+    if any(host == h or host.endswith("." + h) for h in (*SOCIAL_HOSTS, *STATUTE_HOSTS)):
         return True
     bare = canonical.removeprefix("https://")
     return any(

@@ -61,3 +61,9 @@ def test_blocklist_known_and_round_robin() -> None:
 
 def test_bad_port_is_skipped() -> None:
     assert canonicalize("https://example.org:abc/grants") is None
+
+
+def test_statute_sites_blocked() -> None:
+    assert is_blocked("https://uscode.house.gov/view.xhtml?req=42+usc+247b")
+    assert is_blocked("https://www.law.cornell.edu/uscode/text/42/247b")
+    assert not is_blocked("https://doh.wa.gov/grants")

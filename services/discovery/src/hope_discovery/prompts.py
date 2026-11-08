@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-PROMPT_VERSION = "discovery-1"
+PROMPT_VERSION = "discovery-2"
 
 PLAN_SYSTEM = (
     "You plan web searches that find currently open grant opportunities for one US nonprofit."
@@ -24,7 +24,12 @@ EXTRACT_SYSTEM = (
     " fewer. Do not compute or reformat amounts or dates. Write `summary` in plain English (1 to"
     " 3 sentences, no amounts, no dates). If deadline, amount or eligibility is missing and one of"
     " the numbered links looks like guidelines, eligibility, FAQ or how to apply, set"
-    " `needs_more_detail` and give that link's number."
+    " `needs_more_detail` and give that link's number. Only the funder's own call for applications"
+    " (or a listing that copies it) is an `open_opportunity`: laws and statutes, vendor or"
+    " consultant articles about funding, and calls for for-profit contractors or consultants are"
+    " `not_relevant` or `news_or_blog`. `funder` must quote the funding organization's name, not a"
+    " job title. `amount` must quote the award one applicant can receive, never the total program"
+    " budget."
 )
 
 FIT_SYSTEM = (
@@ -34,7 +39,10 @@ FIT_SYSTEM = (
     " sentence of 120 characters or fewer, in plain English. Every reason and concern must cite at"
     " least one source id: W# for grant quotes, P# for profile facts. Only use the facts given. If"
     " an eligibility requirement clearly excludes the organization, set `eligibility_blocker` to"
-    " that W# id."
+    " that W# id. Requirements that exclude it include: the grant is limited to a state, county or"
+    " region outside the organization's service area; only for-profit firms, universities,"
+    " teaching institutions, government agencies or individuals may apply. If the grant's"
+    " purpose doesn't match any of the organization's programs or focus areas, score below 40."
 )
 
 

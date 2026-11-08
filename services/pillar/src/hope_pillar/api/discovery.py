@@ -108,6 +108,7 @@ class DiscoveryCounts(BaseModel):
     candidates_updated: int = 0
     skipped_expired: int = 0
     skipped_not_grant: int = 0
+    skipped_poor_fit: int = 0
     skipped_known: int = 0
     failed_pages: int = 0
     queries_failed: int = 0

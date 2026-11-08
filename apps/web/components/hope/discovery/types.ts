@@ -56,6 +56,7 @@ export const discoveryJobView = z.object({
     candidates_updated: z.number().int(),
     skipped_expired: z.number().int(),
     skipped_not_grant: z.number().int(),
+    skipped_poor_fit: z.number().int(),
     skipped_known: z.number().int(),
     failed_pages: z.number().int(),
     queries_failed: z.number().int(),

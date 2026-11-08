@@ -23,6 +23,8 @@ class DiscoverySettings(BaseSettings):
     fetch_concurrency: int = 4
     known_url_days: int = 7
     min_classify_confidence: float = 0.6
+    min_fit_score: int = 40  # below this a grant is not worth a nonprofit's time
+    max_award_budget_ratio: int = 10  # larger "awards" are program totals
     daily_limit: int = 20
     tz: str = "America/New_York"
 
