@@ -90,10 +90,10 @@ class _DemoRepo(DbRepo):
         return super().load_profile() or self.fallback
 
 
-def _creator(tx: Tx) -> UUID:
+def _demo_user(tx: Tx) -> UUID | None:
     tx.execute("SELECT user_id FROM users ORDER BY created_at LIMIT 1")
     row = tx.fetchone()
-    return UUID(str(row["user_id"])) if row else UUID(int=0)
+    return UUID(str(row["user_id"])) if row else None
 
 
 def seed() -> UUID | None:
@@ -104,11 +104,16 @@ def seed() -> UUID | None:
         if store.list_jobs(tx, repo.KIND, 1):
             return None
         profile = store.get_profile(tx)
-        creator = _creator(tx)
-        job = store.create_job(tx, repo.KIND, created_by=creator)
+        user = _demo_user(tx)
+        job = store.create_job(tx, repo.KIND, created_by=user)
         keywords, location = DEMO_REQUEST
         repo.insert_run(
-            tx, job.job_id, keywords, location, profile.version if profile else None, creator
+            tx,
+            job.job_id,
+            keywords,
+            location,
+            profile.version if profile else None,
+            user or UUID(int=0),
         )
         store.claim_job(tx, job.job_id, repo.KIND)
         new_id: UUID = job.job_id

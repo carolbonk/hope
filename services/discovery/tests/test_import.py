@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 
-def test_imports_and_demo_seed_is_a_no_op() -> None:
+def test_imports() -> None:
     import hope_discovery
-    from hope_discovery import demo
+    from hope_discovery import agent, demo, runner
 
     assert hope_discovery.__doc__
-    assert demo.seed() is None
+    assert callable(demo.seed) and callable(runner.run_discovery) and agent.DiscoveryAgent

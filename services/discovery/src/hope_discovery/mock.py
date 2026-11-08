@@ -14,7 +14,7 @@ from uuid import UUID
 from hope_core.model_gateway import Message, MockProvider
 from hope_core.schemas.agency_profile import AgencyProfile
 from hope_core.schemas.hackathon import DiscoveryProgress, GrantCandidate, JobStatus
-from hope_core.web import RecordedWebTools
+from hope_core.web import Page, RecordedWebTools, SearchResult
 
 from hope_discovery.models import FitAssessment, PageExtraction, QueryPlan
 
@@ -177,6 +177,51 @@ def register(provider: MockProvider) -> MockProvider:
 
 def recorded_web(fixture_dir: Path | str = FIXTURES) -> RecordedWebTools:
     return RecordedWebTools(fixture_dir)
+
+
+# Fixture URLs (tests/fixtures/web).
+ORAL = "https://cascadehealth.example.org/grants/rural-oral-health"
+INJECT = "https://cascadehealth.example.org/grants/rural-oral-health-print"
+CHW = "https://chwcollaborative.example.org/training-grants"
+CHW_GUIDELINES = "https://chwcollaborative.example.org/training-grants/guidelines"
+MOBILE = "https://ncwmedicalfund.example.org/mobile-equipment"
+EXPIRED = "https://wahealth.example.org/mini-grants-2025"
+CLOSED = "https://pnwsmiles.example.org/grants/smile-grants"
+SCHOOLS = "https://wakids.example.org/grants/school-health"
+# Fixture page text that is never quoted, so is never stored or logged.
+UNQUOTED = [
+    "complete the online application and attach your program budget",
+    "Since 1986 we have connected donors",
+    "Twelve clinics received grants",
+    "the grant committee meets monthly",
+]
+
+
+class ScriptedWeb:
+    """The recorded fixtures, with optional failing queries or a fixed first-query hit list."""
+
+    def __init__(
+        self, fail: set[str] | None = None, hits: list[str] | None = None, fail_all: bool = False
+    ) -> None:
+        self.recorded = recorded_web()
+        self.fail = fail or set()
+        self.hits = hits
+        self.fail_all = fail_all
+        self.searched: list[str] = []
+        self.fetched: list[str] = []
+
+    def search(self, query: str, max_results: int = 8) -> list[SearchResult]:
+        self.searched.append(query)
+        if self.fail_all or query in self.fail:
+            raise RuntimeError("search down")
+        if self.hits is not None:
+            first = len(self.searched) == 1
+            return [SearchResult(url=u, title="", snippet="") for u in self.hits] if first else []
+        return self.recorded.search(query, max_results)
+
+    def fetch(self, url: str) -> Page:
+        self.fetched.append(url)
+        return self.recorded.fetch(url)
 
 
 class MemoryRepo:
