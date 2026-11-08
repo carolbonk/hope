@@ -42,6 +42,7 @@ const en = {
 
   loading: "Loading your workspace…",
   session: {
+    account: "Account",
     signOut: "Sign out",
     signOutFailed: "Couldn't sign out. Try again.",
     unreachableTitle: "Hope can't reach the server.",
@@ -374,6 +375,7 @@ const es: HopeDict = {
 
   loading: "Cargando tu espacio…",
   session: {
+    account: "Cuenta",
     signOut: "Cerrar sesión",
     signOutFailed: "No se pudo cerrar la sesión. Inténtalo de nuevo.",
     unreachableTitle: "Hope no puede conectarse al servidor.",

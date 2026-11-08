@@ -13,6 +13,7 @@ const PATHS = {
   shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z",
   chevron: "M9 6l6 6-6 6",
   close: "M6 6l12 12M18 6L6 18",
+  user: "M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0",
   dot: "M12 12m-4 0a4 4 0 108 0 4 4 0 10-8 0",
 } as const;
 
