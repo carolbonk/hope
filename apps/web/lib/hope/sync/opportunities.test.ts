@@ -48,13 +48,17 @@ describe("toOpportunity", () => {
         amount_min: { amount_minor: 1_000_000, currency: "USD" },
       }),
     )!;
-    expect(rich.focusAreas).toEqual(["mentoring", "youth", "family", "mental_health", "safety", "school_based", "capacity", "arts"]);
+    expect(rich.focusAreas).toEqual(["mentoring", "youth", "family", "mental_health", "health", "safety", "school_based", "capacity", "arts"]);
+    expect(rich.geography).toEqual(["United States"]);
     expect(rich.purpose).toBe("general_operating");
     expect(rich.amountMin).toBe(10000);
     expect(rich.federal).toBe(true);
     expect(rich.docs).toEqual(["uei", "sam"]);
     expect(toOpportunity(card({ title: "Capital campaign", summary: "Building fund" }))!.purpose).toBe("capital");
-    expect(toOpportunity(card({ title: "Dental care", summary: "Rural clinics" }))!.focusAreas).toEqual([]);
+    expect(toOpportunity(card({ title: "Dental care", summary: "Rural clinics" }))!.focusAreas).toEqual(["health"]);
+    expect(toOpportunity(card({ title: "Arts", summary: "Murals" }))!.focusAreas).toEqual(["arts"]);
+    const local = toOpportunity(card({ eligibility_summary: "Nonprofits serving Chelan County, WA or Douglas County, WA" }))!;
+    expect(local.geography).toEqual(["Chelan County, WA", "Douglas County, WA"]);
   });
 
   it("needs check rules", async () => {

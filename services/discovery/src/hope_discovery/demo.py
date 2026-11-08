@@ -6,7 +6,7 @@ then dates the run 2 days back.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from hope_core import store
@@ -24,7 +24,7 @@ from hope_core.schemas.hitl import Gate
 from hope_core.settings import get_settings
 from hope_core.store import Tx
 
-from hope_discovery import repo
+from hope_discovery import demo_grants, repo
 from hope_discovery.agent import DiscoveryAgent
 from hope_discovery.repo import DbRepo
 from hope_discovery.runner import offline_tools
@@ -97,7 +97,9 @@ def _demo_user(tx: Tx) -> UUID | None:
 
 
 def seed() -> UUID | None:
-    """Returns the new job id, or None when a discovery run already exists."""
+    """Adds the recorded real grants (`demo_grants`), then the offline run. Returns the new job
+    id, or None when a discovery run already exists."""
+    repo.with_tx(lambda tx: demo_grants.seed_grants(tx, datetime.now().astimezone().date()))
 
     def create(tx: Tx) -> UUID | None:
         repo.lock(tx)

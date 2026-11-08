@@ -5,7 +5,8 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 from hope_core import store
 from hope_core.settings import get_settings
-from hope_discovery import demo, repo
+from hope_discovery import demo, demo_grants, repo
+from hope_discovery.demo_grants import GRANTS
 
 pytestmark = pytest.mark.db
 
@@ -40,4 +41,27 @@ def test_seed_offline_idempotent(clean_db: str, monkeypatch: pytest.MonkeyPatch)
     mobile = got["Mobile Health Equipment Fund"]
     assert mobile.fit_score == 54 and mobile.deadline is None and mobile.deadline_text == "Rolling"
     assert all(c.discovered_at < datetime.now(UTC) - timedelta(days=1) for c in got.values())
+
+    recorded = repo.with_tx(
+        lambda tx: [
+            store.get_candidate(tx, i) if (i := demo_grants.grant_id(tx, g["url"])) else None
+            for g in GRANTS
+        ]
+    )
+    assert all(c is not None for c in recorded) and len(recorded) == 8
+    by_url = {c.url: c for c in recorded if c is not None}
+    title_x = by_url[demo_grants.TITLE_X]
+    assert title_x.amount_max is not None and title_x.amount_max.amount_minor == 2_200_000_000
+    assert title_x.deadline == date(2027, 1, 11)
+    closed = by_url[demo_grants.SMALL_PROVIDER_QI]
+    assert closed.deadline == date(2026, 8, 6) and closed.status == "saved"
+    waterville = by_url[demo_grants.WATERVILLE]
+    assert (
+        waterville.amount_max is None
+        and waterville.deadline_text == "Application Deadline: December 1"
+    )
+    youth = by_url[demo_grants.NCW_YOUTH]
+    assert youth.deadline is None and youth.amount_max is not None
+    assert youth.amount_max.amount_minor == 100_000
+    assert all(c.status == "new" for u, c in by_url.items() if u != demo_grants.SMALL_PROVIDER_QI)
     get_settings.cache_clear()

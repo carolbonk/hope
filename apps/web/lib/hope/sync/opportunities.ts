@@ -28,7 +28,8 @@ const FOCUS_KEYWORDS: Record<string, string[]> = {
   mentoring: ["mentor"],
   youth: ["youth", "young people", "teen"],
   family: ["family", "families"],
-  mental_health: ["mental health", "behavioral"],
+  mental_health: ["mental health", "behavioral", "substance use"],
+  health: ["health", "dental", "clinic", "medical", "family planning"],
   safety: ["safety", "violence"],
   school_based: ["school"],
   capacity: ["capacity", "operating"],
@@ -57,6 +58,12 @@ function purposeOf(text: string): Purpose {
   return "program";
 }
 
+/** Places the funder's text names as "Chelan County, WA"; a federal notice covers the United States. */
+function geographyOf(text: string, federal: boolean): string[] {
+  if (federal) return ["United States"];
+  return [...new Set(text.match(/\b[A-Z][a-z]+(?: [A-Z][a-z]+)? County, [A-Z]{2}\b/g) ?? [])];
+}
+
 function isFederal(url: string): boolean {
   try {
     return new URL(url).hostname.toLowerCase().endsWith(".gov");
@@ -82,7 +89,7 @@ export function toOpportunity(card: GrantCard): Opportunity {
     amountMin: max ? (card.amount_min ?? max).amount_minor / 100 : null,
     amountMax,
     currency: (max?.currency ?? "USD") as Currency,
-    geography: [],
+    geography: geographyOf(`${text} ${eligibility ?? ""}`, federal),
     fundingType: "grant",
     focusAreas: Object.keys(FOCUS_KEYWORDS).filter((key) => FOCUS_KEYWORDS[key]!.some((w) => hasWord(text, w))),
     purpose: purposeOf(text),
