@@ -30,6 +30,7 @@ from hope_discovery.answers import (
     effective_questions,
     export_markdown,
 )
+from hope_discovery.glossary import TermExplained, explain
 from hope_discovery.requirements import Question, Requirements, RequirementsReader
 from hope_discovery.runner import default_tools
 from psycopg.types.json import Jsonb
@@ -136,6 +137,9 @@ class ApplicationView(ApplicationSummary):
     questions: list[Question]
     answers: list[AnswerView]
     facts: list[FactView]
+    terms: list[TermExplained] = Field(
+        description="Funder jargon in plain language, most urgent first, each with its source"
+    )
     answers_job: RequirementsJob | None
     checklist: Checklist
     ask: Money | None
@@ -251,6 +255,12 @@ def _view(tx: Tx, row: dict[str, Any]) -> ApplicationView:
     requirements = latest_requirements(tx, row["application_id"])
     answers = load_answers(tx, row["application_id"])
     facts = load_facts(tx, row["application_id"])
+    terms = explain(
+        requirements.terms if requirements else [],
+        store.get_profile(tx),
+        requirements.submission.deadline_date if requirements else None,
+        datetime.now().astimezone().date(),
+    )
     job = store.latest_job(tx, REQUIREMENTS_KIND, str(row["application_id"]))
     answers_job = store.latest_job(tx, ANSWERS_KIND, str(row["application_id"]))
     ask = (
@@ -266,15 +276,16 @@ def _view(tx: Tx, row: dict[str, Any]) -> ApplicationView:
             "questions": effective_questions(requirements),
             "answers": list(answers.values()),
             "facts": list(facts.values()),
+            "terms": terms,
             "answers_job": answers_job.model_dump() if answers_job else None,
-            "checklist": checklist_for(requirements, answers, facts),
+            "checklist": checklist_for(requirements, answers, facts, terms),
         }
     )
 
 
 def latest_requirements(tx: Tx, application_id: UUID) -> Requirements | None:
     tx.execute(
-        "SELECT questions, attachments, budget, submission, eligibility, pages"
+        "SELECT questions, attachments, budget, submission, eligibility, terms, pages"
         " FROM application_requirements WHERE application_id = %s"
         " ORDER BY revision DESC LIMIT 1",
         (application_id,),
@@ -306,10 +317,11 @@ def checklist_for(
     req: Requirements | None,
     answers: dict[str, AnswerView],
     facts: dict[str, FactView] | None = None,
+    terms: list[TermExplained] | None = None,
 ) -> Checklist:
     plain = {k: Answer.model_validate(a.model_dump()) for k, a in answers.items()}
     given = {k: f.answer for k, f in (facts or {}).items()}
-    return build_checklist(req, plain, datetime.now().astimezone().date(), given)
+    return build_checklist(req, plain, datetime.now().astimezone().date(), given, terms)
 
 
 def _update(tx: Tx, application_id: UUID, version: int, **fields: Any) -> None:
@@ -545,8 +557,8 @@ def save_requirements(tx: Tx, application_id: UUID, req: Requirements) -> None:
     data = req.model_dump(mode="json")
     tx.execute(
         "INSERT INTO application_requirements (application_id, tenant_id, revision, questions,"
-        " attachments, budget, submission, eligibility, pages)"
-        " SELECT %s, current_tenant(), coalesce(max(revision), 0) + 1, %s, %s, %s, %s, %s, %s"
+        " attachments, budget, submission, eligibility, terms, pages)"
+        " SELECT %s, current_tenant(), coalesce(max(revision), 0) + 1, %s, %s, %s, %s, %s, %s, %s"
         " FROM application_requirements WHERE application_id = %s",
         (
             application_id,
@@ -560,7 +572,7 @@ def save_requirements(tx: Tx, application_id: UUID, req: Requirements) -> None:
     )
 
 
-REQ_FIELDS = ("questions", "attachments", "budget", "submission", "eligibility", "pages")
+REQ_FIELDS = ("questions", "attachments", "budget", "submission", "eligibility", "terms", "pages")
 
 
 @router.post("/applications/{application_id}/requirements/jobs", status_code=202)

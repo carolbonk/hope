@@ -25,6 +25,7 @@ from hope_core.schemas.agency_profile import AgencyProfile
 from pydantic import BaseModel, Field
 
 from hope_discovery.digest import ProfileDigest, build_digest
+from hope_discovery.glossary import TermExplained
 from hope_discovery.models import _clip_list, _clip_text
 from hope_discovery.requirements import Limit, Question, Requirements, question_key
 
@@ -551,7 +552,7 @@ class Answer(BaseModel):
 
 
 class ChecklistItem(BaseModel):
-    kind: Literal["question", "attachment", "budget", "deadline", "submission"]
+    kind: Literal["question", "attachment", "budget", "deadline", "submission", "prep"]
     key: str
     label: str
     status: str
@@ -591,7 +592,10 @@ def build_checklist(
     answers: dict[str, Answer],
     today: date,
     facts: dict[str, str] | None = None,
+    terms: list[TermExplained] | None = None,
 ) -> Checklist:
+    """`terms` adds the registrations and documents the funder's jargon asks for (SAM.gov,
+    letters of support, ...); Hope can't verify them, so they inform but don't block."""
     items: list[ChecklistItem] = []
     needed: list[InputNeeded] = []
     for q in effective_questions(req):
@@ -674,6 +678,23 @@ def build_checklist(
                 url=sub.method.url,
             )
         )
+    for t in terms or []:
+        if t.key is None or t.status == "info":
+            continue
+        items.append(
+            ChecklistItem(
+                kind="prep",
+                key=f"term:{t.key}",
+                label=t.term,
+                status=t.status,
+                detail=t.detail or t.todo,
+                owner=t.owner,
+                quote=t.quote,
+                url=t.url,
+            )
+        )
+        if t.status in ("action_needed", "at_risk") and t.owner:
+            needed.append(InputNeeded(owner=t.owner, text=f"{t.term}: {t.todo or t.plain}"))
     blocking = {"missing", "over_limit", "to_confirm", "upload_needed", "passed"}
     return Checklist(
         items=items,

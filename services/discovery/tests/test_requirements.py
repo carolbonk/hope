@@ -5,12 +5,15 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+import pytest
 from hope_core.model_gateway import Message, MockProvider, ModelGateway
 from hope_core.web import FetchError, Link, Page
 from hope_discovery.requirements import (
     Limit,
+    Requirements,
     RequirementsExtraction,
     RequirementsReader,
+    is_question,
     mock_responder,
     parse_limit,
     pick_links,
@@ -183,3 +186,84 @@ def test_budget_format_must_talk_about_the_budget() -> None:
 
     r, _ = reader(noisy)
     assert r.read(GRANT).budget.format is None
+
+
+@pytest.mark.parametrize(
+    ("text", "unit", "most", "spaces"),
+    [  # verbatim from real nonprofit forms (Foundant, NEA, Metro, VSUW, Tower, ...)
+        ("Character Limit: 3000", "characters", 3000, None),
+        ("Character Limit: 1000 | File Size Limit: 2 MB", "characters", 1000, None),
+        ("(200-word limit)", "words", 200, None),
+        ("word limit: 250", "words", 250, None),
+        ("500-character limit, including spaces", "characters", 500, True),
+        ("limit 2,500 including spaces", "characters", 2500, True),
+        ("This section allows for population - limited to 3000-character spaces.",
+         "characters", 3000, True),
+        ("Responses include 2,000 character limits (spaces included).", "characters", 2000, True),
+        ("not to exceed five pages, min. 11-point font", "pages", 5, None),
+    ],
+)  # fmt: skip
+def test_real_form_limits(text: str, unit: str, most: int, spaces: bool | None) -> None:
+    assert parse_limit(text) == Limit(unit=unit, max=most, includes_spaces=spaces)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("text", ["File Size Limit: 5 MB", "500", "$100,000 MAX"])
+def test_not_text_limits(text: str) -> None:
+    assert parse_limit(text) is None
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [  # field labels real forms use instead of questions
+        "Project description:",
+        "Organizational Capability",
+        "Planned project evaluation:",
+        "A detailed description of the project and why it's needed.",
+        "(280 characters) Discuss how the money will be spent.",
+        "If serving additional geographies beyond the target geographies selected above, please"
+        " describe, including specific states/counties.",
+        "Purpose and description of project (include rationale, target population;"
+        " word limit: 400)",
+    ],
+)
+def test_field_labels_are_questions(prompt: str) -> None:
+    assert is_question(prompt)
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    ["Enter N/A. This field will be used if you are awarded a grant.", "Eligibility", "Deadlines:"],
+)
+def test_portal_placeholders_are_not_questions(prompt: str) -> None:
+    assert not is_question(prompt)
+
+
+def test_funder_terms_are_verified_and_labelled() -> None:
+    from hope_discovery.requirements import RequirementsExtraction, RequirementsReader
+
+    page = (
+        "Thrive Grants support Neighborhood Anchors. A Neighborhood Anchor is a group rooted in one"
+        " zip code for at least five years. Applicants must have a UEI."
+    )
+    ext = RequirementsExtraction.model_validate(
+        {
+            "is_application_info": True,
+            "terms": [
+                {
+                    "term": "Neighborhood Anchor",
+                    "quote": "Thrive Grants support Neighborhood Anchors.",
+                    "funder_definition": "A Neighborhood Anchor is a group rooted in one zip code"
+                    " for at least five years.",
+                },
+                {"term": "Thrive", "quote": "Thrive Grants support", "meaning": "The program."},
+                {"term": "Ghost", "quote": "Not on the page.", "meaning": "Invented."},
+            ],
+        }
+    )
+    out = Requirements()
+    reader = RequirementsReader(ModelGateway([MockProvider()]), None)  # type: ignore[arg-type]
+    reader._merge(out, ext, page, "https://f.example.org")
+    by = {t.term: t for t in out.terms}
+    assert by["UEI"].key == "uei" and by["UEI"].source == "glossary"
+    assert by["Neighborhood Anchor"].source == "funder"
+    assert by["Thrive"].source == "ai" and "Ghost" not in by

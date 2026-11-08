@@ -25,17 +25,19 @@ from hope_core.web import FetchError, Link, Page, WebTools
 from pydantic import BaseModel, BeforeValidator, Field, ValidationError
 
 from hope_discovery.extract import clean_text
+from hope_discovery.glossary import TermUse, find_terms, glossary_term
 from hope_discovery.models import _clip_list, _clip_text
 from hope_discovery.parse import parse_amount, parse_deadline
 from hope_discovery.urls import canonicalize, same_site
 
 log = logging.getLogger(__name__)
 
-PROMPT_VERSION = "requirements-1"
+PROMPT_VERSION = "requirements-2"
 PASTED = "pasted"
 PASTE_CHUNKS = 4
 MAX_PAGES = 6
 PAGE_CHARS = 14_000
+MAX_TERMS = 40
 LINK_WORDS = re.compile(
     r"apply|application|guideline|rfp|request for proposal|nofo|instruction|faq|budget|template"
     r"|\bloi\b|letter of (?:inquiry|intent)|how to|eligib",
@@ -47,8 +49,18 @@ _NUMBER_WORDS = {
 }  # fmt: skip
 _LIMIT = re.compile(
     r"(?P<n>\d[\d,]*|one|two|three|four|five|six|seven|eight|nine|ten)"
-    r"(?:\s*(?:-|\u2013|to)\s*(?P<n2>\d[\d,]*))?\s*(?P<unit>words?|characters?|chars?|pages?)\b",
+    r"(?:\s*(?:-|\u2013|to)\s*(?P<n2>\d[\d,]*))?[\s-]*(?P<unit>words?|characters?|chars?|pages?)\b",
     re.I,
+)
+# Foundant-style "Character Limit: 3000", "word limit: 250", "Words: 500".
+_LIMIT_AFTER = re.compile(
+    r"\b(?P<unit>words?|characters?|chars?|pages?)\s*(?:limit|max(?:imum)?|count)?\s*[:=]?\s*"
+    r"(?:of\s+)?(?P<n>\d[\d,]*)(?![\d,]*\s*(?:mb|kb|%))",
+    re.I,
+)
+# "limit 2,500 including spaces": no unit, characters implied.
+_LIMIT_SPACES = re.compile(
+    r"\blimit(?:ed)?\s+(?:to\s+)?(?P<n>\d[\d,]*)\s+(?:including|with)\s+spaces", re.I
 )
 
 SYSTEM = (
@@ -65,7 +77,12 @@ SYSTEM = (
     " Budget: the quote that describes the budget format or template, the maximum request, any"
     " match requirement and any indirect-cost rule. `submission_method`: how and where to"
     " submit (portal, email, mail). `deadline`: the application deadline quote."
-    " `eligibility`: quotes saying who may apply. Leave anything the page doesn't say empty."
+    " `eligibility`: quotes saying who may apply."
+    " `terms`: jargon, acronyms or form names on the page a small nonprofit may not know (e.g."
+    " 'UEI', 'SF-424A', 'MTDC', or the funder's own program names), each with the page sentence"
+    " that uses it, the page's own definition word for word if it gives one, and `meaning`: one"
+    " plain sentence a nonprofit volunteer would understand."
+    " Leave anything the page doesn't say empty."
     " Set `is_application_info` false if the page says nothing about how to apply."
 )
 
@@ -110,6 +127,13 @@ class QuestionItem(BaseModel):
     required: bool = True
 
 
+class TermItem(BaseModel):
+    term: Annotated[str, _clip_text(80)] = Field(min_length=2, max_length=80)
+    quote: Quote
+    funder_definition: OptQuote = None
+    meaning: Annotated[str | None, _clip_text(300)] = Field(None, max_length=300)
+
+
 class AttachmentItem(BaseModel):
     name: Annotated[str, _clip_text(80)] = Field(min_length=2, max_length=80)
     quote: Quote
@@ -130,6 +154,7 @@ class RequirementsExtraction(BaseModel):
     submission_method: OptQuote = None
     deadline: OptQuote = None
     eligibility: Annotated[list[OptQuote], _clip_list(8)] = Field(default=[], max_length=8)
+    terms: Annotated[list[TermItem], _valid_items(TermItem, 20)] = Field(default=[], max_length=20)
 
 
 # --- stored result (code-built) ---------------------------------------------------------------
@@ -191,6 +216,7 @@ class Requirements(BaseModel):
     budget: BudgetRequirements = BudgetRequirements()
     submission: Submission = Submission()
     eligibility: list[Sourced] = []
+    terms: list[TermUse] = []
     pages: list[PageRead] = []
 
 
@@ -212,6 +238,18 @@ _ASKS_FOR_DOC = re.compile(
 
 
 _FIELD_LABEL = re.compile(r"^[A-Z][\w ,&/'-]{1,60}?(?:\*\s*|:\s+)(?=\S)")
+_NOT_A_FIELD = re.compile(
+    r"^(?:enter n/?a\b|click|download|save|note:|(?:eligibility|deadlines?|contact(?: us)?|faqs?"
+    r"|overview|instructions|resources|important dates|questions\??)\s*:?\s*$)",
+    re.I,
+)
+_ASK_INSIDE = re.compile(
+    r"\bplease\s+(?:briefly\s+)?(?:describe|explain|list|provide|summari[sz]e|tell|share|identify"
+    r"|complete|include|outline)\b|^(?:a |an |the )?(?:detailed |brief |short )?(?:description"
+    r"|summary|overview|explanation|narrative)\b",
+    re.I,
+)
+_LIMIT_PAREN = re.compile(r"\s*\([^)]*\b(?:words?|characters?|pages?|limit)\b[^)]*\)", re.I)
 _LIMIT_LEAD = re.compile(
     r"^(?:in|using)\s+(?:no more than\s+|up to\s+)?[\d,]+\s+\w+(?:\s+or\s+(?:fewer|less))?,?\s*",
     re.I,
@@ -224,9 +262,14 @@ def is_question(prompt: str) -> bool:
     Portal fields often lead with a label ("Project Design* ...") or a limit
     ("In 100 words or fewer, ..."); the ask comes after."""
     text = _LIMIT_LEAD.sub("", _FIELD_LABEL.sub("", prompt.strip(), count=1), count=1)
-    if _READER_NOTE.match(text):
+    if _READER_NOTE.match(text) or _NOT_A_FIELD.match(text):
         return False
-    return text.endswith("?") or bool(_ASK_START.match(text))
+    text = _LIMIT_PAREN.sub("", text).strip()
+    if text.endswith("?") or _ASK_START.match(text) or _ASK_INSIDE.search(text):
+        return True
+    # Forms often label a field instead of asking: "Project description:", "Organizational
+    # Capability", "Planned project evaluation (500 characters)".
+    return bool(text) and (text.endswith(":") or not text.endswith((".", "!")))
 
 
 def asks_for_document(quote: str) -> bool:
@@ -247,10 +290,15 @@ def parse_limit(text: str | None) -> Limit | None:
     """'500 words', '2,500 characters including spaces', 'no more than two pages'."""
     if not text:
         return None
-    match = _LIMIT.search(text)
+    match = _LIMIT.search(text) or _LIMIT_AFTER.search(text)
     if not match:
+        if spaced := _LIMIT_SPACES.search(text):
+            return Limit(
+                unit="characters", max=int(spaced["n"].replace(",", "")), includes_spaces=True
+            )
         return None
-    nums = [match["n"], match["n2"]]
+    groups = match.groupdict()
+    nums = [groups["n"], groups.get("n2")]
     values = [
         _NUMBER_WORDS[n.lower()] if n.lower() in _NUMBER_WORDS else int(n.replace(",", ""))
         for n in nums
@@ -264,7 +312,8 @@ def parse_limit(text: str | None) -> Limit | None:
     low = text.lower()
     spaces = (
         False if re.search(r"(?:without|excluding|not including) spaces", low)
-        else True if re.search(r"(?:with|including) spaces", low)
+        else True if re.search(r"(?:with|including|includes?) spaces|spaces (?:included|count)"
+                               r"|character spaces", low)
         else None
     )  # fmt: skip
     return Limit(
@@ -442,7 +491,43 @@ class RequirementsReader:
                 known_elig.add(_norm(s.text))
                 out.eligibility.append(s)
                 found = True
+        self._merge_terms(out, ext, text, url)
         return found
+
+    def _merge_terms(
+        self, out: Requirements, ext: RequirementsExtraction, text: str, url: str
+    ) -> None:
+        """Glossary terms are found by code; other terms the model names must be on the page,
+        and are explained by the funder's own definition when the page has one."""
+        normed = _norm(text)
+        have = {t.key or _norm(t.term) for t in out.terms}
+        uses = find_terms(text, url)
+        for item in ext.terms:
+            if _norm(item.quote) not in normed or _norm(item.term) not in _norm(item.quote):
+                continue
+            known = glossary_term(item.term)
+            if known:
+                if known.key not in {u.key for u in uses}:
+                    uses.append(TermUse(key=known.key, term=item.term, quote=item.quote, url=url))
+                continue
+            definition = item.funder_definition
+            funder = bool(definition and _norm(definition) in normed)
+            if not (funder or item.meaning):
+                continue
+            uses.append(
+                TermUse(
+                    term=item.term.strip(),
+                    quote=item.quote,
+                    url=url,
+                    source="funder" if funder else "ai",
+                    meaning=definition if funder else item.meaning,
+                )
+            )
+        for use in uses:
+            mark = use.key or _norm(use.term)
+            if mark not in have and len(out.terms) < MAX_TERMS:
+                have.add(mark)
+                out.terms.append(use)
 
 
 # --- offline responder ------------------------------------------------------------------------

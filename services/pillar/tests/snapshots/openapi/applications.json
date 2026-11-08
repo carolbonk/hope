@@ -370,6 +370,14 @@
             "title": "Stage",
             "type": "string"
           },
+          "terms": {
+            "description": "Funder jargon in plain language, most urgent first, each with its source",
+            "items": {
+              "$ref": "#/components/schemas/TermExplained"
+            },
+            "title": "Terms",
+            "type": "array"
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -405,6 +413,7 @@
           "questions",
           "answers",
           "facts",
+          "terms",
           "answers_job",
           "checklist",
           "ask",
@@ -628,7 +637,8 @@
               "attachment",
               "budget",
               "deadline",
-              "submission"
+              "submission",
+              "prep"
             ],
             "title": "Kind",
             "type": "string"
@@ -1200,7 +1210,7 @@
             "type": "array"
           },
           "prompt_version": {
-            "default": "requirements-1",
+            "default": "requirements-2",
             "title": "Prompt Version",
             "type": "string"
           },
@@ -1215,6 +1225,14 @@
           "submission": {
             "$ref": "#/components/schemas/Submission",
             "default": {}
+          },
+          "terms": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TermUse"
+            },
+            "title": "Terms",
+            "type": "array"
           }
         },
         "title": "Requirements",
@@ -1377,6 +1395,180 @@
           }
         },
         "title": "Submission",
+        "type": "object"
+      },
+      "TermExplained": {
+        "description": "One funder term for staff: the funder's words, what they mean, and who says so.",
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "explained_by": {
+            "enum": [
+              "official",
+              "hope",
+              "funder",
+              "ai"
+            ],
+            "title": "Explained By",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "lead_days": {
+            "default": 0,
+            "title": "Lead Days",
+            "type": "integer"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "enum": [
+                  "program",
+                  "finance",
+                  "director"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "plain": {
+            "title": "Plain",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "status": {
+            "default": "info",
+            "enum": [
+              "have",
+              "check",
+              "action_needed",
+              "at_risk",
+              "info"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "term": {
+            "title": "Term",
+            "type": "string"
+          },
+          "todo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Todo"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "term",
+          "plain",
+          "explained_by",
+          "quote",
+          "url"
+        ],
+        "title": "TermExplained",
+        "type": "object"
+      },
+      "TermUse": {
+        "description": "A term the funder uses, with their sentence. `meaning` is set only when the term isn't\nin the glossary: the funder's own definition (`source=\"funder\"`) or a model reading.",
+        "properties": {
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "meaning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meaning"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "source": {
+            "default": "glossary",
+            "enum": [
+              "glossary",
+              "funder",
+              "ai"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "term": {
+            "title": "Term",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "term",
+          "quote",
+          "url"
+        ],
+        "title": "TermUse",
         "type": "object"
       },
       "ValidationError": {
