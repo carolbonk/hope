@@ -588,7 +588,7 @@ Commands: `uv run pytest -q services/discovery services/pillar`, the lint/mypy c
    Cloudflare / Pantheon bot protection (e.g. `confluencehealth.org`, `hca.wa.gov`, `arcorafoundation.org`,
    `hrsa.gov`). The same URLs return 200 to `curl` with the same `User-Agent`, and 403 to plain `httpx`, so
    the block is on the client fingerprint, not the headers or the IP pinning. No header change fixes it, and
-   Hope shouldn't work around bot protection. Other failures: `network` (one site's TLS chain is incomplete),
+   Hope shouldn't work around bot protection. Other failures: `network` (`health.mn.gov`'s certificate expired on 2026-10-28; Hope correctly refuses it),
    and `http_429` (a short `Retry-After` is now retried once; Vercel's 429 bot challenge sends none and still fails). `.docx` application forms are now read as text by `fetch`.
 
 ## Out of scope
