@@ -61,8 +61,10 @@ Next action: Confirm every requirement with evidence, then send to internal appr
 6. **Director review: Approve:** the stage becomes `drafting`, and SC28 unlocks.
 7. **Add comment:** appends to `app.comments` (author "You (local)").
 
-Online, steps 1-7 are the H4 server calls (`…/stage`, `…/evidence`, `…/approvals`, `…/comments`) with `If-Match`;
-the page shows the returned application. The note is sent when the field loses focus. A version conflict (412)
+Online, the Eligibility panel is replaced by SC29's "Does this grant fit you?" rules (#63), and steps 2-7 are the H4
+server calls (`…/stage`, `…/approvals`, `…/comments`) with `If-Match`; the page shows the returned application.
+While the requirements job started by saving (#64) runs, the page polls every 2 s and shows "Reading the funder's
+pages…", then the result, without a reload. A version conflict (412)
 reloads with "Someone else changed this application. We loaded the latest version."; a 409/422 shows the server's
 message, both in a 5-second notice under the header.
 
@@ -71,7 +73,6 @@ message, both in a 5-second notice under the header.
 - **Not in this browser:** "This application isn't in this browser. It may have been saved in another browser or cleared."
 - **Approval note:** online "Any signed-in teammate can approve for now. Hope records who approved and when."; demo
   mode keeps the "Simulated roles" note.
-- **Eligibility locked (online, after eligibility):** "Eligibility is locked while the application is in review."
 - **Loading (online):** "Loading this application…"
 - **Eligibility note:** "Eligibility here is specific to this call. It is separate from “profile complete” and “documentation reviewed”."
 - **Storage:** "Saved in this browser only — not shared, not production storage, no real sign-in."

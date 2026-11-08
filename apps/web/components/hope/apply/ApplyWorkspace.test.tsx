@@ -169,3 +169,23 @@ test("checks the grant's own rules, shows what changed, and reuses answers from 
   const [, ev] = fetch.mock.calls.find(([u]) => String(u).endsWith("/evidence"))!;
   expect(JSON.parse(String(ev?.body))).toEqual({ requirement_id: "rule:elig2", status: "yes" });
 });
+
+test("keeps polling while saving's requirements job (#64) runs, then shows the result without a reload", async () => {
+  const done = view();
+  const reading = { ...done, questions_status: "reading", requirements: null, questions: [], answers: [], requirements_job: { job_id: "j1", status: "running", error: null } } as ApplicationView;
+  let gets = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+      if (url.endsWith("/v1/applications")) return json({ items: [{ application_id: APP, grant_id: GRANT }], total: 1 });
+      gets += 1;
+      return json(gets < 2 ? reading : { ...done, requirements_job: { job_id: "j1", status: "succeeded", error: null } });
+    }),
+  );
+  renderIt();
+  expect(await screen.findByText("Reading the funder's pages…")).toBeInTheDocument();
+  expect((await screen.findAllByText(/Describe the gap/, {}, { timeout: 5000 })).length).toBeGreaterThan(0);
+  expect(screen.queryByText("Reading the funder's pages…")).toBeNull();
+  expect(gets).toBe(2);
+}, 10000);

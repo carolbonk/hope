@@ -39,15 +39,16 @@ and mirrors it into the browser record with `updateApplication` (`mirror` in `li
 
 | Action | Call |
 |---|---|
-| Yes / No / Unknown, note (sent on blur) | `POST …/evidence` `{ requirement_id, status, note? }` |
-| Start eligibility review, Send to internal approval | `POST …/stage` `{ to }`. Before `approval`, requirements answered from the profile are recorded as evidence too |
+| Eligibility | No second panel: the grant's own rules in SC29's RulesPanel (#63). Staff settle `unknown` rules with `POST …/evidence` `{ requirement_id: rule.key, status }` |
+| Start eligibility review, Send to internal approval | `POST …/stage` `{ to }`. "Send to internal approval" is enabled once every eligibility rule is `met`; the server checks it again |
 | Approve / Send back | `POST …/approvals` `{ step, decision: approve \| send_back, comment? }` |
 | Add comment | `POST …/comments` `{ text }` (no version) |
 | Mark ready | `POST …/stage` `{ to: "ready", override_reason? }`, see SC29 |
 
 - `412` reloads the application and shows "Someone else changed this application. We loaded the latest version."
 - `409` / `422` show the server's message: the blocked reason from `errors[0].message`, else `detail`.
-- Evidence is locked outside `saved` / `eligibility` (the server refuses it), and the panel says so.
+- While the requirements job started by saving (#64) runs, the page polls every 2 s and shows the reading state,
+  then the result, without a reload.
 - Comments, send-back comments and Activity come from the server's events, named "You"/the user's name for
   the signed-in user, "A teammate" for others and "Hope" for system events.
 - New EN/ES copy for this mode lives in `components/hope/apply/copy.ts`.
