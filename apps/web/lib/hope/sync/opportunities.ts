@@ -58,10 +58,14 @@ function purposeOf(text: string): Purpose {
   return "program";
 }
 
-/** Places the funder's text names as "Chelan County, WA"; a federal notice naming none covers the United States. */
-function geographyOf(text: string, federal: boolean): string[] {
-  const places = [...new Set(text.match(/\b[A-Z][a-z]+(?: [A-Z][a-z]+)? County, [A-Z]{2}\b/g) ?? [])];
-  return places.length || !federal ? places : ["United States"];
+const counties = (text: string) => [...new Set(text.match(/\b[A-Z][a-z]+(?: [A-Z][a-z]+)? County, [A-Z]{2}\b/g) ?? [])];
+
+/** Places the funder's text names as "Chelan County, WA". A federal notice is limited only by counties its
+ * eligibility names; one its summary merely mentions still covers the United States. */
+function geographyOf(text: string, eligibility: string, federal: boolean): string[] {
+  if (!federal) return counties(`${text} ${eligibility}`);
+  const limited = counties(eligibility);
+  return limited.length ? limited : ["United States"];
 }
 
 /** "Mental health" and "behavioral health" are not general health. */
@@ -92,7 +96,7 @@ export function toOpportunity(card: GrantCard): Opportunity {
     amountMin: max ? (card.amount_min ?? max).amount_minor / 100 : null,
     amountMax,
     currency: (max?.currency ?? "USD") as Currency,
-    geography: geographyOf(`${text} ${eligibility ?? ""}`, federal),
+    geography: geographyOf(text, eligibility ?? "", federal),
     fundingType: "grant",
     focusAreas: Object.keys(FOCUS_KEYWORDS).filter((key) => FOCUS_KEYWORDS[key]!.some((w) => hasWord(focusText(key, text), w))),
     purpose: purposeOf(text),

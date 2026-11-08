@@ -62,6 +62,8 @@ describe("toOpportunity", () => {
     expect(toOpportunity(card({ title: "Mental health access", summary: "Behavioral health counseling" }))!.focusAreas).toEqual(["mental_health"]);
     const county = toOpportunity(card({ url: "https://www.grants.gov/search-results-detail/1", eligibility_summary: "Applicants must serve Yakima County, WA" }))!;
     expect(county.geography).toEqual(["Yakima County, WA"]);
+    const example = toOpportunity(card({ url: "https://www.grants.gov/search-results-detail/2", summary: "Past awards reached Yakima County, WA", eligibility_summary: "Nonprofits" }))!;
+    expect(example.geography).toEqual(["United States"]);
   });
 
   it("needs check rules", async () => {
