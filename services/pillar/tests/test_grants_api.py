@@ -204,6 +204,7 @@ def test_list_filters_paging(
         ("limit", "101"),
         ("offset", "-1"),
         ("offset", "1.5"),
+        ("offset", "9" * 5000),
     ],
 )
 def test_invalid_query(api: TestClient, param: str, value: str) -> None:

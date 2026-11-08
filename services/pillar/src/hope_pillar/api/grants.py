@@ -252,7 +252,11 @@ def _int(params: dict[str, str], name: str, low: int, high: int | None) -> int |
     raw = params.get(name)
     if raw is None:
         return None
-    if not re.fullmatch(r"\d+", raw) or int(raw) < low or (high is not None and int(raw) > high):
+    if (
+        not re.fullmatch(r"[0-9]{1,9}", raw)
+        or int(raw) < low
+        or (high is not None and int(raw) > high)
+    ):
         raise _QueryProblem(name)
     return int(raw)
 
