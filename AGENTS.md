@@ -35,9 +35,8 @@ orchestrator.
 | `services/discovery/` (`hope_discovery`), `db/migrations/0700-0709` | discovery (H2) | H2 spec |
 | `services/pillar/src/hope_pillar/api/grants.py`, `db/migrations/0710-0719` | grants (H3) | H3 spec |
 
-Hackathon migration ranges: H0 `0002`, H1 profile `0310-0319`, discovery `0700-0709`, grants `0710-0719`.
+Hackathon migration ranges: H0 `0002`, H1 profile `0310-0319`, discovery `0700-0709`, grants `0710-0719`, bids `0730-0739`.
 `0720-0729` and `0800-0809` stay reserved (H4/H5 use none).
-bids 0730-0739.
 | `apps/web/` | web | 4.4, 5.3 |
 
 ## Rules
