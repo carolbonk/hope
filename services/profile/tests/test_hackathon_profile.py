@@ -148,6 +148,17 @@ def test_if_match_conflict_and_required(signed_in: Any) -> None:
     assert patch.status_code == 428
 
 
+def test_concurrent_first_save_conflicts(signed_in: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    from hope_profile.repository import ProfileRepository
+
+    def race(*_: Any, **__: Any) -> Any:
+        raise psycopg.errors.UniqueViolation("duplicate key value")
+
+    monkeypatch.setattr(ProfileRepository, "_insert_version", race)
+    resp = put(signed_in, demo_form())
+    assert resp.status_code == 409 and resp.json()["code"] == "version_conflict"
+
+
 def _set(form: dict[str, Any], path: str, value: Any) -> dict[str, Any]:
     form = copy.deepcopy(form)
     *head, last = path.split(".")

@@ -145,6 +145,19 @@ class ProfileRepository:
         `expected_version` is the version the caller edited (0 or None before the first save);
         a mismatch raises `VersionConflictError`. A no-op save returns the current version.
         """
+        try:
+            return self._save_direct(tenant_id, agency_id, data, actor, expected_version)
+        except psycopg.errors.UniqueViolation as e:  # a concurrent first save won the race
+            raise VersionConflictError("profile was created concurrently") from e
+
+    def _save_direct(
+        self,
+        tenant_id: UUID,
+        agency_id: UUID,
+        data: dict[str, Any],
+        actor: str,
+        expected_version: int | None,
+    ) -> ProfileVersion:
         with tenant_tx(self.conn, tenant_id) as cur:
             cur.execute(
                 f"SELECT {_VERSION_COLS} FROM agency_profile_versions WHERE agency_id = %s"
