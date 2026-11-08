@@ -152,6 +152,21 @@ export function saveRemoteProfile(profile: OrgProfile): void {
   }
 }
 
+export type SaveOutcome = { ok: boolean; fields: string[] };
+
+/** Settles once queued saves finish: `ok` false lists what the server didn't take. Never rejects. */
+export async function profileSaveOutcome(): Promise<SaveOutcome> {
+  if (!online) return { ok: true, fields: [] };
+  try {
+    while (worker) await worker;
+  } catch {
+    // drain never rejects; keep the reported state
+  }
+  const { pending, skipped } = current();
+  const fields = skipped.filter((f) => f !== "non_usd_budget");
+  return { ok: !pending && fields.length === 0, fields: pending ? [...fields, "network"] : fields };
+}
+
 /** Not part of the seam: sync state for tests and devtools. `idle` settles when the queue is empty. */
 export function profileSyncStatus(): SyncState & { idle: Promise<void> } {
   return { ...current(), idle: worker ?? Promise.resolve() };

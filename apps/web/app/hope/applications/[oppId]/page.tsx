@@ -5,7 +5,7 @@ import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ClientOnly, Panel, StageBar, btnPrimary, btnSecondary, focusRing, input } from "@/components/hope/ui";
 import { useGrantFacts } from "@/components/hope/discovery/facts";
 import { DraftPanel, type Up } from "@/components/hope/draft/DraftPanel";
-import { ApplyWorkspace, ServerNotice } from "@/components/hope/apply/ApplyWorkspace";
+import { ApplyWorkspace, NextStep, ServerNotice } from "@/components/hope/apply/ApplyWorkspace";
 import { ReadyGate } from "@/components/hope/apply/ReadyGate";
 import { useServerCopy } from "@/components/hope/apply/copy";
 import { useServerApplication } from "@/components/hope/apply/useServerApplication";
@@ -230,6 +230,7 @@ function Body({ opp, app, actions, eligible, eligibility, draft, view, who, noti
           {a.nextAction}
         </h2>
         <p className="mt-1 text-lg">{a.next[app.stage]}</p>
+        {view && app.stage !== "ready" && <NextStep view={view} />}
         {app.stage in NEXT_STAGE && (
           <div className="mt-3">
             <button className={btnPrimary} disabled={!canAdvance} onClick={actions.advance}>

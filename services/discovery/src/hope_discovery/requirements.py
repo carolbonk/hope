@@ -302,7 +302,103 @@ def full_prompt(prompt: str, text: str) -> str:
 
 
 def asks_for_document(quote: str) -> bool:
-    return bool(_ASKS_FOR_DOC.search(quote))
+    return bool(_ASKS_FOR_DOC.search(quote) or _UPLOAD_LIST.match(quote))
+
+
+def _line_with(quote: str, text: str) -> str | None:
+    """The page sentence a short quote sits in."""
+    return next((s for s in _sentences(text) if quote in s), None)
+
+
+# --- code backstop ----------------------------------------------------------------------------
+# The model sometimes skips a plain line ("Attachments: a; b; c", "A 1:1 match is required.").
+# These patterns catch the common wording so a required upload, deadline or budget rule is never
+# silently missing; every value is still a quote copied from the page.
+
+# Page text arrives with whitespace collapsed, so a "line" is a sentence: "Attachments: a; b."
+_UPLOAD_LIST = re.compile(
+    r"(?:^|(?<=[.!?] ))(?:required\s+|supporting\s+|additional\s+)?(?:attachments?|uploads?"
+    r"|documents?|enclosures|documents? to (?:attach|upload|include|submit))(?:\s+required)?"
+    r"\s*(?:\([^)]{0,40}\))?\s*:\s*(?P<items>[^.:]{3,300}?)\s*(?:\.(?=\s|$)|$)",
+    re.I,
+)
+_LIST_SPLIT = re.compile(r"\s*(?:;|\u2022|\|)\s*|,\s*(?:and\s+)?", re.I)
+_DEADLINE_WORDS = re.compile(
+    r"\b(?:deadline|due\b|must be (?:received|submitted)|submit(?:ted)? by|closes?\b"
+    r"|no later than)",
+    re.I,
+)
+_MATCH_WORDS = re.compile(
+    r"cost[- ]?shar\w*|matching (?:funds?|grants?|contributions?|requirement)"
+    r"|\bmatch (?:is|of|requirement|must)|\(match\)|\d\s*:\s*\d\s*(?:match|cost)"
+    r"|in-kind match|dollar[- ]for[- ]dollar",
+    re.I,
+)
+_MAX_WORDS = re.compile(
+    r"\b(?:up to|maximum|max\.?|not (?:to )?exceed|no more than|awards? of up to|request up to)\b",
+    re.I,
+)
+_INDIRECT_WORDS = re.compile(
+    r"indirect costs?|overhead|\bF&A\b|facilities and administrative|\bde minimis\b", re.I
+)
+_MONEY_SIGN = re.compile(r"\$\s?\d")
+
+
+def _sentences(text: str) -> list[str]:
+    out: list[str] = []
+    for line in text.splitlines():
+        out += [s.strip() for s in re.split(r"(?<=[.!?])\s+(?=[A-Z])", line) if s.strip()]
+    return [s for s in out if len(s) <= 400]
+
+
+def _first(sentences: list[str], *tests: Callable[[str], bool]) -> str | None:
+    return next((s for s in sentences if all(t(s) for t in tests)), None)
+
+
+def _backstop(
+    out: Requirements, text: str, url: str, take: Callable[[str, object], bool], today: date
+) -> bool:
+    found = False
+    names = {_norm(a.name) for a in out.attachments}
+    for m in _UPLOAD_LIST.finditer(text):
+        line = m.group(0).strip()
+        if len(line) > 400:
+            continue
+        for raw in _LIST_SPLIT.split(m["items"]):
+            name = raw.strip().strip(".").strip()
+            if 2 <= len(name) <= 80 and _norm(name) not in names:
+                names.add(_norm(name))
+                out.attachments.append(Attachment(name=name[0].upper() + name[1:], quote=line,
+                                                  url=url))  # fmt: skip
+                found = True
+    sentences = _sentences(text)
+    sub, b = out.submission, out.budget
+    hit = _first(
+        sentences,
+        lambda s: bool(_DEADLINE_WORDS.search(s)),
+        lambda s: parse_deadline(s, today).date is not None,
+    )
+    if hit and take("deadline", sub.deadline if sub.deadline_date else None):
+        sub.deadline = Sourced(text=hit, url=url)
+        sub.deadline_date = parse_deadline(hit, today).date
+        found = True
+    hit = _first(sentences, lambda s: bool(_MATCH_WORDS.search(s)))
+    if hit and take("match_rule", b.match_rule):
+        b.match_rule, found = Sourced(text=hit, url=url), True
+    hit = _first(
+        sentences,
+        lambda s: bool(_MAX_WORDS.search(s) and _MONEY_SIGN.search(s)),
+        lambda s: not _INDIRECT_WORDS.search(s) and not _MATCH_WORDS.search(s),
+    )
+    if hit and take("max_request", b.max_request):
+        amount = parse_amount(hit)
+        b.max_request = Sourced(text=hit, url=url)
+        b.max_request_amount = amount.max if amount else None
+        found = True
+    hit = _first(sentences, lambda s: bool(_INDIRECT_WORDS.search(s)))
+    if hit and take("indirect_rule", b.indirect_rule):
+        b.indirect_rule, found = Sourced(text=hit, url=url), True
+    return found
 
 
 def _norm(text: str) -> str:
@@ -530,6 +626,10 @@ class RequirementsReader:
         names = {_norm(a.name) for a in out.attachments}
         for att in ext.attachments:
             quote = ok(att.quote)
+            if quote and not asks_for_document(quote):
+                quote = _line_with(
+                    quote, text
+                )  # "Attachments: logic model; ..." quoted as "logic model"
             if quote and asks_for_document(quote) and _norm(att.name) not in names:
                 names.add(_norm(att.name))
                 out.attachments.append(Attachment(name=att.name.strip(), quote=quote, url=url))
@@ -566,6 +666,7 @@ class RequirementsReader:
                 known_cond.add(_norm(s.text))
                 out.conditions.append(s)
                 found = True
+        found = _backstop(out, text, url, take, self.today()) or found
         self._merge_terms(out, ext, text, url)
         return found
 

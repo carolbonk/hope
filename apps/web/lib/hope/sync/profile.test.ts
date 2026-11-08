@@ -189,6 +189,19 @@ describe("sync/profile", () => {
     expect(sync.profileSyncStatus()).toMatchObject({ skipped: ["basics"], pending: false, etag: '"3"' });
   });
 
+  it("a rejected save is reported, not shown as saved", async () => {
+    const api = fakeApi();
+    api.patchProfile.mockRejectedValueOnce(
+      new ProblemError(422, "validation_error", "x", [{ field: "ntee_codes", code: "too_short", message: "Pick one." }]),
+    );
+    h.api = api;
+    const sync = await load();
+    sync.saveRemoteProfile({ ...sync.local(), website: "https://new.example.org/" });
+    await expect(sync.profileSaveOutcome()).resolves.toEqual({ ok: false, fields: ["ntee_codes"] });
+    sync.saveRemoteProfile({ ...sync.local(), website: "https://newer.example.org/" });
+    await expect(sync.profileSaveOutcome()).resolves.toEqual({ ok: true, fields: [] });
+  });
+
   it("network sets pending and retries", async () => {
     const api = fakeApi();
     api.patchProfile.mockRejectedValueOnce(new ProblemError(0, "network_error", "Failed to fetch"));

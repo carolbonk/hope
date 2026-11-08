@@ -843,19 +843,22 @@ def draft_answer(
 
 
 def run_draft_all(application_id: UUID, actor: UUID | None) -> dict[str, Any]:
-    """Job body: draft every unanswered question; staff edits and existing drafts are kept."""
+    """Job body: draft every unanswered (or emptied) question; staff edits and existing drafts
+    are kept."""
     drafted = 0
     with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
         row = _row(tx, application_id)
         req = latest_requirements(tx, application_id)
         done = load_answers(tx, application_id)
-        todo = [q for q in effective_questions(req) if q.key not in done]
+        todo = [
+            q for q in effective_questions(req) if q.key not in done or not done[q.key].text.strip()
+        ]
     for q in todo:
         with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
             _draft_one(tx, application_id, row, req, q, actor)
         drafted += 1
         jobs.report({"drafted": drafted, "total": len(todo)})
-    return {"drafted": drafted, "skipped": len(done)}
+    return {"drafted": drafted, "skipped": len(effective_questions(req)) - len(todo)}
 
 
 @router.post("/applications/{application_id}/answers/draft-all", status_code=202)

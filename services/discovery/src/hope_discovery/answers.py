@@ -599,6 +599,10 @@ class AnswerDrafter:
                 and not any(same_need(item, c) for c in [*confirm, *known])
             ):
                 confirm.append(item)
+        marked = [m.strip() for m in TO_CONFIRM.findall(text)]
+        for item in confirm[:15]:
+            if not any(same_need(item, m) or _norm_need(item) == _norm_need(m) for m in marked):
+                text = f"{text.rstrip()} [TO CONFIRM: {item}]"
         sourced = {c.sentence.strip() for c in draft.claims if set(c.refs) & seen}
         filled = [ans for ans, line in staff.values() if line in used]
         unsourced = [
@@ -731,12 +735,16 @@ class Checklist(BaseModel):
     complete: bool
 
 
+def _norm_need(text: str) -> str:
+    return " ".join(re.sub(r"[^a-z0-9 ]", " ", text.lower()).split())
+
+
 def question_status(q: Question, a: Answer | None) -> str:
     if a is None or not a.text.strip():
         return "missing"
     if over_limit(a.text, q.limit):
         return "over_limit"
-    if TO_CONFIRM.search(a.text):
+    if TO_CONFIRM.search(a.text) or (a.origin != "human" and a.to_confirm):
         return "to_confirm"
     return "edited" if a.origin == "human" else "drafted"
 

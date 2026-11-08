@@ -126,8 +126,12 @@ def test_quotes_not_on_the_page_are_dropped() -> None:
 
     r, _ = reader(invented)
     req = r.read(GRANT)
-    assert req.questions == [] and req.attachments == [] and req.submission.deadline is None
-    assert {p.status for p in req.pages if p.status != "failed"} == {"no_info"}
+    assert req.questions == [] and req.attachments == []
+    # the invented April deadline is dropped; code finds the page's own one
+    assert req.submission.deadline is not None
+    assert req.submission.deadline.text == "Applications are due March 1, 2027."
+    status = {p.url: p.status for p in req.pages}
+    assert status[GRANT] == "read" and status[GUIDE] == "no_info"
 
 
 def test_model_failure_marks_the_page_failed() -> None:
@@ -309,3 +313,44 @@ def test_full_question_replaces_an_earlier_bare_label() -> None:
     assert [q.prompt for q in out.questions] == ["Statement of Need (500 words): Describe the gap."]
     assert out.questions[0].key == question_key("Statement of Need")
     assert out.questions[0].limit == Limit(unit="words", max=500)
+
+
+FORM = """Rural Oral Health Access Grant 2027 - Application Form
+Funding: Awards up to $100,000. A 1:1 cost share (match) is required.
+Indirect costs are capped at 10% of direct costs.
+Deadline: Applications are due March 1, 2027 at 5:00 PM Pacific via the online portal.
+Section 1. Statement of Need (500 words max): Describe the oral health access gap.
+Attachments: logic model; budget justification; letters of support."""
+DUE = "Applications are due March 1, 2027 at 5:00 PM Pacific via the online portal."
+
+
+def test_code_backstop_catches_uploads_deadline_and_budget_the_model_skipped() -> None:
+    def thin(messages: list[Message], schema: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "is_application_info": True,
+            "questions": [{"prompt": "Statement of Need"}],
+            "attachments": [{"name": "Logic model", "quote": "logic model"}],
+            "submission_method": DUE,
+        }
+
+    r, _ = reader(thin)
+    req = r.read_text(FORM)
+    assert [a.name for a in req.attachments] == [
+        "Logic model",
+        "Budget justification",
+        "Letters of support",
+    ]
+    assert all(a.quote.startswith("Attachments:") for a in req.attachments)
+    assert req.submission.deadline_date == date(2027, 3, 1)
+    assert req.budget.match_rule and "1:1 cost share" in req.budget.match_rule.text
+    assert (
+        req.budget.max_request_amount and req.budget.max_request_amount.amount_minor == 10_000_000
+    )
+    assert req.budget.indirect_rule and "10%" in req.budget.indirect_rule.text
+
+
+def test_a_new_paste_replaces_the_old_deadline_even_when_the_model_misses_it() -> None:
+    r, _ = reader(lambda m, s: {"is_application_info": True})
+    first = r.read_text(FORM)
+    second = r.read_text(FORM.replace("March 1", "March 15"), base=first)
+    assert second.submission.deadline_date == date(2027, 3, 15)

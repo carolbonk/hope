@@ -22,6 +22,7 @@ from hope_discovery.answers import (
     measure,
     mock_answer,
     owner_for,
+    question_status,
     same_need,
     standard_questions,
     strip_refs,
@@ -374,3 +375,14 @@ def test_same_missing_fact_is_asked_once_across_questions() -> None:
     }
     c = build_checklist(req, answers, date(2026, 11, 7))
     assert [n.text for n in c.inputs_needed] == [gap]
+
+
+def test_every_open_fact_is_marked_in_the_text() -> None:
+    def unmarked(messages: list[Message], schema: dict[str, Any]) -> dict[str, Any]:
+        return {"text": "We serve rural families.", "claims": [], "to_confirm": ["board size"]}
+
+    result = drafter(unmarked).draft(agency_profile(), GRANT, Requirements(), q("Describe it."))
+    assert "[TO CONFIRM: board size]" in result.text
+    answer = Answer(question_key="k", text="We serve rural families.", origin="ai",
+                    to_confirm=["board size"])  # fmt: skip
+    assert question_status(q("Describe it."), answer) == "to_confirm"

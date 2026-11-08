@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useStoredJson } from "./storage";
 import { PROFILE_STEPS, record } from "./dossier";
 import { isGrantId, mirrorDecision, type RemoteDecisions } from "./sync/decisions";
-import { saveRemoteProfile } from "./sync/profile";
+import { profileSaveOutcome, saveRemoteProfile, type SaveOutcome } from "./sync/profile";
 import type { Application, Eligibility, HopeState, Opportunity, OrgProfile, ReqId, RequirementRecord, SectionId, Stage, TriState } from "./types";
 
 export { PROFILE_STEPS };
@@ -195,10 +195,11 @@ export function useHope() {
   const update = useCallback((fn: (s: HopeState) => HopeState) => setState(fn(state)), [state, setState]);
 
   const saveProfile = useCallback(
-    (profile: OrgProfile) => {
+    (profile: OrgProfile): Promise<SaveOutcome> => {
       const saved = { ...profile, updatedAt: now() };
       update((s) => ({ ...s, profile: saved }));
       safely(() => saveRemoteProfile(saved));
+      return profileSaveOutcome();
     },
     [update],
   );

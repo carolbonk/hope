@@ -68,7 +68,7 @@ export function Modal({ open, title, onClose, children, footer, variant = "dialo
         aria-describedby={description ? descId : undefined}
         className={cx(
           "glass-panel relative flex max-h-full flex-col",
-          drawer ? "h-full w-full max-w-xl rounded-l-[var(--radius-glass)]" : "w-full max-w-md rounded-[var(--radius-glass)]",
+          drawer ? "h-full w-full max-w-xl rounded-l-[var(--radius-glass)]" : "max-h-[90vh] w-full max-w-2xl rounded-[var(--radius-glass)]",
         )}
       >
         <div className="flex items-start justify-between gap-4 p-5 pb-3">

@@ -5,7 +5,11 @@ import { mirrorDecision } from "./sync/decisions";
 import { saveRemoteProfile } from "./sync/profile";
 
 vi.mock("./sync/decisions", async (actual) => ({ ...(await actual<typeof import("./sync/decisions")>()), mirrorDecision: vi.fn(), flushDecisions: vi.fn() }));
-vi.mock("./sync/profile", () => ({ saveRemoteProfile: vi.fn(), loadRemoteProfile: vi.fn() }));
+vi.mock("./sync/profile", () => ({
+  saveRemoteProfile: vi.fn(),
+  loadRemoteProfile: vi.fn(),
+  profileSaveOutcome: vi.fn(async () => ({ ok: true, fields: [] })),
+}));
 
 const opp = demoOpportunities(new Date("2026-11-07"))[0]!;
 const stored = () => JSON.parse(window.localStorage.getItem(HOPE_KEY) ?? "null");
@@ -38,7 +42,9 @@ it("undo mirrors the last decision as new, and nothing with an empty history", (
 
 it("saveProfile saves remotely; hydrateProfile does not echo", () => {
   const { result } = renderHook(() => useHope());
-  act(() => result.current.saveProfile(DEMO_PROFILE));
+  act(() => {
+    void result.current.saveProfile(DEMO_PROFILE);
+  });
   expect(saveRemoteProfile).toHaveBeenCalledTimes(1);
   expect(vi.mocked(saveRemoteProfile).mock.calls[0]![0].legalName).toBe(DEMO_PROFILE.legalName);
   act(() => result.current.hydrateProfile({ ...DEMO_PROFILE, legalName: "From server" }));
@@ -56,7 +62,9 @@ it("a throwing adapter never breaks the page or the browser state", () => {
   });
   const { result } = renderHook(() => useHope());
   act(() => result.current.decide(opp, "saved"));
-  act(() => result.current.saveProfile(DEMO_PROFILE));
+  act(() => {
+    void result.current.saveProfile(DEMO_PROFILE);
+  });
   expect(stored().decisions[opp.id].decision).toBe("saved");
   expect(stored().profile.legalName).toBe(DEMO_PROFILE.legalName);
   warn.mockRestore();

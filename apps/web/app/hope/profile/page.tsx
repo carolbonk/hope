@@ -112,9 +112,15 @@ function ProfileWizard() {
 
   function persist(next: OrgProfile) {
     setDraft(next);
-    saveProfile(next);
     setDirty(false);
-    setSavedFlash(true);
+    setSavedFlash(false);
+    void saveProfile(next).then((r) => {
+      if (r.ok) setSavedFlash(true);
+      else {
+        setDirty(true);
+        setError(p.errSave(r.fields));
+      }
+    });
   }
 
   function commit(nextStep: number) {

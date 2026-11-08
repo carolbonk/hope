@@ -39,19 +39,67 @@ const RULE_TONE: Record<string, [Tone, IconName]> = {
 export function ApplyWorkspace({ view, run }: { view: ApplicationView; run: Run }) {
   return (
     <div className="space-y-4" data-testid="apply-workspace">
-      <FormSource view={view} run={run} />
+      <div id="step-form" className="scroll-mt-4">
+        <FormSource view={view} run={run} />
+      </div>
       <ChangesPanel changes={view.changes ?? []} />
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <RulesPanel view={view} run={run} />
+          <div id="step-rules" className="scroll-mt-4">
+            <RulesPanel view={view} run={run} />
+          </div>
           <TermsPanel terms={view.terms} />
-          <QuestionList view={view} run={run} />
-          <Uploads items={view.checklist.items.filter((i) => i.kind === "attachment")} />
+          <div id="step-answers" className="scroll-mt-4">
+            <QuestionList view={view} run={run} />
+          </div>
+          <div id="step-uploads" className="scroll-mt-4">
+            <Uploads items={view.checklist.items.filter((i) => i.kind === "attachment")} />
+          </div>
         </div>
-        <TodoPanel view={view} run={run} />
+        <div id="step-todo" className="h-fit scroll-mt-4">
+          <TodoPanel view={view} run={run} />
+        </div>
       </div>
-      <ReadyPanel view={view} />
+      <div id="step-ready" className="scroll-mt-4">
+        <ReadyPanel view={view} />
+      </div>
     </div>
+  );
+}
+
+type Next = { anchor: string; text: string };
+
+/** The one piece of work to do now, in the order it happens: form, rules, answers, team, uploads. */
+export function nextStep(view: ApplicationView, t: ReturnType<typeof useHopeT>["h"]["apply"]): Next {
+  const items = view.checklist.items;
+  const qs = items.filter((i) => i.kind === "question");
+  const n = (status: string) => qs.filter((i) => i.status === status).length;
+  if (api.running(view.requirements_job) || view.questions_status === "reading") return { anchor: "step-form", text: t.next.reading };
+  if (view.questions_status === "unread" || view.questions.length === 0) return { anchor: "step-form", text: t.next.form };
+  const notMet = view.rules.filter((r) => r.status === "not_met").length;
+  if (notMet) return { anchor: "step-rules", text: t.next.rules(notMet) };
+  if (n("missing")) return { anchor: "step-answers", text: t.next.draft(n("missing")) };
+  const open = view.checklist.inputs_needed.filter((x) => !x.answer && !x.text.startsWith("Upload:")).length;
+  if (open) return { anchor: "step-todo", text: t.next.todo(open) };
+  if (n("over_limit")) return { anchor: "step-answers", text: t.next.over(n("over_limit")) };
+  if (n("to_confirm")) return { anchor: "step-answers", text: t.next.confirm(n("to_confirm")) };
+  const uploads = items.filter((i) => i.kind === "attachment" && i.status === "upload_needed").length;
+  if (uploads) return { anchor: "step-uploads", text: t.next.uploads(uploads) };
+  return { anchor: "step-ready", text: t.next.ready };
+}
+
+/** The work hint inside the page's next-action bar. */
+export function NextStep({ view }: { view: ApplicationView }) {
+  const { h } = useHopeT();
+  const t = h.apply;
+  const next = nextStep(view, t);
+  return (
+    <p className="mt-3 rounded-xl bg-cream/10 px-3 py-2 text-sm" data-testid="next-step" data-anchor={next.anchor}>
+      <span className="font-semibold text-gold-light">{t.nextTitle}:</span> {next.text}{" "}
+      <a href={`#${next.anchor}`} className={`font-semibold text-gold-light underline ${focusRing}`}>
+        {t.go} ↓
+      </a>
+    </p>
   );
 }
 
