@@ -118,7 +118,8 @@ describe("fetchOpportunities", () => {
   it("reads new saved and passed", async () => {
     const { fetchOpportunities } = await load(true);
     const passed = card({ grant_id: "g-passed", title: "Passed grant" });
-    const fetch = vi.fn(async (url: string) => {
+    const fetch = vi.fn(async (url: string, init?: RequestInit) => {
+      void init;
       const status = new URL(url).searchParams.get("status");
       return json(status === "new" ? mockBody("new") : status === "saved" ? mockBody("saved") : { items: [passed] });
     });
