@@ -43,20 +43,24 @@ def run_service_seeds() -> list[str]:
     return ran
 
 
-def ensure_invite_code(env_file: Path = Path(".env")) -> str | None:
-    """Write `HOPE_INVITE_CODE` to `.env` when it has none; returns the new code (printed once)."""
+def ensure_env(name: str, value: str, env_file: Path = Path(".env")) -> str | None:
+    """Write `name=value` to `.env` when it has no value for `name`; returns what was written."""
     text = env_file.read_text() if env_file.exists() else ""
-    if re.search(r"^HOPE_INVITE_CODE=\S", text, re.MULTILINE):
+    if re.search(rf"^{name}=\S", text, re.MULTILINE):
         return None
-    code = secrets.token_urlsafe(16)
-    text = re.sub(r"^HOPE_INVITE_CODE=.*\n?", "", text, flags=re.MULTILINE)
+    text = re.sub(rf"^{name}=.*\n?", "", text, flags=re.MULTILINE)
     if text and not text.endswith("\n"):
         text += "\n"
-    env_file.write_text(f"{text}HOPE_INVITE_CODE={code}\n")
-    return code
+    env_file.write_text(f"{text}{name}={value}\n")
+    return value
+
+
+def ensure_invite_code(env_file: Path = Path(".env")) -> str | None:
+    return ensure_env("HOPE_INVITE_CODE", secrets.token_urlsafe(16), env_file)
 
 
 def main() -> None:
+    ensure_env("HOPE_SESSION_SECRET", secrets.token_urlsafe(32))
     code = ensure_invite_code()
     if code:
         print(f"wrote HOPE_INVITE_CODE to .env; share it to let others sign up: {code}")

@@ -89,8 +89,31 @@ def test_interrupted_jobs_fail_on_startup() -> None:
     with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
         running = store.create_job(tx, "discovery")
         store.update_job_progress(tx, running.job_id, {"current_step": "Reading"})
+        tx.execute(
+            "UPDATE jobs SET heartbeat_at = now() - interval '10 minutes' WHERE job_id = %s",
+            (running.job_id,),
+        )
+        live = store.create_job(tx, "discovery")
+        store.update_job_progress(tx, live.job_id, {"current_step": "Searching"})
         queued = store.create_job(tx, "discovery")
     assert jobs.fail_interrupted_jobs() == 1
     assert job(running.job_id).status == "failed"
     assert job(running.job_id).error == "Interrupted by restart"
+    assert job(live.job_id).status == "running", "a job heartbeating in another process stays"
     assert job(queued.job_id).status == "queued"
+
+
+def test_a_queued_job_is_claimed_once() -> None:
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        created = store.create_job(tx, "discovery")
+    with (
+        connect() as a, connect() as b, tenant_tx(a, get_settings().tenant_id) as tx_a,
+        tenant_tx(b, get_settings().tenant_id) as tx_b,
+    ):
+        assert store.claim_job(tx_a, created.job_id, "discovery") is True
+        tx_b.execute("SET LOCAL lock_timeout = '200ms'")
+        with pytest.raises(psycopg.errors.LockNotAvailable):
+            store.claim_job(tx_b, created.job_id, "discovery")
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        assert store.claim_job(tx, created.job_id, "discovery") is False
+        assert store.claim_job(tx, created.job_id, "other") is False

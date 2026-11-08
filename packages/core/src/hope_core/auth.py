@@ -15,6 +15,7 @@ from hope_core import store
 from hope_core.db import connect, tenant_tx
 from hope_core.settings import HopeSettings, get_settings
 
+MIN_SESSION_SECRET = 16
 COOKIE_NAME = "hope_session"
 SESSION_MAX_AGE = 14 * 24 * 3600
 _hasher = PasswordHasher()
@@ -62,8 +63,17 @@ def verify_password(password_hash: str, password: str) -> bool:
         return False
 
 
+class SessionSecretError(RuntimeError):
+    """`HOPE_SESSION_SECRET` is unset or too short, so sessions can't be signed or checked."""
+
+
 def _serializer(settings: HopeSettings) -> URLSafeTimedSerializer:
-    return URLSafeTimedSerializer(settings.session_secret, salt="hope-session")
+    secret = settings.session_secret or ""
+    if len(secret) < MIN_SESSION_SECRET:
+        raise SessionSecretError(
+            f"HOPE_SESSION_SECRET must be set (at least {MIN_SESSION_SECRET} characters)"
+        )
+    return URLSafeTimedSerializer(secret, salt="hope-session")
 
 
 def make_session_token(user_id: UUID, settings: HopeSettings | None = None) -> str:

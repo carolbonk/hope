@@ -8,11 +8,13 @@ from typing import Any
 import httpx
 import pytest
 from hope_core.model_gateway import (
+    BudgetExceededError,
     Message,
     MockProvider,
     ModelGateway,
     ModelOutputError,
     ModelTier,
+    RunBudget,
     default_gateway,
 )
 from hope_core.openai_provider import OpenAIProvider
@@ -94,6 +96,14 @@ def test_schema_mismatch_retries_then_raises() -> None:
     with pytest.raises(ModelOutputError):
         gateway(transport).structured(ModelTier.SMALL, messages(), Other)
     assert len(seen) == 2
+
+
+def test_invalid_output_counts_toward_the_budget() -> None:
+    transport, seen = replay("chat_invalid", "chat_ok")
+    budget = RunBudget(max_calls=1)
+    with pytest.raises(BudgetExceededError):
+        gateway(transport).structured(ModelTier.SMALL, messages(), NteeSuggestionOut, budget)
+    assert len(seen) == 2 and budget.calls == 2 and budget.tokens == 300
 
 
 def test_429_retries() -> None:

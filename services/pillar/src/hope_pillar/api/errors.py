@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from hope_core.auth import ProblemException
+from hope_core.auth import ProblemException, SessionSecretError
 
 PROBLEM_JSON = "application/problem+json"
 
@@ -33,6 +33,11 @@ async def _validation(_request: Request, exc: Exception) -> JSONResponse:
     return problem_response(problem)
 
 
+async def _misconfigured(_request: Request, exc: Exception) -> JSONResponse:
+    return problem_response(ProblemException(503, "server_misconfigured", str(exc)))
+
+
 def install(app: FastAPI) -> None:
     app.add_exception_handler(ProblemException, _problem)
+    app.add_exception_handler(SessionSecretError, _misconfigured)
     app.add_exception_handler(RequestValidationError, _validation)

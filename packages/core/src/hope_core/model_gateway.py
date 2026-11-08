@@ -33,6 +33,14 @@ class BudgetExceededError(RuntimeError):
     pass
 
 
+class InvalidOutputError(ValueError):
+    """A provider call succeeded (and cost `tokens`) but its content wasn't a JSON object."""
+
+    def __init__(self, tokens: int = 0) -> None:
+        super().__init__("model output is not a JSON object")
+        self.tokens = tokens
+
+
 class ModelOutputError(ValueError):
     """The model returned invalid structured output twice in a row."""
 
@@ -128,7 +136,9 @@ class ModelGateway:
                     data, tokens = provider.complete_json(tier, messages, schema)
                 except (LookupError, BudgetExceededError):
                     raise
-                except json.JSONDecodeError:
+                except (InvalidOutputError, json.JSONDecodeError) as exc:
+                    if budget is not None:  # the call happened, so it counts
+                        budget.charge(getattr(exc, "tokens", 0))
                     continue  # invalid JSON from the model: retry once
                 except Exception as exc:  # provider down: fail over to the next provider
                     last_error = exc
