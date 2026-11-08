@@ -167,3 +167,14 @@ def test_notes_to_the_reader_are_not_questions() -> None:
     assert not is_question("Organizations are limited to one grant proposal per cycle.")
     assert asks_for_document("Upload your IRS determination letter.")
     assert not asks_for_document("A nonprofit must have current tax-exempt status under 501(c)(3).")
+
+
+def test_budget_format_must_talk_about_the_budget() -> None:
+    def noisy(messages: list[Message], schema: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "is_application_info": True,
+            "budget_format": "The Health Access Grant supports rural clinics.",
+        }
+
+    r, _ = reader(noisy)
+    assert r.read(GRANT).budget.format is None

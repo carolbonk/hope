@@ -384,7 +384,10 @@ class RequirementsReader:
         b = out.budget
         for field in ("format", "max_request", "match_rule", "indirect_rule"):
             source_field = "budget_format" if field == "format" else field
-            if getattr(b, field) is None and (s := sourced(getattr(ext, source_field))):
+            s = sourced(getattr(ext, source_field))
+            if s and field == "format" and "budget" not in s.text.lower():
+                s = None
+            if getattr(b, field) is None and s:
                 setattr(b, field, s)
                 found = True
         if b.max_request and b.max_request_amount is None:
