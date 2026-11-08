@@ -231,13 +231,13 @@ Offline (no `NEXT_PUBLIC_HOPE_API_URL`): `FixtureProfileApi("empty", 400)` and `
 
 ## 11. Fixture data
 
-`apps/web/api/profile/fixture.ts` (`FixtureProfileApi`):
+`apps/web/lib/api/profile/fixture.ts` (`FixtureProfileApi`):
 - Modes: `empty` (404), `existing` (`DEMO_FORM`, version 3), `invalid` (422 `basics.ein` / `invalid_ein_prefix` and
   `programs.0.description` / `too_short`), `conflict` (409) and `network`.
 - `network` throws `ProblemError(0, "network_error")` once H0's `api/http.ts` lands.
 - With no `etag` on an existing profile, it gives 428.
 
-`apps/web/api/onboarding/fixture.ts` (`FixtureOnboardingApi`):
+`apps/web/lib/api/onboarding/fixture.ts` (`FixtureOnboardingApi`):
 - `searchNtee` uses `searchNteeCodes` (26 groups + about 40 codes in `api/onboarding/ntee.ts`).
 - `suggestNtee` uses keyword rules with exact-substring quotes (E32, F30, O50, K31, L41). Modes: `unverified` and `down` (`suggestions_unavailable`).
 - These are the same rules as the backend's `hope_profile/ntee_mock.py`.
@@ -283,7 +283,7 @@ Existing tests are in `apps/web/features/onboarding/OnboardingWizard.test.tsx`. 
 | AC11 | `::review edit links` (new) |
 | AC12 | `::existing profile prefills and sends if match` (new) |
 | AC13 | `::redirects to login on 401` (new) |
-| AC14 | `::finish invalidates the session` (new; mock `@/api/session`) |
+| AC14 | `::finish invalidates the session` (new; mock `@/lib/api/session`) |
 | AC15 | reviewer check: `git diff main -- apps/web/app/globals.css apps/web/features/onboarding/steps` shows no markup or copy change |
 
 `apps/web/lib/hope/fromOnboarding.test.ts` covers `seedHopeProfile` and `profileFromOnboarding` (exists, plus H1's new cases).

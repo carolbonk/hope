@@ -1,4 +1,4 @@
-import type { BudgetBand, FieldError, ProfileForm, ProgramForm, TaxStatus } from "@/api/profile";
+import type { BudgetBand, FieldError, ProfileForm, ProgramForm, TaxStatus } from "@/lib/api/profile";
 
 export const STEPS = [
   { id: "basics", title: "Basics", rail: "Basics", why: "Funders check who you are and where you work. Hope searches by your service area." },

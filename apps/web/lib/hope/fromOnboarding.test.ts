@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { ProfileForm } from "@/api/profile/types";
-import { DEMO_FORM } from "@/api/profile/fixture";
+import type { ProfileForm } from "@/lib/api/profile/types";
+import { DEMO_FORM } from "@/lib/api/profile/fixture";
 import { formFromProfile, profileFromOnboarding, seedHopeProfile } from "./fromOnboarding";
 import { HOPE_KEY, PROFILE_STEPS, emptyProfile } from "./store";
 import type { OrgProfile } from "./types";

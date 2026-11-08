@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import type { NteeCode, NteeSuggestion, OnboardingApi } from "@/api/onboarding";
-import { ProblemError } from "@/api/profile";
+import type { NteeCode, NteeSuggestion, OnboardingApi } from "@/lib/api/onboarding";
+import { ProblemError } from "@/lib/api/profile";
 import { Badge, Button, Icon } from "@/components/ui";
 import { cx } from "@/lib/cx";
 import { AutoDismiss } from "@/components/ui/AutoDismiss";

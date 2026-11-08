@@ -1,23 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { LOCALES, LOCALE_COOKIE, type Locale } from "@/lib/locale";
+import { LOCALES, type Locale } from "@/lib/locale";
 import { useI18n } from "./I18nProvider";
 
-function saveLocale(next: Locale) {
-  document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
-}
-
 export function LanguageToggle({ tone = "dark" }: { tone?: "dark" | "light" }) {
-  const { locale, t } = useI18n();
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { locale, t, setLocale } = useI18n();
 
   function choose(next: Locale) {
-    if (next === locale) return;
-    saveLocale(next);
-    startTransition(() => router.refresh());
+    if (next !== locale) setLocale(next);
   }
 
   return (
@@ -27,7 +17,6 @@ export function LanguageToggle({ tone = "dark" }: { tone?: "dark" | "light" }) {
           key={l}
           type="button"
           onClick={() => choose(l)}
-          disabled={pending}
           aria-pressed={l === locale}
           className={`rounded-full px-2.5 py-1 uppercase transition ${
             tone === "dark"

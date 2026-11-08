@@ -1,4 +1,4 @@
-import type { ProfileForm, ProgramForm, TaxStatus } from "@/api/profile/types";
+import type { ProfileForm, ProgramForm, TaxStatus } from "@/lib/api/profile/types";
 import { bandFor, US_STATES } from "@/features/onboarding/model";
 import { PROFILE_STEPS } from "./dossier";
 import { writeStoredJson } from "./storage";

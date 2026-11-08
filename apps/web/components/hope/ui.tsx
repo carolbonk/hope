@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import { online } from "@/api/http";
-import { signOut as endSession, useSession } from "@/api/session";
+import { online } from "@/lib/api/http";
+import { signOut as endSession, useSession } from "@/lib/api/session";
 import { useToday } from "@/components/useToday";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";

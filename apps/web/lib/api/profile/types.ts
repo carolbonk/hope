@@ -1,4 +1,4 @@
-export { ProblemError, type FieldError } from "@/api/http";
+export { ProblemError, type FieldError } from "@/lib/api/http";
 
 // Client view of H1's hackathon profile endpoints (docs/specs/features/H1-sign-in-and-profile.md).
 export type TaxStatus =

@@ -1,7 +1,7 @@
 // Mirrors Discover decisions to `/v1/grants` through a localStorage outbox, and loads the server's saved and
 // passed grants back for `useHope().hydrateDecisions`. Never throws or rejects; with sync off it does nothing.
 // The browser state (`hope:state:v1`) is never read or changed here.
-import { apiFetch, online, ProblemError } from "@/api/http";
+import { apiFetch, online, ProblemError } from "@/lib/api/http";
 
 export type DecisionStatus = "saved" | "passed" | "new";
 

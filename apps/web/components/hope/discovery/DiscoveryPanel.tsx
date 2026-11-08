@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ProblemError, online as syncOnline } from "@/api/http";
+import { ProblemError, online as syncOnline } from "@/lib/api/http";
 import { btnPrimary, btnSecondary, eyebrow, focusRing, input } from "@/components/hope/ui";
 import { AutoDismiss } from "@/components/ui/AutoDismiss";
 import { useHopeT, type HopeDict } from "@/lib/hope/i18n";

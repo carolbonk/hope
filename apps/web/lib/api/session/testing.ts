@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const MOCKS = join(__dirname, "..", "..", "..", "..", "contracts", "mocks", "w1");
+const MOCKS = join(__dirname, "..", "..", "..", "..", "..", "contracts", "mocks", "w1");
 
 /** A `contracts/mocks/w1/<name>.json` mock as a fetch `Response`. */
 export function w1(name: string): Response {

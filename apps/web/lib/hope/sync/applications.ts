@@ -2,7 +2,7 @@
 // all from `/v1/applications`. Writes send `If-Match: <version>`; a stale version is a 412.
 // H4 on the server: eligibility evidence, internal approvals, comments and stage moves, mirrored into
 // the browser `Application` with `mirror`.
-import { API_URL, apiFetch, ProblemError } from "@/api/http";
+import { API_URL, apiFetch, ProblemError } from "@/lib/api/http";
 import type { Application, Stage, TriState } from "@/lib/hope/types";
 
 export type Owner = "program" | "finance" | "director";

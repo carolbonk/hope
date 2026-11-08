@@ -1,4 +1,4 @@
-import { API_URL, ProblemError, UNAUTHORIZED_EVENT, apiFetch, type FieldError } from "@/api/http";
+import { API_URL, ProblemError, UNAUTHORIZED_EVENT, apiFetch, type FieldError } from "@/lib/api/http";
 import { discoveryJobView, discoveryRunList, type DiscoveryApi, type DiscoveryJobView, type DiscoveryRequest, type DiscoveryRunList } from "./types";
 
 /** A `ProblemError` that keeps the problem body's extra members (`job_id`, `missing`, `limit`, `resets_at`). */

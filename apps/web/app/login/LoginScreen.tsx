@@ -2,8 +2,8 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ProblemError } from "@/api/http";
-import { invalidateSession, login, me, safeNext } from "@/api/session";
+import { ProblemError } from "@/lib/api/http";
+import { invalidateSession, login, me, safeNext } from "@/lib/api/session";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useI18n } from "@/components/I18nProvider";
 import { Logo } from "@/components/hope/ui";

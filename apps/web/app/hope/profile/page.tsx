@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { online } from "@/api/http";
+import { online } from "@/lib/api/http";
 import { useEffect, useMemo, useState } from "react";
 import { btnPrimary, btnSecondary, ClientOnly, focusRing, input, PageIntro, Panel } from "@/components/hope/ui";
 import { demoOpportunities } from "@/lib/hope/demo";

@@ -1,5 +1,5 @@
-import { online, ProblemError } from "@/api/http";
-import { profileApi, type ProfileForm, type ProfileSections, type ProfileView } from "@/api/profile";
+import { online, ProblemError } from "@/lib/api/http";
+import { profileApi, type ProfileForm, type ProfileSections, type ProfileView } from "@/lib/api/profile";
 import { validateStep, type StepId } from "@/features/onboarding/model";
 import { formFromProfile, profileFromOnboarding } from "../fromOnboarding";
 import { HOPE_KEY, normalizeProfile, PROFILE_STEPS } from "../store";

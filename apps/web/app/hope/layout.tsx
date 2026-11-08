@@ -1,4 +1,4 @@
-import { RequireSession } from "@/api/session/RequireSession";
+import { RequireSession } from "@/lib/api/session/RequireSession";
 import { HopeFooter, HopeNav } from "@/components/hope/ui";
 import { HopeSync } from "@/lib/hope/sync";
 

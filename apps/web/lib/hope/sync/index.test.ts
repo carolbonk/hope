@@ -1,6 +1,6 @@
 import { act, render } from "@testing-library/react";
 import { createElement } from "react";
-import { w1 } from "@/api/session/testing";
+import { w1 } from "@/lib/api/session/testing";
 
 const adapters = vi.hoisted(() => ({
   loadRemoteProfile: vi.fn(),

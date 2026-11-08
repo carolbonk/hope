@@ -31,7 +31,7 @@ There is no product logic beyond auth. H0 builds no screen and restyles nothing.
 - **Browser state:** `useHope()` (`lib/hope/store.ts`) over `localStorage` key `hope:state:v1`
   (`{ version: 1, profile, decisions, history, applications }`), and `useOpportunities()` (`lib/hope/opportunities.ts`)
   over the demo catalog (`lib/hope/demo.ts`). H4/H5 run entirely on this state plus `POST /api/hope/draft`.
-- **Layout:** `apps/web` has no `src/`. `app/`, `components/`, `lib/`, `features/`, `api/` sit at the package root
+- **Layout:** `apps/web` has no `src/`. `app/`, `components/`, `lib/` (API clients in `lib/api/`), `features/` sit at the package root
   and `@/*` maps to `./*`.
 - **Design:** the liquid-glass `app/globals.css` and `components/ui/**`. H0 never changes them, and never changes
   `features/onboarding/**`.
@@ -131,7 +131,7 @@ export function loadRemoteDecisions(): Promise<RemoteDecisions | null>;        /
 hydrateDecisions(remote: RemoteDecisions): void; // writes mergeRemoteDecisions(latestState(), remote); never echoes
 
 // lib/hope/sync/index.ts (H0, stays H0's)
-export { online as syncEnabled } from "@/api/http"; // NEXT_PUBLIC_HOPE_API_URL set
+export { online as syncEnabled } from "@/lib/api/http"; // NEXT_PUBLIC_HOPE_API_URL set
 export function HopeSync(): null;           // mounted once in app/hope/layout.tsx
 ```
 
@@ -349,7 +349,7 @@ db/migrations/0002_hackathon.sql
 services/pillar/**                  (app wiring, CORS, auth.py, me.py, empty discovery.py/grants.py, snapshots, demo seed runner)
 services/discovery/**               (skeleton only)
 services/profile/**                 (import-only edits: get_principal, Principal)
-apps/web/api/http.ts, apps/web/api/session/**
+apps/web/lib/api/http.ts, apps/web/lib/api/session/**
 apps/web/app/hope/layout.tsx, apps/web/components/hope/ui.tsx (HopeNav user/Sign out only; SC00)
 apps/web/lib/hope/sync/**           (index.ts stays H0's; profile/opportunities/decisions pass to H1/H2/H3 after H0)
 apps/web/package.json, pnpm-lock.yaml, Makefile, pyproject.toml, uv.lock, infra/docker-compose.yml, AGENTS.md
@@ -391,7 +391,7 @@ All offline: `MockProvider`, `RecordedWebTools`, httpx `MockTransport`, `HOPE_JO
 | AC7 | `packages/core/tests/test_openai_provider.py` (`test_default_gateway_without_key`, `test_structured_validates`, `test_invalid_output_retries_then_raises`, `test_429_retries`, `test_no_mock_fallback`, `test_log_has_no_message_text`) |
 | AC8 | `packages/core/tests/test_jobs.py` (incl. `test_adopts_existing_job_id`, `test_exception_marks_failed`) |
 | AC9 | `services/pillar/tests/test_openapi.py::test_router_snapshots` + the full suite |
-| AC10, AC11 | `apps/web/api/session/RequireSession.test.tsx`, `apps/web/api/http.test.ts`, `apps/web/components/hope/ui.test.tsx` (see SC00) |
+| AC10, AC11 | `apps/web/lib/api/session/RequireSession.test.tsx`, `apps/web/lib/api/http.test.ts`, `apps/web/components/hope/ui.test.tsx` (see SC00) |
 | AC12 | `apps/web/lib/hope/sync/index.test.ts` (`HopeSync` calls, sync off), `apps/web/lib/hope/store.test.ts` (`decide`/`undo`/`saveProfile` call sites with `vi.mock("./sync/decisions")` and `vi.mock("./sync/profile")`), `apps/web/lib/hope/opportunities.test.ts` (`remote ?? demo`, a rejecting adapter) |
 | AC13 | CI diff check in the PR description |
 | AC14 | manual, recorded in the PR |
