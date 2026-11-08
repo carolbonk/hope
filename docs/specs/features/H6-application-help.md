@@ -49,6 +49,8 @@ with server data. When a grant's questions can't be found, the 6 H5 sections sta
   grant_id)`. Pass then save again reuses it; reset never deletes it.
 - Stages are code-controlled, in order: `saved -> eligibility -> approval -> drafting -> ready`. The allowed
   transitions are the H4/H5 gates, now enforced by the API (409 `stage_blocked` with the reason).
+- `submitted` is terminal and comes after `ready`: only recording the bid's portal receipt (H7) sets it, in the same
+  transaction, with a `stage` event `{from, to: "submitted", via: "bid_receipt"}`. No manual move into or out of it.
 - Every change writes a row to `application_events` (who, when, what). This is the activity log and comments.
 - Concurrency: `version` integer; every write needs `If-Match` (as `/v1/profile`), else 412.
 

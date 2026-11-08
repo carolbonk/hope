@@ -60,7 +60,8 @@ change to an item undoes the final review (event `final_review_undone`).
 ### D. Receipt
 
 `POST .../submission {receipt, portal, submitted_at}` needs the final review (else 409 `bid_blocked`). It stores
-`sent_by_hope: false`; after it the bid is read-only and every write is 409 `bid_submitted`.
+`sent_by_hope: false`; after it the bid is read-only and every write is 409 `bid_submitted`. The same transaction moves
+the application to stage `submitted` (migration `0731`), whatever its stage was; the web shows it read-only.
 
 ### E. Concurrency and history
 

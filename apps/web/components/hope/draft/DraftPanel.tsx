@@ -18,7 +18,7 @@ export function DraftPanel({ opp, app, up }: { opp: Opportunity; app: Applicatio
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
-  const unlocked = app.stage === "drafting" || app.stage === "ready";
+  const unlocked = app.stage === "drafting" || app.stage === "ready" || app.stage === "submitted";
 
   async function generate(mode: "agent" | "template") {
     const edited = SECTION_IDS.some((s) => app.sections[s].origin === "human" && app.sections[s].text.trim());

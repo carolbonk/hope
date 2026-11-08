@@ -108,6 +108,8 @@ def test_writes_need_a_current_if_match(api: TestClient, grant: GrantCandidate) 
 def test_stage_gates(api: TestClient, grant: GrantCandidate) -> None:
     app = saved_app(api, grant)
     problem(call(api, app, "stage", {"to": "drafting"}), 409, "stage_blocked")
+    body = problem(call(api, app, "stage", {"to": "submitted"}), 409, "stage_blocked")
+    assert "portal receipt" in body["errors"][0]["message"]
     app = call(api, app, "stage", {"to": "eligibility"}).json()
     app = call(api, app, "evidence", {"requirement_id": "501c3", "status": "unknown"}).json()
     body = problem(call(api, app, "stage", {"to": "approval"}), 409, "stage_blocked")

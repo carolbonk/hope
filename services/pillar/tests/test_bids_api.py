@@ -289,6 +289,17 @@ def test_final_review_then_receipt_then_read_only(api: TestClient, grant: GrantC
         if e["kind"] == "bid"
     ]
     assert actions[0] == "submission" and "final_review_undone" in actions
+    app = api.get(f"/v1/applications/{bid['application_id']}").json()
+    assert app["stage"] == "submitted"
+    moved = [e["payload"] for e in app["events"] if e["kind"] == "stage"]
+    assert moved[0] == {"from": "saved", "to": "submitted", "via": "bid_receipt"}
+    for to in ("drafting", "ready"):
+        response = api.post(
+            f"/v1/applications/{app['application_id']}/stage",
+            json={"to": to},
+            headers={"If-Match": f'"{app["version"]}"'},
+        )
+        problem(response, 409, "stage_blocked")
 
 
 def test_a_passed_deadline_blocks(api: TestClient, grant: GrantCandidate) -> None:

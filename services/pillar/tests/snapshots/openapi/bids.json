@@ -1150,7 +1150,7 @@
     },
     "/v1/bids/{grant_id}/submission": {
       "post": {
-        "description": "Record the receipt from the funder's portal after staff submitted there. Hope never\nsubmits; once recorded, the bid is read-only.",
+        "description": "Record the receipt from the funder's portal after staff submitted there. Hope never\nsubmits; once recorded, the bid is read-only and the application moves to `submitted`.",
         "operationId": "record_submission_v1_bids__grant_id__submission_post",
         "parameters": [
           {

@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { demoOpportunities } from "./demo";
-import { applicationId, DEMO_PROFILE, HOPE_KEY, ORG_ID, useHope } from "./store";
+import { applicationId, DEMO_PROFILE, HOPE_KEY, ORG_ID, STAGES, useHope } from "./store";
 import { mirrorDecision } from "./sync/decisions";
 import { saveRemoteProfile } from "./sync/profile";
 
@@ -14,6 +14,10 @@ beforeEach(() => {
   vi.mocked(mirrorDecision).mockReset();
   vi.mocked(saveRemoteProfile).mockReset();
   window.localStorage.clear();
+});
+
+it("submitted is the last stage", () => {
+  expect(STAGES.at(-1)).toBe("submitted");
 });
 
 it("decide writes locally, then mirrors once", () => {

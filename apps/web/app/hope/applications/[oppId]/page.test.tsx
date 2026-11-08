@@ -242,6 +242,15 @@ test("shows the server's message on 409/422 and refetches on a version conflict"
   await vi.waitFor(() => expect(gets()).toBe(before + 1));
 });
 
+test("a submitted application shows the stage read-only, with no next step", async () => {
+  serve(serverView({ stage: "submitted" }));
+  seed();
+  await renderPage(true);
+  expect(await screen.findByText(/Submitted through the funder's portal/)).toBeInTheDocument();
+  expect(screen.getByRole("list", { name: "Submitted" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Mark ready|Start eligibility|Send to internal/ })).toBeNull();
+});
+
 test("demo mode keeps the browser-only workspace", async () => {
   const fetch = vi.fn();
   vi.stubGlobal("fetch", fetch);
