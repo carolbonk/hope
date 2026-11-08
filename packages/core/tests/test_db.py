@@ -79,3 +79,36 @@ def test_ledger_check_rejects_non_engine_producer(migrated_db: str) -> None:
             " VALUES (%s, %s, 'v', '{\"computed_by\": \"llm\"}', 'h')",
             (str(uuid4()), TENANT_A),
         )
+
+
+def test_public_artifacts_are_read_only_for_tenants(migrated_db: str) -> None:
+    _seed(migrated_db)
+    sha = f"public-{uuid4()}"
+    with psycopg.connect(migrated_db, autocommit=True) as admin:
+        admin.execute(
+            "INSERT INTO artifacts (tenant_id, sha256, storage_uri, media_type)"
+            " VALUES (NULL, %s, 's3://public/x', 'text/plain')",
+            (sha,),
+        )
+    with connect(APP_URL) as conn, tenant_tx(conn, TENANT_A) as cur:
+        cur.execute("SELECT count(*) AS n FROM artifacts WHERE sha256 = %s", (sha,))
+        assert cur.fetchone() == {"n": 1}
+        cur.execute("UPDATE artifacts SET storage_uri = 's3://evil' WHERE sha256 = %s", (sha,))
+        assert cur.rowcount == 0
+        cur.execute("DELETE FROM artifacts WHERE sha256 = %s", (sha,))
+        assert cur.rowcount == 0
+        own = f"own-{uuid4()}"
+        cur.execute(
+            "INSERT INTO artifacts (tenant_id, sha256, storage_uri, media_type)"
+            " VALUES (%s, %s, 's3://a/x', 'text/plain')",
+            (TENANT_A, own),
+        )
+        cur.execute("UPDATE artifacts SET media_type = 'text/csv' WHERE sha256 = %s", (own,))
+        assert cur.rowcount == 1
+        cur.execute("DELETE FROM artifacts WHERE sha256 = %s", (own,))
+        assert cur.rowcount == 1
+    with psycopg.connect(migrated_db) as admin:
+        row = admin.execute(
+            "SELECT tenant_id, storage_uri FROM artifacts WHERE sha256 = %s", (sha,)
+        ).fetchone()
+        assert row == (None, "s3://public/x")

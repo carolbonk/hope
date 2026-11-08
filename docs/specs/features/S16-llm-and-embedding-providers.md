@@ -45,7 +45,7 @@ Alternatives considered:
   - `RunBudget(max_calls=50, max_tokens=200_000)` with `charge(tokens)` raising `BudgetExceededError`.
   - The `Provider` protocol: `complete_json(tier, messages, schema) -> (dict, tokens)` and `embed(texts) -> list[list[float]]`.
   - `MockProvider` (responders keyed by schema title, deterministic 64-dimension hash embeddings).
-  - `ModelGateway(providers)`. `structured()` tries providers in order and fails over on any exception except `LookupError`, charges the budget, and validates with Pydantic. A validation error raises and does **not** fail over. `embed()` always uses `providers[0]`.
+  - `ModelGateway(providers)`. `structured()` tries providers in order and fails over on any exception except `NoResponderError` (MockProvider's "no responder", a `LookupError` subclass) and `BudgetExceededError`, charges the budget, and validates with Pydantic. A validation error raises and does **not** fail over. `embed()` always uses `providers[0]`.
   - `untrusted(text, label)` and `as_json`.
 - `packages/core/src/hope_core/settings.py`: `HopeSettings.model_provider: str = "mock"` (`HOPE_MODEL_PROVIDER`). Nothing reads it.
 - `packages/core/src/hope_core/providers/__init__.py` is an empty skeleton (S00, step 13).
