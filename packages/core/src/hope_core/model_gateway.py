@@ -33,6 +33,10 @@ class BudgetExceededError(RuntimeError):
     pass
 
 
+class NoResponderError(LookupError):
+    """MockProvider has no responder for the schema: a test bug, so it never fails over."""
+
+
 class InvalidOutputError(ValueError):
     """A provider call succeeded (and cost `tokens`) but its content wasn't a JSON object."""
 
@@ -101,7 +105,7 @@ class MockProvider:
     ) -> tuple[dict[str, Any], int]:
         title = str(schema.get("title", ""))
         if title not in self.responders:
-            raise LookupError(f"MockProvider has no responder for {title!r}")
+            raise NoResponderError(f"MockProvider has no responder for {title!r}")
         tokens = sum(len(m.content) for m in messages) // 4 + 1
         return self.responders[title](messages, schema), tokens
 
@@ -134,7 +138,7 @@ class ModelGateway:
             for _attempt in range(2):
                 try:
                     data, tokens = provider.complete_json(tier, messages, schema)
-                except (LookupError, BudgetExceededError):
+                except (NoResponderError, BudgetExceededError):
                     raise
                 except (InvalidOutputError, json.JSONDecodeError) as exc:
                     if budget is not None:  # the call happened, so it counts
