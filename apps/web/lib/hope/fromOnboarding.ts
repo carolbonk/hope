@@ -1,5 +1,6 @@
 import type { ProfileForm, ProgramForm, TaxStatus } from "@/api/profile/types";
 import { bandFor, US_STATES } from "@/features/onboarding/model";
+import { PROFILE_STEPS } from "./dossier";
 import { writeStoredJson } from "./storage";
 import { HOPE_KEY, normalizeProfile } from "./store";
 import type { HopeState, OrgProfile } from "./types";
@@ -8,8 +9,11 @@ const NTEE_FOCUS: Record<string, string[]> = {
   B: ["education"], E: ["health"], F: ["mental_health"], I: ["safety"], O: ["youth", "mentoring"], P: ["family"], A: ["arts"],
 };
 
-/** Maps the onboarding wizard's answers onto the Hope profile the discover and workspace screens read. */
-export function profileFromOnboarding(form: ProfileForm, base: OrgProfile): OrgProfile {
+/**
+ * Maps the onboarding wizard's answers onto the Hope profile the discover and workspace screens read.
+ * `complete`: the server says onboarding is done, so the profile no longer counts as unfinished.
+ */
+export function profileFromOnboarding(form: ProfileForm, base: OrgProfile, complete = false): OrgProfile {
   const is501c3 = form.basics.tax_status.startsWith("501c3");
   const focus = new Set(base.focusAreas);
   const keepBudget = base.currency !== "USD" && base.annualBudget !== null;
@@ -40,7 +44,7 @@ export function profileFromOnboarding(form: ProfileForm, base: OrgProfile): OrgP
     annualBudget: keepBudget ? base.annualBudget : (form.budget.annual_operating_budget_usd ?? base.annualBudget),
     currency: keepBudget ? base.currency : "USD",
     fiscalYear: form.budget.fiscal_year_end ? `Fiscal year ends ${form.budget.fiscal_year_end}` : base.fiscalYear,
-    completedSteps: Math.max(base.completedSteps, 3),
+    completedSteps: complete ? PROFILE_STEPS : Math.max(base.completedSteps, 3),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -97,6 +101,7 @@ export function formFromProfile(profile: OrgProfile, base: ProfileForm): Profile
   };
 }
 
+/** Called once onboarding has been saved on the server, so the profile counts as complete. */
 export function seedHopeProfile(form: ProfileForm) {
   let state: Partial<HopeState> = {};
   try {
@@ -104,6 +109,6 @@ export function seedHopeProfile(form: ProfileForm) {
   } catch {
     state = {};
   }
-  const profile = profileFromOnboarding(form, normalizeProfile(state.profile));
+  const profile = profileFromOnboarding(form, normalizeProfile(state.profile), true);
   writeStoredJson(HOPE_KEY, { version: 1, decisions: {}, history: [], applications: {}, ...state, profile });
 }

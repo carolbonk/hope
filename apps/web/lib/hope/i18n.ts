@@ -55,7 +55,10 @@ const en = {
     title: "Your organization profile",
     intro: "Build the profile and document dossier our team can review. Leave anything you don't know blank — it stays “Pending”, never “No”.",
     notCert: "Completing this profile is not legal certification and does not guarantee eligibility for any funding opportunity.",
-    storage: "Saved in this browser only (localStorage). No server, no sign-in, no file uploads.",
+    storage: (synced: boolean): string =>
+      synced
+        ? "Identity, mission, budget and programs are saved to your account. Documents, reviews and the other details stay in this browser. No file uploads."
+        : "Saved in this browser only (localStorage). No server, no sign-in, no file uploads.",
     steps: ["Identity", "Mission & programs", "Capacity", "Documents & requirements", "Review"],
     step: (n: number, d: number) => `Step ${n} of ${d}`,
     legalName: "Legal name",
@@ -187,8 +190,8 @@ const en = {
     yes: "Yes",
     notYet: "Not yet",
     requestReview: "Request team review",
-    requestRecorded: (at: string) => `Review request recorded in this browser only (${at}). It was NOT sent to any team or server.`,
-    requestHelp: "There is no backend yet, so the request is stored locally. A real request needs a server, sign-in and a reviewer queue.",
+    requestRecorded: (at: string) => `Review request recorded in this browser (${at}). It was NOT sent to any team.`,
+    requestHelp: "Hope has no reviewer queue yet, so the request stays in this browser and isn't sent to anyone.",
     explore: "Explore opportunities",
     exploreNote: "You can explore with pending items. Each call has its own requirements, checked in its workspace.",
     detailTitle: "Details",
@@ -262,7 +265,7 @@ const en = {
   },
   stage: { saved: "Saved", eligibility: "Reviewing eligibility", approval: "Internal approval", drafting: "Drafting", ready: "Ready for human submission" } as Record<string, string>,
   app: {
-    notFound: "This application isn't in this browser. It may have been saved in another browser or cleared.",
+    notFound: "We couldn't find this application. It may have been removed, or saved in another browser or account.",
     nextAction: "Next action",
     next: {
       saved: "Start the eligibility review.",
@@ -277,7 +280,7 @@ const en = {
     evidence: "Evidence / note",
     fromProfile: (st: string) => `From your profile · ${st}`,
     approvalsTitle: "Internal approval",
-    simulated: "Simulated roles — this prototype has no sign-in, so anyone in this browser can click these.",
+    simulated: "Simulated roles — anyone using Hope here can click these; it isn't a real authorization check.",
     programReview: "Program review",
     directorReview: "Director review",
     approve: "Approve",
@@ -515,7 +518,10 @@ const es: HopeDict = {
     title: "Perfil de tu organización",
     intro: "Construye el perfil y el expediente documental que nuestro equipo puede revisar. Deja en blanco lo que no sepas: queda “Pendiente”, nunca “No”.",
     notCert: "Completar este perfil no equivale a una certificación legal ni garantiza la elegibilidad para ninguna oportunidad de financiación.",
-    storage: "Guardado solo en este navegador (localStorage). Sin servidor, sin inicio de sesión, sin subir archivos.",
+    storage: (synced: boolean) =>
+      synced
+        ? "La identidad, la misión, el presupuesto y los programas se guardan en tu cuenta. Los documentos, las revisiones y los demás datos quedan en este navegador. Sin subir archivos."
+        : "Guardado solo en este navegador (localStorage). Sin servidor, sin inicio de sesión, sin subir archivos.",
     steps: ["Identidad", "Misión y programas", "Capacidad", "Documentos y requisitos", "Revisión"],
     step: (n: number, d: number) => `Paso ${n} de ${d}`,
     legalName: "Nombre legal",
@@ -647,8 +653,8 @@ const es: HopeDict = {
     yes: "Sí",
     notYet: "Aún no",
     requestReview: "Solicitar revisión del equipo",
-    requestRecorded: (at: string) => `Solicitud de revisión registrada solo en este navegador (${at}). NO se envió a ningún equipo ni servidor.`,
-    requestHelp: "Aún no hay backend, así que la solicitud se guarda localmente. Una solicitud real necesita servidor, inicio de sesión y una cola de revisores.",
+    requestRecorded: (at: string) => `Solicitud de revisión registrada en este navegador (${at}). NO se envió a ningún equipo.`,
+    requestHelp: "Hope aún no tiene una cola de revisores, así que la solicitud queda en este navegador y no se envía a nadie.",
     explore: "Explorar oportunidades",
     exploreNote: "Puedes explorar con pendientes. Cada convocatoria tiene requisitos propios, que se revisan en su espacio de solicitud.",
     detailTitle: "Detalle",
@@ -722,7 +728,7 @@ const es: HopeDict = {
   },
   stage: { saved: "Guardada", eligibility: "Revisando elegibilidad", approval: "Aprobación interna", drafting: "Redactando", ready: "Lista para envío humano" },
   app: {
-    notFound: "Esta solicitud no está en este navegador. Puede haberse guardado en otro navegador o haberse borrado.",
+    notFound: "No encontramos esta solicitud. Puede haberse eliminado o guardado en otro navegador o cuenta.",
     nextAction: "Siguiente acción",
     next: {
       saved: "Inicia la revisión de elegibilidad.",
@@ -737,7 +743,7 @@ const es: HopeDict = {
     evidence: "Evidencia / nota",
     fromProfile: (st) => `De tu perfil · ${st}`,
     approvalsTitle: "Aprobación interna",
-    simulated: "Roles simulados — este prototipo no tiene inicio de sesión, así que cualquiera en este navegador puede pulsarlos.",
+    simulated: "Roles simulados — cualquiera que use Hope aquí puede pulsarlos; no es una verificación real de autorización.",
     programReview: "Revisión del programa",
     directorReview: "Revisión de dirección",
     approve: "Aprobar",

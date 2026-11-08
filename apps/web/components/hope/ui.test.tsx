@@ -46,7 +46,7 @@ it("online shows the signed-in name and signs out without clearing browser state
   await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
   await act(async () => {});
   expect(fetch).toHaveBeenCalledWith("http://api.test/v1/auth/logout", expect.objectContaining({ method: "POST", credentials: "include" }));
-  expect(nav.replace).toHaveBeenCalledWith("/login");
+  expect(nav.replace).toHaveBeenCalledWith("/login?signedOut=1");
   expect(window.localStorage.getItem("hope:state:v1")).toBe(STATE);
 });
 
@@ -85,7 +85,7 @@ it("orders links by the grant journey and keeps the profile in the account menu"
   expect(account).toHaveFocus();
 });
 
-it("signing out goes to /login without next, even with the guard mounted", async () => {
+it("signing out goes to /login?signedOut=1 without next, even with the guard mounted", async () => {
   const fetch = vi.fn((url: string) => Promise.resolve(url.endsWith("/v1/auth/logout") ? w1("auth.logout/ok") : w1("me.get/onboarded")));
   vi.stubGlobal("fetch", fetch);
   vi.resetModules();
@@ -105,7 +105,7 @@ it("signing out goes to /login without next, even with the guard mounted", async
   await userEvent.click(screen.getByRole("button", { name: /Dana Okafor/ }));
   await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
   await act(async () => {});
-  expect(nav.replace).toHaveBeenCalledWith("/login");
+  expect(nav.replace).toHaveBeenCalledWith("/login?signedOut=1");
   expect(nav.replace).not.toHaveBeenCalledWith(expect.stringContaining("next="));
   expect(fetch.mock.calls.filter(([url]) => String(url).endsWith("/v1/me"))).toHaveLength(1);
 });

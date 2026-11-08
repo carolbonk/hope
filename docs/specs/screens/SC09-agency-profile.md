@@ -42,7 +42,7 @@ Inside `app/hope/layout.tsx` (`HopeNav` with the EN/ES toggle, `HopeFooter`).
 │ THE HEART OF YOUR MATCHES                                                                 │  <- PageIntro
 │ Start with your purpose.                                                                  │
 │ Build the profile and document dossier our team can review. Leave anything you don't…    │
-│ ┌ Completing this profile is not legal certification… Saved in this browser only… ┐      │  <- gold notice
+│ ┌ Completing this profile is not legal certification… {storage note}…             ┐      │  <- gold notice
 │ [1 Identity] [2 Mission & programs] [3 Capacity] [4 Documents & requirements] [5 Review]  │  <- rail (navy = current, sage = done)
 │ ┌ Panel (glass-panel) ───────────────────────────────────────────────────────────────┐   │
 │ │ Step 2 of 5 · Mission & programs               Fill with demo organization (demo)   │   │
@@ -109,7 +109,7 @@ These are the existing strings from `h.profile.*`. H1 changes none of them.
 | State | What shows |
 |---|---|
 | Not certification | "Completing this profile is not legal certification and does not guarantee eligibility for any funding opportunity." |
-| Storage note | "Saved in this browser only (localStorage). No server, no sign-in, no file uploads." (stays as is in the hackathon; see Open questions) |
+| Storage note | `h.profile.storage(online)`. Offline: "Saved in this browser only (localStorage). No server, no sign-in, no file uploads." Online: "Identity, mission, budget and programs are saved to your account. Documents, reviews and the other details stay in this browser. No file uploads." |
 | Resume | "Profile {n}/5 steps complete — pick up where you left off." |
 | Unsaved / saved | "● Unsaved changes" / "✓ Saved" |
 | Errors | "Add the organization's legal name." · "Enter a valid email, or leave blank for now." · "Add a mission so we can explain matches." · "Enter a positive number, or leave blank if unknown." · "Enter a positive whole number, or leave blank if unknown." · "Enter a year between 1800 and this year, or leave blank." |
@@ -176,8 +176,6 @@ No analytics in the hackathon. Success: online, an edit saved here shows up in `
 
 ## 15. Open questions
 
-- **The storage note is wrong online.** "Saved in this browser only … No server" is untrue once sync is on. Recommended:
-  in a later PR, add `h.profile.storageSynced` (EN + ES) and show it when `syncEnabled`. That is a page and i18n change,
-  so it needs the owner's go-ahead.
+- ~~The storage note is wrong online.~~ Done: `h.profile.storage(online)` picks the online or offline wording.
 - **Sync status UI** (pending / failed)? Recommended default: none in the hackathon, because pages don't change.
 - **NTEE, EIN, HQ city and people served** are editable only in SC11 today. Re-running `/onboarding` prefills from the server and updates them.

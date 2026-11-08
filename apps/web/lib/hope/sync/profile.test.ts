@@ -82,10 +82,25 @@ describe("sync/profile", () => {
     expect(sync.profileSyncStatus()).toMatchObject({ etag: '"3"', pending: false });
     expect(JSON.parse(window.localStorage.getItem(sync.SYNC_KEY)!)).toMatchObject({ etag: '"3"' });
 
-    storeLocal(sync.local("2026-11-08T00:00:00Z"));
+    storeLocal({ ...sync.local("2026-11-08T00:00:00Z"), completedSteps: 5 });
     await expect(sync.loadRemoteProfile()).resolves.toBeNull();
     storeLocal({ ...sync.local(), updatedAt: "" });
     await expect(sync.loadRemoteProfile()).resolves.toMatchObject({ legalName: "Server Name" });
+  });
+
+  it("server onboarding_complete marks the profile complete", async () => {
+    h.api = fakeApi(view(3));
+    const sync = await load();
+    storeLocal(sync.local("2026-11-01T00:00:00Z"));
+    await expect(sync.loadRemoteProfile()).resolves.toMatchObject({ completedSteps: 5 });
+
+    storeLocal(sync.local("2026-11-08T00:00:00Z"));
+    await expect(sync.loadRemoteProfile()).resolves.toMatchObject({ completedSteps: 5, updatedAt: "2026-11-08T00:00:00Z" });
+
+    h.api = fakeApi({ ...view(3), onboarding_complete: false });
+    const again = await load();
+    storeLocal(again.local("2026-11-01T00:00:00Z"));
+    await expect(again.loadRemoteProfile()).resolves.toMatchObject({ completedSteps: 3 });
   });
 
   it("load never rejects", async () => {
@@ -179,7 +194,7 @@ describe("sync/profile", () => {
     api.patchProfile.mockRejectedValueOnce(new ProblemError(0, "network_error", "Failed to fetch"));
     h.api = api;
     const sync = await load();
-    const p = { ...sync.local("2026-11-08T00:00:00Z"), vision: "Care within thirty minutes for every family." };
+    const p = { ...sync.local("2026-11-08T00:00:00Z"), completedSteps: 5, vision: "Care within thirty minutes for every family." };
     sync.saveRemoteProfile(p);
     await settle(sync.profileSyncStatus);
     expect(sync.profileSyncStatus().pending).toBe(true);
