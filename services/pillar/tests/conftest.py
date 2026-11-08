@@ -82,8 +82,10 @@ def hope_api(migrated_db: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[Test
     """The hackathon API on the configured tenant, with a fresh users table and an invite code."""
     from fastapi.testclient import TestClient
     from hope_core import store
-    from hope_pillar.api import create_app
+    from hope_pillar.api import create_app, requirements_autostart
 
+    # Saving a grant starts a background job; only tests that want it turn it on.
+    monkeypatch.setattr(requirements_autostart, "ENABLED", False)
     monkeypatch.setenv("HOPE_INVITE_CODE", INVITE)
     monkeypatch.setenv("HOPE_SESSION_SECRET", "test-session-secret-0123456789")
     get_settings.cache_clear()
