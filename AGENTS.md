@@ -32,6 +32,11 @@ orchestrator.
 | `services/matching/`, `db/migrations/0400-0499` | matching | 2.2 A4/A5/A6, 5.3 |
 | `services/budget/`, `db/migrations/0500-0599` | budget | 2.2 A7, 8.1 |
 | `services/workflow/`, `db/migrations/0600-0699` | workflow | 4, 2.2 A0/A12 |
+| `services/discovery/` (`hope_discovery`), `db/migrations/0700-0709` | discovery (H2) | H2 spec |
+| `services/pillar/src/hope_pillar/api/grants.py`, `db/migrations/0710-0719` | grants (H3) | H3 spec |
+
+Hackathon migration ranges: H0 `0002`, H1 profile `0310-0319`, discovery `0700-0709`, grants `0710-0719`.
+`0720-0729` and `0800-0809` stay reserved (H4/H5 use none).
 | `apps/web/` | web | 4.4, 5.3 |
 
 ## Rules

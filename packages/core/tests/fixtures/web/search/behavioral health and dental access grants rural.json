@@ -1,0 +1,15 @@
+{
+  "query": "behavioral health and dental access grants rural",
+  "results": [
+    {
+      "url": "https://ncwhealthfoundation.example.org/community-mental-health-grants",
+      "title": "Community Mental Health Grants | North Central Washington Health Foundation",
+      "snippet": "Grants of $10,000 to $75,000 for mental health services."
+    },
+    {
+      "url": "https://pnwdental.example.org/grants/oral-health-access",
+      "title": "Oral Health Access Grants | Pacific Northwest Dental Foundation",
+      "snippet": "Dental care grants for underserved rural patients."
+    }
+  ]
+}

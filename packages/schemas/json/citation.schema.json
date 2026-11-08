@@ -1,0 +1,83 @@
+{
+  "$id": "https://schemas.hope.dev/citation/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "citation_id": {
+      "description": "\"c1\", \"c2\"... unique within its parent",
+      "title": "Citation Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "web",
+        "profile"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "profile_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "e.g. \"mission.mission_statement\"",
+      "title": "Profile Path"
+    },
+    "quote": {
+      "description": "exact supporting text",
+      "maxLength": 500,
+      "title": "Quote",
+      "type": "string"
+    },
+    "retrieved_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retrieved At"
+    },
+    "title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    },
+    "url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Url"
+    }
+  },
+  "required": [
+    "citation_id",
+    "kind",
+    "quote"
+  ],
+  "title": "Citation",
+  "type": "object"
+}

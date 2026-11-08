@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import psycopg
 import pytest
+from fastapi.testclient import TestClient
 from hope_core.migrate import apply_migrations
 from hope_core.settings import get_settings
 from hope_core.testing.factories import TENANT_A, TENANT_B
@@ -71,3 +72,28 @@ def kafka_pillar(
     stop.set()
     thread.join(5)
     kafka.delete_prefixed_topics()
+
+
+INVITE = "test-invite-code-0123456789"
+
+
+@pytest.fixture
+def hope_api(migrated_db: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+    """The hackathon API on the configured tenant, with a fresh users table and an invite code."""
+    from fastapi.testclient import TestClient
+    from hope_core import store
+    from hope_pillar.api import create_app
+
+    monkeypatch.setenv("HOPE_INVITE_CODE", INVITE)
+    get_settings.cache_clear()
+    settings = get_settings()
+    store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)
+    with psycopg.connect(migrated_db) as conn:
+        for table in ("grant_candidates", "jobs", "users"):
+            conn.execute(f"DELETE FROM {table} WHERE tenant_id = %s", (settings.tenant_id,))
+        conn.execute(
+            "DELETE FROM agency_profile_versions WHERE agency_id = %s", (settings.agency_id,)
+        )
+    with TestClient(create_app(), base_url="https://testserver") as client:
+        yield client
+    get_settings.cache_clear()

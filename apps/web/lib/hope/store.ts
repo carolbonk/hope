@@ -3,6 +3,8 @@
 import { useCallback, useMemo } from "react";
 import { useStoredJson } from "./storage";
 import { PROFILE_STEPS, record } from "./dossier";
+import { mirrorDecision } from "./sync/decisions";
+import { saveRemoteProfile } from "./sync/profile";
 import type { Application, Eligibility, HopeState, Opportunity, OrgProfile, ReqId, RequirementRecord, SectionId, Stage, TriState } from "./types";
 
 export { PROFILE_STEPS };
@@ -87,6 +89,15 @@ export const applicationId = (orgId: string, oppId: string) => `app:${orgId}:${o
 
 const now = () => new Date().toISOString();
 
+/** Sync adapters run after the local write and can never break a page. */
+function safely(call: () => void) {
+  try {
+    call();
+  } catch (err) {
+    console.warn("hope sync:", err);
+  }
+}
+
 function newApplication(orgId: string, opp: Opportunity): Application {
   const at = now();
   const sections = Object.fromEntries(SECTION_IDS.map((id) => [id, { text: "", origin: "empty", updatedAt: null }])) as Application["sections"];
@@ -146,26 +157,38 @@ export function useHope() {
   const update = useCallback((fn: (s: HopeState) => HopeState) => setState(fn(state)), [state, setState]);
 
   const saveProfile = useCallback(
-    (profile: OrgProfile) => update((s) => ({ ...s, profile: { ...profile, updatedAt: now() } })),
+    (profile: OrgProfile) => {
+      const saved = { ...profile, updatedAt: now() };
+      update((s) => ({ ...s, profile: saved }));
+      safely(() => saveRemoteProfile(saved));
+    },
+    [update],
+  );
+
+  /** Writes a profile that came from the server; never echoes it back. */
+  const hydrateProfile = useCallback(
+    (profile: OrgProfile) => update((s) => ({ ...s, profile: normalizeProfile(profile) })),
     [update],
   );
 
   const decide = useCallback(
-    (opp: Opportunity, decision: "saved" | "passed") =>
+    (opp: Opportunity, decision: "saved" | "passed") => {
       update((s) => {
         const id = applicationId(s.profile.id, opp.id);
         const applications = { ...s.applications };
         if (decision === "saved" && !applications[id]) applications[id] = newApplication(s.profile.id, opp);
         else if (decision === "saved") applications[id] = touch(applications[id]!, "saved_again");
         return { ...s, decisions: { ...s.decisions, [opp.id]: { decision, at: now() } }, history: [...s.history, opp.id], applications };
-      }),
+      });
+      safely(() => mirrorDecision(opp.id, decision));
+    },
     [update],
   );
 
   /** Undo removes the last swipe decision; a saved application with no work is removed too. */
-  const undo = useCallback(
-    () =>
-      update((s) => {
+  const undo = useCallback(() => {
+    const lastId = state.history.at(-1);
+    update((s) => {
         const last = s.history.at(-1);
         if (!last) return s;
         const decisions = { ...s.decisions };
@@ -175,9 +198,9 @@ export function useHope() {
         const a = applications[id];
         if (a && a.activity.length <= 1 && a.stage === "saved") delete applications[id];
         return { ...s, decisions, history: s.history.slice(0, -1), applications };
-      }),
-    [update],
-  );
+    });
+    if (lastId) safely(() => mirrorDecision(lastId, "new"));
+  }, [state, update]);
 
   const updateApplication = useCallback(
     (id: string, fn: (a: Application) => Application, event: string) =>
@@ -188,8 +211,8 @@ export function useHope() {
   const reset = useCallback(() => setState(initial()), [setState]);
 
   return useMemo(
-    () => ({ state, saveProfile, decide, undo, updateApplication, reset }),
-    [state, saveProfile, decide, undo, updateApplication, reset],
+    () => ({ state, saveProfile, hydrateProfile, decide, undo, updateApplication, reset }),
+    [state, saveProfile, hydrateProfile, decide, undo, updateApplication, reset],
   );
 }
 

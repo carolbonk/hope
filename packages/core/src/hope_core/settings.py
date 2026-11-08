@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from uuid import UUID
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -22,6 +23,19 @@ class HopeSettings(BaseSettings):
     s3_access_key: str = "hope"
     s3_secret_key: str = "hopehope"
     model_provider: str = "mock"
+
+    # Hackathon (H0): one tenant and one agency, chosen by configuration only.
+    tenant_id: UUID = UUID("00000000-0000-4000-8000-000000000001")
+    agency_id: UUID = UUID("2c3d4e5f-6a7b-4c8d-9e0f-a1b2c3d4e5f6")
+    session_secret: str = "dev-only-session-secret-change-me"
+    invite_code: str | None = None
+    cookie_secure: bool = True
+    web_origin: str = "http://localhost:3000"
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4o-mini"
+    openai_search_model: str = "gpt-4o-mini"
+    openai_embed_model: str = "text-embedding-3-small"
+    jobs_inline: bool = False
 
 
 @lru_cache

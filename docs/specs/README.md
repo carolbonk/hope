@@ -100,7 +100,7 @@ each, and finish by day 2 noon. Day 2 afternoon is integration and demo rehearsa
 
 | Spec | Delivers | Screens (route) | Depends on | Migrations | Status |
 |---|---|---|---|---|---|
-| [H0](features/H0-hackathon-scaffolding.md) | Email/password auth, `/v1/me`, all shared contracts + tables + store, web search/fetch tools, OpenAI provider, job runner, routers/clients/nav split, `make demo` | app shell | - | 0002 | Ready |
+| [H0](features/H0-hackathon-scaffolding.md) | Email/password auth, `/v1/me`, all shared contracts + tables + store, web search/fetch tools, OpenAI provider, job runner, routers/clients/nav split, `make demo` | app shell | - | 0002 | Built |
 | [H1](features/H1-sign-in-and-profile.md) | Sign-in screen, profile backend + `lib/hope/sync/profile.ts` (onboarding and profile UI built) | SC01 `/login`, SC11 `/onboarding`, SC09 `/hope/profile` | H0 | 0310-0319 | Draft |
 | [H2](features/H2-discovery-agent.md) | Discovery agent backend + `lib/hope/sync/opportunities.ts` + run panel (deck UI built) | SC24 `/hope/discover` | H0 | 0700-0709 | Draft |
 | [H3](features/H3-curated-list.md) | Save/pass backend + `lib/hope/sync/decisions.ts` (Saved/Deadlines UI built; SC26 folded into the card + workspace) | SC25 `/hope/saved`, `/hope/deadlines` | H0 | 0710-0719 | Draft |

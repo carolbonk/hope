@@ -1,0 +1,20 @@
+{
+  "query": "rural clinic funding washington nonprofit",
+  "results": [
+    {
+      "url": "https://wafamilyhealth.example.org/grants/clinic-capacity",
+      "title": "Clinic Capacity Grants | Washington Family Health Trust",
+      "snippet": "Grants to free and charitable clinics serving low-income patients."
+    },
+    {
+      "url": "https://ruralhealthwa.example.org/programs/telehealth-expansion",
+      "title": "Telehealth Expansion Program | Rural Health Washington",
+      "snippet": "Telehealth funding for rural safety-net providers."
+    },
+    {
+      "url": "https://cascadecf.example.org/grants/rural-health-access-fund",
+      "title": "Rural Health Access Fund | Cascade Community Foundation",
+      "snippet": "Up to $50,000 for rural health access."
+    }
+  ]
+}

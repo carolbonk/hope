@@ -10,7 +10,9 @@ from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Request, Response, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Response, status
+from hope_core.auth import Principal as SessionPrincipal
+from hope_core.auth import get_principal as session_principal
 from hope_core.schemas.agency_profile import AgencyProfile
 from hope_core.schemas.hitl import Gate, HitlDecision
 from pydantic import BaseModel
@@ -38,11 +40,8 @@ class Principal:
     roles: tuple[str, ...] = ()
 
 
-def get_principal(request: Request) -> Principal:
-    principal = getattr(request.state, "principal", None)
-    if not isinstance(principal, Principal):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "authentication required")
-    return principal
+def get_principal(session: Annotated[SessionPrincipal, Depends(session_principal)]) -> Principal:
+    return Principal(session.tenant_id, str(session.user_id))
 
 
 def get_repository() -> ProfileRepository:

@@ -12,11 +12,17 @@ from pydantic.json_schema import models_json_schema
 from hope_core.envelope import PillarEnvelope
 from hope_core.schemas import (
     AgencyProfile,
+    Citation,
+    DiscoveryJob,
+    DiscoveryProgress,
+    GrantCandidate,
     GrantOpportunity,
     HitlDecision,
     HitlRequest,
+    MeView,
     OpportunityMatrix,
     ProposalFramework,
+    UserView,
 )
 
 SCHEMA_BASE = "https://schemas.hope.dev"
@@ -30,6 +36,12 @@ CONTRACTS: dict[str, type[BaseModel]] = {
     "pillar-envelope": PillarEnvelope,
     "hitl-request": HitlRequest,
     "hitl-decision": HitlDecision,
+    "citation": Citation,
+    "discovery-progress": DiscoveryProgress,
+    "discovery-job": DiscoveryJob,
+    "grant-candidate": GrantCandidate,
+    "user-view": UserView,
+    "me-view": MeView,
 }
 VERSION = "1.0.0"
 

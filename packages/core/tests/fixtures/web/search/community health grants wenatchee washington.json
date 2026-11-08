@@ -1,0 +1,20 @@
+{
+  "query": "community health grants wenatchee washington",
+  "results": [
+    {
+      "url": "https://cascadecf.example.org/grants/rural-health-access-fund",
+      "title": "Rural Health Access Fund | Cascade Community Foundation",
+      "snippet": "Supports community clinics and health nonprofits in rural Washington counties."
+    },
+    {
+      "url": "https://ncwhealthfoundation.example.org/community-mental-health-grants",
+      "title": "Community Mental Health Grants | North Central Washington Health Foundation",
+      "snippet": "Funds mental health services in North Central Washington, including Wenatchee."
+    },
+    {
+      "url": "https://appleregion.example.org/grants/healthy-communities",
+      "title": "Healthy Communities Grant | Apple Region Community Fund",
+      "snippet": "Community health grants for Chelan and Douglas counties."
+    }
+  ]
+}

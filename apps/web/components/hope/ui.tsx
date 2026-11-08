@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { online } from "@/api/http";
+import { invalidateSession, logout, useSession } from "@/api/session";
 import { useToday } from "@/components/useToday";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
@@ -56,8 +59,46 @@ export function HopeNav() {
           })}
         </nav>
         <LanguageToggle tone="light" />
+        {online && <SessionControls />}
       </div>
       <DeadlineReminder />
+    </div>
+  );
+}
+
+/** Online only: the signed-in name and Sign out. Signing out never clears `hope:state:v1`. */
+function SessionControls() {
+  const { h } = useHopeT();
+  const router = useRouter();
+  const { status, me } = useSession();
+  const [failed, setFailed] = useState(false);
+  if (status !== "ready" || !me) return null;
+  const name = me.display_name.length > 24 ? `${me.display_name.slice(0, 23)}…` : me.display_name;
+  const signOut = () => {
+    setFailed(false);
+    logout().then(
+      () => {
+        invalidateSession();
+        router.replace("/login");
+      },
+      () => setFailed(true),
+    );
+  };
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-3 text-sm">
+        <span className="text-muted" title={me.display_name}>
+          {name}
+        </span>
+        <button type="button" onClick={signOut} className={btnSecondary}>
+          {h.session.signOut}
+        </button>
+      </div>
+      {failed && (
+        <p role="alert" className="text-xs text-bad">
+          {h.session.signOutFailed}
+        </p>
+      )}
     </div>
   );
 }

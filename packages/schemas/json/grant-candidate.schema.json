@@ -1,0 +1,264 @@
+{
+  "$defs": {
+    "Citation": {
+      "additionalProperties": false,
+      "properties": {
+        "citation_id": {
+          "description": "\"c1\", \"c2\"... unique within its parent",
+          "title": "Citation Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "web",
+            "profile"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "profile_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. \"mission.mission_statement\"",
+          "title": "Profile Path"
+        },
+        "quote": {
+          "description": "exact supporting text",
+          "maxLength": 500,
+          "title": "Quote",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retrieved At"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        }
+      },
+      "required": [
+        "citation_id",
+        "kind",
+        "quote"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "Money": {
+      "properties": {
+        "amount_minor": {
+          "title": "Amount Minor",
+          "type": "integer"
+        },
+        "currency": {
+          "default": "USD",
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount_minor"
+      ],
+      "title": "Money",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.hope.dev/grant-candidate/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "amount_max": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Money"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "parsed by code, integer minor units"
+    },
+    "amount_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "quoted, e.g. \"up to $50,000\"",
+      "title": "Amount Text"
+    },
+    "citations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Citation"
+      },
+      "title": "Citations",
+      "type": "array"
+    },
+    "concerns": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Concerns",
+      "type": "array"
+    },
+    "deadline": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "parsed by code; None for rolling or unknown",
+      "title": "Deadline"
+    },
+    "deadline_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deadline Text"
+    },
+    "discovered_at": {
+      "format": "date-time",
+      "title": "Discovered At",
+      "type": "string"
+    },
+    "eligibility_summary": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Eligibility Summary"
+    },
+    "fit_reasons": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Fit Reasons",
+      "type": "array"
+    },
+    "fit_score": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Fit Score",
+      "type": "integer"
+    },
+    "found_by_job_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Found By Job Id"
+    },
+    "funder": {
+      "title": "Funder",
+      "type": "string"
+    },
+    "grant_id": {
+      "format": "uuid",
+      "title": "Grant Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "new",
+      "enum": [
+        "new",
+        "saved",
+        "passed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "description": "1-3 plain-English sentences; may contain [cN] markers",
+      "title": "Summary",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "url": {
+      "description": "canonical grant page",
+      "title": "Url",
+      "type": "string"
+    }
+  },
+  "required": [
+    "grant_id",
+    "title",
+    "funder",
+    "url",
+    "summary",
+    "fit_score",
+    "discovered_at"
+  ],
+  "title": "GrantCandidate",
+  "type": "object"
+}

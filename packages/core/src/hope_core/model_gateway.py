@@ -11,9 +11,14 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+
+if TYPE_CHECKING:
+    import httpx
+
+    from hope_core.settings import HopeSettings
 
 
 class ModelTier(StrEnum):
@@ -26,6 +31,14 @@ class ModelTier(StrEnum):
 
 class BudgetExceededError(RuntimeError):
     pass
+
+
+class ModelOutputError(ValueError):
+    """The model returned invalid structured output twice in a row."""
+
+    def __init__(self, schema_title: str) -> None:
+        super().__init__(f"invalid model output for {schema_title}")
+        self.schema_title = schema_title
 
 
 @dataclass
@@ -110,20 +123,42 @@ class ModelGateway:
         schema = response_model.model_json_schema()
         last_error: Exception | None = None
         for provider in self.providers:
-            try:
-                data, tokens = provider.complete_json(tier, messages, schema)
-            except LookupError:
-                raise
-            except Exception as exc:  # failover to the next provider of the same tier
-                last_error = exc
-                continue
-            if budget is not None:
-                budget.charge(tokens)
-            return response_model.model_validate(data)
+            for _attempt in range(2):
+                try:
+                    data, tokens = provider.complete_json(tier, messages, schema)
+                except (LookupError, BudgetExceededError):
+                    raise
+                except json.JSONDecodeError:
+                    continue  # invalid JSON from the model: retry once
+                except Exception as exc:  # provider down: fail over to the next provider
+                    last_error = exc
+                    break
+                if budget is not None:
+                    budget.charge(tokens)
+                try:
+                    return response_model.model_validate(data)
+                except ValidationError:
+                    continue
+            else:
+                raise ModelOutputError(str(schema.get("title", response_model.__name__)))
         raise RuntimeError("all model providers failed") from last_error
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         return self.providers[0].embed(texts)
+
+
+def default_gateway(
+    settings: HopeSettings | None = None, transport: httpx.BaseTransport | None = None
+) -> ModelGateway:
+    """OpenAI when `HOPE_OPENAI_API_KEY` is set, otherwise the mock. Never both."""
+    from hope_core.settings import get_settings
+
+    settings = settings or get_settings()
+    if settings.openai_api_key:
+        from hope_core.openai_provider import OpenAIProvider
+
+        return ModelGateway([OpenAIProvider.from_settings(settings, transport=transport)])
+    return ModelGateway([MockProvider()])
 
 
 def untrusted(text: str, label: str = "document") -> str:

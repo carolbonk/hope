@@ -63,6 +63,10 @@ export interface AgencyProfile {
   legal: Legal;
   mission: Mission;
   programs?: Program[];
+  /**
+   * state or county names
+   */
+  service_area?: string[];
   tenant_id: string;
   valid_from?: string | null;
   version: number;
@@ -203,6 +207,8 @@ export interface Legal {
   dba?: string[];
   ein: string;
   fiscal_sponsor_id?: string | null;
+  hq_city?: string | null;
+  hq_state?: string | null;
   legal_name: string;
   provenance?: Provenance | null;
   sam_registration?: SamRegistration | null;
@@ -217,6 +223,7 @@ export interface Legal {
     | "tribal"
     | "other";
   uei?: string | null;
+  website?: string | null;
 }
 /**
  * This interface was referenced by `HopeContracts`'s JSON-Schema
@@ -236,6 +243,7 @@ export interface Mission {
   mission_statement: string;
   ntee_codes?: string[];
   theory_of_change?: string | null;
+  values?: string[];
   vision_statement?: string | null;
 }
 /**
@@ -385,6 +393,28 @@ export interface Totals {
 }
 /**
  * This interface was referenced by `HopeContracts`'s JSON-Schema
+ * via the `definition` "Citation".
+ */
+export interface Citation {
+  /**
+   * "c1", "c2"... unique within its parent
+   */
+  citation_id: string;
+  kind: "web" | "profile";
+  /**
+   * e.g. "mission.mission_statement"
+   */
+  profile_path?: string | null;
+  /**
+   * exact supporting text
+   */
+  quote: string;
+  retrieved_at?: string | null;
+  title?: string | null;
+  url?: string | null;
+}
+/**
+ * This interface was referenced by `HopeContracts`'s JSON-Schema
  * via the `definition` "CostShare".
  */
 export interface CostShare {
@@ -460,6 +490,30 @@ export interface DimensionScores {
   mission_alignment: number;
   strategic_priority_boost?: number;
   win_probability: number;
+}
+/**
+ * This interface was referenced by `HopeContracts`'s JSON-Schema
+ * via the `definition` "DiscoveryJob".
+ */
+export interface DiscoveryJob {
+  error?: string | null;
+  finished_at?: string | null;
+  job_id: string;
+  progress: DiscoveryProgress;
+  queries?: string[];
+  started_at: string;
+  status: "queued" | "running" | "done" | "failed";
+}
+/**
+ * This interface was referenced by `HopeContracts`'s JSON-Schema
+ * via the `definition` "DiscoveryProgress".
+ */
+export interface DiscoveryProgress {
+  candidates_found?: number;
+  current_step?: string;
+  pages_read?: number;
+  queries_done?: number;
+  queries_total?: number;
 }
 /**
  * This interface was referenced by `HopeContracts`'s JSON-Schema
@@ -599,6 +653,44 @@ export interface Kpi {
 }
 /**
  * This interface was referenced by `HopeContracts`'s JSON-Schema
+ * via the `definition` "GrantCandidate".
+ */
+export interface GrantCandidate {
+  /**
+   * parsed by code, integer minor units
+   */
+  amount_max?: Money | null;
+  /**
+   * quoted, e.g. "up to $50,000"
+   */
+  amount_text?: string | null;
+  citations?: Citation[];
+  concerns?: string[];
+  /**
+   * parsed by code; None for rolling or unknown
+   */
+  deadline?: string | null;
+  deadline_text?: string | null;
+  discovered_at: string;
+  eligibility_summary?: string | null;
+  fit_reasons?: string[];
+  fit_score: number;
+  found_by_job_id?: string | null;
+  funder: string;
+  grant_id: string;
+  status?: "new" | "saved" | "passed";
+  /**
+   * 1-3 plain-English sentences; may contain [cN] markers
+   */
+  summary: string;
+  title: string;
+  /**
+   * canonical grant page
+   */
+  url: string;
+}
+/**
+ * This interface was referenced by `HopeContracts`'s JSON-Schema
  * via the `definition` "GrantOpportunity".
  */
 export interface GrantOpportunity {
@@ -734,6 +826,17 @@ export interface Estimates1 {
 }
 /**
  * This interface was referenced by `HopeContracts`'s JSON-Schema
+ * via the `definition` "MeView".
+ */
+export interface MeView {
+  agency_id: string;
+  display_name: string;
+  email: string;
+  onboarding_complete: boolean;
+  user_id: string;
+}
+/**
+ * This interface was referenced by `HopeContracts`'s JSON-Schema
  * via the `definition` "OpportunityMatrix".
  */
 export interface OpportunityMatrix {
@@ -855,4 +958,13 @@ export interface Requirements1 {
   forms?: string[];
   sections?: RequirementSection[];
   submission_channel?: ("grants_gov" | "funder_portal" | "email" | "mail" | "other") | null;
+}
+/**
+ * This interface was referenced by `HopeContracts`'s JSON-Schema
+ * via the `definition` "UserView".
+ */
+export interface UserView {
+  display_name: string;
+  email: string;
+  user_id: string;
 }
