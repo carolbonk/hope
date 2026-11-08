@@ -138,10 +138,10 @@ def claim_job(tx: Tx, job_id: UUID | str, kind: str) -> bool:
     return tx.fetchone() is not None
 
 
-def heartbeat_job(tx: Tx, job_id: UUID | str) -> None:
+def heartbeat_jobs(tx: Tx, job_ids: list[UUID]) -> None:
     tx.execute(
-        "UPDATE jobs SET heartbeat_at = now() WHERE job_id = %s AND status = 'running'",
-        (str(job_id),),
+        "UPDATE jobs SET heartbeat_at = now() WHERE job_id = ANY(%s) AND status = 'running'",
+        ([str(j) for j in job_ids],),
     )
 
 

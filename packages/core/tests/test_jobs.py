@@ -125,6 +125,35 @@ def test_sweeper_fails_jobs_that_go_stale_after_startup() -> None:
     assert job(crashed.job_id).error == "Interrupted by restart"
 
 
+def test_owned_jobs_share_one_heartbeat(monkeypatch: pytest.MonkeyPatch) -> None:
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        a, b = store.create_job(tx, "discovery"), store.create_job(tx, "discovery")
+        for j in (a, b):
+            store.claim_job(tx, j.job_id, "discovery")
+        tx.execute("UPDATE jobs SET heartbeat_at = now() - interval '10 minutes'")
+        store.heartbeat_jobs(tx, [a.job_id, b.job_id])
+    assert jobs.fail_interrupted_jobs() == 0
+    jobs.start_job("discovery", work, 1)
+    assert not jobs._owned, "finished jobs are released"
+
+
+def test_rejected_submission_fails_the_job(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HOPE_JOBS_INLINE", "0")
+    get_settings.cache_clear()
+
+    def refuse(*_args: Any) -> None:
+        raise RuntimeError("cannot schedule new futures after shutdown")
+
+    monkeypatch.setattr(jobs._pool, "submit", refuse)
+    with pytest.raises(RuntimeError):
+        jobs.start_job("discovery", work, 1)
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        latest = store.latest_job(tx, "discovery")
+    assert latest is not None and latest.status == "failed"
+    assert latest.error == "Could not start the job"
+    assert not jobs._owned
+
+
 def test_a_queued_job_is_claimed_once() -> None:
     with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
         created = store.create_job(tx, "discovery")

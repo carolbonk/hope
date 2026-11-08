@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import ContextVar
+from functools import partial
 from typing import Any
 from uuid import UUID
 
@@ -19,6 +21,10 @@ from hope_core.settings import get_settings
 log = logging.getLogger(__name__)
 _pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="hope-job")
 HEARTBEAT_SECONDS = 15.0
+# Jobs this process has claimed and not finished; one thread heartbeats them all.
+_owned: set[UUID] = set()
+_owned_lock = threading.Lock()
+_heartbeat_thread: threading.Thread | None = None
 _current_job: ContextVar[UUID | None] = ContextVar("hope_current_job", default=None)
 
 JobResult = BaseModel | dict[str, Any] | None
@@ -57,13 +63,16 @@ def start_job(
         return target
 
     claimed = _with_tx(_claim)
-    # Heartbeat from the claim on, so a job queued behind busy workers isn't swept as stale.
-    stop = threading.Event()
-    threading.Thread(target=_heartbeat, args=(claimed, stop), daemon=True).start()
+    _own(claimed)  # heartbeat from the claim on, so a job queued behind busy workers isn't stale
     if get_settings().jobs_inline:
-        _run(claimed, fn, args, stop)
-    else:
-        _pool.submit(_run, claimed, fn, args, stop)
+        _run(claimed, fn, args)
+        return claimed
+    try:
+        _pool.submit(_run, claimed, fn, args)
+    except RuntimeError:
+        _release(claimed)
+        finish(claimed, error="Could not start the job")
+        raise
     return claimed
 
 
@@ -90,17 +99,40 @@ def start_stale_sweeper(interval: float = 60.0) -> threading.Event:
     return stop
 
 
-def _heartbeat(job_id: UUID, stop: threading.Event) -> None:
-    while not stop.wait(HEARTBEAT_SECONDS):
+def _own(job_id: UUID) -> None:
+    global _heartbeat_thread
+    with _owned_lock:
+        _owned.add(job_id)
+        if _heartbeat_thread is None:
+            _heartbeat_thread = threading.Thread(
+                target=_heartbeat_loop, daemon=True, name="hope-job-heartbeat"
+            )
+            _heartbeat_thread.start()
+
+
+def _release(job_id: UUID) -> None:
+    with _owned_lock:
+        _owned.discard(job_id)
+
+
+def _heartbeat_owned(owned: list[UUID], tx: store.Tx) -> None:
+    store.heartbeat_jobs(tx, owned)
+
+
+def _heartbeat_loop() -> None:
+    while True:
+        time.sleep(HEARTBEAT_SECONDS)
+        with _owned_lock:
+            owned = list(_owned)
+        if not owned:
+            continue
         try:
-            _with_tx(lambda tx: store.heartbeat_job(tx, job_id))
+            _with_tx(partial(_heartbeat_owned, owned))
         except Exception:
-            log.warning("heartbeat for job %s failed", job_id, exc_info=True)
+            log.warning("job heartbeat failed", exc_info=True)
 
 
-def _run(
-    job_id: UUID, fn: Callable[..., JobResult], args: tuple[Any, ...], stop: threading.Event
-) -> None:
+def _run(job_id: UUID, fn: Callable[..., JobResult], args: tuple[Any, ...]) -> None:
     token = _current_job.set(job_id)
     try:
         result = fn(*args)
@@ -111,7 +143,7 @@ def _run(
     else:
         finish(job_id, result=result)
     finally:
-        stop.set()
+        _release(job_id)
         _current_job.reset(token)
 
 
