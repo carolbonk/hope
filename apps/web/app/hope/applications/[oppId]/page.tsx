@@ -5,6 +5,8 @@ import { use, useState } from "react";
 import { ClientOnly, Panel, StageBar, btnPrimary, btnSecondary, daysUntil, focusRing, input, money } from "@/components/hope/ui";
 import { useToday } from "@/components/useToday";
 import { DraftPanel, type Up } from "@/components/hope/draft/DraftPanel";
+import { ApplyWorkspace } from "@/components/hope/apply/ApplyWorkspace";
+import { online } from "@/api/http";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
 import { factStatus, oppDocs, reqStatus, type FieldKey } from "@/lib/hope/dossier";
@@ -88,7 +90,17 @@ function Workspace({ oppId }: { oppId: string }) {
 
       <EligibilityPanel opp={opp} app={app} up={up} />
       <ApprovalPanel app={app} up={up} />
-      <DraftPanel opp={opp} app={app} up={up} />
+      {online && GRANT_ID.test(opp.id) ? (
+        app.stage === "drafting" || app.stage === "ready" ? (
+          <ApplyWorkspace grantId={opp.id} />
+        ) : (
+          <Panel title={a.sectionsTitle}>
+            <p className="rounded-xl bg-cream px-3 py-2 text-sm">🔒 {a.locked}</p>
+          </Panel>
+        )
+      ) : (
+        <DraftPanel opp={opp} app={app} up={up} />
+      )}
 
       <details className="rounded-2xl glass-panel p-5">
         <summary className={`cursor-pointer font-display text-xl ${focusRing}`}>{a.documentsTitle}</summary>
@@ -130,6 +142,7 @@ function Workspace({ oppId }: { oppId: string }) {
   );
 }
 
+const GRANT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const REQ_FACT: Record<string, FieldKey> = { c3: "has501c3", budget: "annualBudget", geo: "serviceArea" };
 
 
