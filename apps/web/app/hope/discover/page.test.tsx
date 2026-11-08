@@ -40,6 +40,7 @@ it("sync off renders deck and panel once without requests", async () => {
   expect(screen.getAllByRole("region", { name: "Find real grants" })).toHaveLength(1);
   expect(screen.getByText("Live search needs Hope's server. These are demo cards.")).toBeInTheDocument();
   expect(screen.getAllByText(/Fictional opportunity/).length).toBeGreaterThan(0);
+  expect(screen.getByText("Demo data")).toBeInTheDocument();
   expect(fetch).not.toHaveBeenCalled();
   vi.unstubAllGlobals();
 });
@@ -49,6 +50,7 @@ it("verified cards show source and no demo chip; save pass undo work", async () 
   render(<DiscoverPage />);
   await act(async () => {});
   expect(screen.queryByText(/Fictional opportunity/)).not.toBeInTheDocument();
+  expect(screen.queryByText("Demo data")).not.toBeInTheDocument();
   expect(screen.getAllByRole("link", { name: /cascadehealth\.example\.org\/g-/ }).length).toBeGreaterThan(0);
   const state = () => JSON.stringify(Object.fromEntries(Object.entries(window.localStorage)));
   fireEvent.click(screen.getByRole("button", { name: "Save" }));

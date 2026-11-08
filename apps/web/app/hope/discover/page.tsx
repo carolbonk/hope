@@ -130,7 +130,7 @@ function Deck() {
       </aside>
 
       <div>
-        <PageIntro kicker={L.eyebrow} title={L.heading} sub={L.sub} aside={<DemoTag />} />
+        <PageIntro kicker={L.eyebrow} title={L.heading} sub={L.sub} aside={all.some((o) => o.source.kind === "demo") && <DemoTag />} />
 
         {profile.completedSteps < PROFILE_STEPS && (
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/50 bg-[#f1ead8] p-4">

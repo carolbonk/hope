@@ -109,3 +109,14 @@ it("signing out goes to /login without next, even with the guard mounted", async
   expect(nav.replace).not.toHaveBeenCalledWith(expect.stringContaining("next="));
   expect(fetch.mock.calls.filter(([url]) => String(url).endsWith("/v1/me"))).toHaveLength(1);
 });
+
+it.each([
+  [false, true],
+  [true, false],
+])("footer browser-only demo note when online=%s: %s", async (isOnline, shown) => {
+  vi.resetModules();
+  vi.stubEnv("NEXT_PUBLIC_HOPE_API_URL", isOnline ? "http://api.test" : "");
+  const { HopeFooter } = await import("./ui");
+  render(<HopeFooter />);
+  expect(screen.queryByText(/Saved in this browser only/) !== null).toBe(shown);
+});

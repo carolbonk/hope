@@ -105,11 +105,12 @@ each, and finish by day 2 noon. Day 2 afternoon is integration and demo rehearsa
 | Spec | Delivers | Screens (route) | Depends on | Migrations | Status |
 |---|---|---|---|---|---|
 | [H0](features/H0-hackathon-scaffolding.md) | Email/password auth, `/v1/me`, all shared contracts + tables + store, web search/fetch tools, OpenAI provider, job runner, routers/clients/nav split, `make demo` | app shell | - | 0002 | Built |
-| [H1](features/H1-sign-in-and-profile.md) | Sign-in screen, profile backend + `lib/hope/sync/profile.ts` (onboarding and profile UI built) | SC01 `/login`, SC11 `/onboarding`, SC09 `/hope/profile` | H0 | 0310-0319 | Draft |
-| [H2](features/H2-discovery-agent.md) | Discovery agent backend + `lib/hope/sync/opportunities.ts` + run panel (deck UI built) | SC24 `/hope/discover` | H0 | 0700-0709 | Draft |
-| [H3](features/H3-curated-list.md) | Save/pass backend + `lib/hope/sync/decisions.ts` (Saved/Deadlines UI built; SC26 folded into the card + workspace) | SC25 `/hope/saved`, `/hope/deadlines` | H0 | 0710-0719 | Draft |
+| [H1](features/H1-sign-in-and-profile.md) | Sign-in screen, profile backend + `lib/hope/sync/profile.ts` (onboarding and profile UI built) | SC01 `/login`, SC11 `/onboarding`, SC09 `/hope/profile` | H0 | 0310-0319 | Built (PR #49) |
+| [H2](features/H2-discovery-agent.md) | Discovery agent backend + `lib/hope/sync/opportunities.ts` + run panel (deck UI built) | SC24 `/hope/discover` | H0 | 0700-0709 | Built (PR #50) |
+| [H3](features/H3-curated-list.md) | Save/pass backend + `lib/hope/sync/decisions.ts` (Saved/Deadlines UI built; SC26 folded into the card + workspace) | SC25 `/hope/saved`, `/hope/deadlines` | H0 | 0710-0719 | Built (PR #48, #52) |
 | [H4](features/H4-eligibility-and-approval.md) | Eligibility checklist, required documents, simulated Program/Director approval | SC27 `/hope/applications/[oppId]` | H0 | none | Built (PR #34) |
 | [H5](features/H5-application-draft.md) | 6-section draft (`POST /api/hope/draft`, AI or template), edit, copy/.md, mark ready | SC28 `/hope/applications/[oppId]` | H0 | none | Built (PR #34) |
+| [H6](features/H6-application-help.md) | Application help: reads each saved grant's own questions, limits and attachments, drafts answers from the profile, stores the application on the server (`/v1/applications`) | SC27/SC28 `/hope/applications/[oppId]` (SC29 workspace) | H0-H3 | 0720-0729 | Built (PR #53) |
 
 **Frontend (PR #34):** `apps/web` follows the Hope frontend zip: `app/`, `components/`, `lib/` at the package root, routes under `/hope/*` (`/hope/discover`, `/hope/saved`, `/hope/deadlines`, `/hope/profile`, `/hope/applications/[oppId]`), plus SC11 `/onboarding` and the liquid-glass CSS. H4/H5 follow the zip's application flow; their state lives in the browser (`hope:state:v1`) until the backend track lands.
 

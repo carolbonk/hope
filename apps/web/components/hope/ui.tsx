@@ -198,9 +198,11 @@ export function HopeFooter() {
   const { h } = useHopeT();
   return (
     <div className="mt-12 flex flex-wrap justify-between gap-3 border-t border-line pt-5 text-xs text-muted">
-      <span>
-        {h.demo} · {h.storageNote}
-      </span>
+      {!online && (
+        <span>
+          {h.demo} · {h.storageNote}
+        </span>
+      )}
       <span>{h.look.footerR}</span>
     </div>
   );
