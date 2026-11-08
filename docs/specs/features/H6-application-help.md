@@ -129,7 +129,7 @@ director, so the right person fills them.
 | GET | `/v1/applications/{id}/export.md` | |
 
 Errors use the existing problem format: 401 `not_signed_in`, 404 `application_not_found`, 409 `stage_blocked` /
-`job_running`, 412 `version_mismatch`, 422 `validation_error`.
+`job_running`, 412 `version_mismatch`, 422 `validation_failed`, 428 `if_match_required`.
 
 ## Data (`0720_applications.sql`, all with tenant RLS)
 

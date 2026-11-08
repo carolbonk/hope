@@ -13,7 +13,7 @@ from hope_core import jobs, store
 from hope_core.settings import get_settings
 from hope_profile.api import router as profile_router
 
-from hope_pillar.api import auth, discovery, errors, grants, me
+from hope_pillar.api import applications, auth, discovery, errors, grants, me
 from hope_pillar.api.deps import Services
 
 log = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ ROUTERS: dict[str, APIRouter] = {
     "me": me.router,
     "discovery": discovery.router,
     "grants": grants.router,
+    "applications": applications.router,
 }
 
 
