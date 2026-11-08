@@ -331,11 +331,13 @@ class DiscoveryAgent:
             return
         v = verify_extraction(ext, texts, final_url, page.title, links, self.s)
         if v.keep and v.detail_url and self._take_detail():
-            o.events.append(
-                _Event("page", f"Checking details on {domain(v.detail_url)}", {"url": v.detail_url})
-            )
             detail = self._fetch(v.detail_url)
             if detail is not None:
+                o.events.append(
+                    _Event(
+                        "page", f"Checking details on {domain(v.detail_url)}", {"url": v.detail_url}
+                    )
+                )
                 texts2 = [*texts, clean_text(detail.text)[: self.s.page_chars_to_llm]]
                 ext2 = self._extract(final_url, page.title, texts2, links, today)
                 if ext2 is not None:
