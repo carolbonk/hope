@@ -67,4 +67,8 @@ export interface ProfileApi {
   /** Resolves `null` when no profile exists yet (404 `profile_not_found`). */
   getProfile(): Promise<ProfileView | null>;
   saveProfile(form: ProfileForm, etag?: string): Promise<ProfileView>;
+  /** `PATCH /v1/profile`: replaces the given top-level sections. Used only by `lib/hope/sync/profile.ts`. */
+  patchProfile(sections: ProfileSections, etag: string): Promise<ProfileView>;
 }
+
+export type ProfileSections = Partial<ProfileForm>;
