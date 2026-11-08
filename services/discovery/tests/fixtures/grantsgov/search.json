@@ -1,0 +1,29 @@
+{
+ "errorcode": 0,
+ "msg": "Webservice Succeeds",
+ "data": {
+  "hitCount": 2,
+  "oppHits": [
+   {
+    "id": "358864",
+    "number": "PAR-27-015",
+    "title": "Community-Based Participatory Research to Advance Data and Practice Transformation (ADAPT) for Optimizing Oral Health for All (UG3/UH3 Clinical Trial Optional)",
+    "agency": "National Institutes of Health",
+    "openDate": "04/27/2026",
+    "closeDate": "11/16/2028",
+    "oppStatus": "posted",
+    "docType": "synopsis"
+   },
+   {
+    "id": "357524",
+    "number": "PAR-26-001",
+    "title": "Accelerating Solutions to Improve Access and Quality of Empirically-Supported Practices",
+    "agency": "National Institutes of Health",
+    "openDate": "01/07/2026",
+    "closeDate": "01/07/2027",
+    "oppStatus": "posted",
+    "docType": "synopsis"
+   }
+  ]
+ }
+}

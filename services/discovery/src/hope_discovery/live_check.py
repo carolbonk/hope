@@ -23,6 +23,7 @@ from hope_core.web import FetchError, Page, RealWebTools, SearchResult, WebTools
 from hope_discovery import mock
 from hope_discovery.agent import DiscoveryAgent
 from hope_discovery.demo import DEMO_REQUEST, demo_profile
+from hope_discovery.grantsgov import GrantsGovWeb
 from hope_discovery.urls import domain
 
 
@@ -99,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     if any(isinstance(p, MockProvider) for p in gateway.providers):
         print("Set HOPE_OPENAI_API_KEY for a live run.", file=sys.stderr)
         return 2
-    out = run(gateway, RealWebTools())
+    out = run(gateway, GrantsGovWeb(RealWebTools()))
     print(report(out))
     if args.json:
         with open(args.json, "w") as f:
