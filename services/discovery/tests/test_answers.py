@@ -338,3 +338,17 @@ def test_certification_label_alone_goes_to_staff() -> None:
 
     assert staff_only("Certification")
     assert not staff_only("Aid to families")
+
+
+def test_same_missing_fact_is_asked_once_across_questions() -> None:
+    need, plan = q("Describe the need."), q("Describe the plan.")
+    req = Requirements(questions=[need, plan])
+    gap = "how often (draft said 'annually')"
+    answers = {
+        k: Answer(
+            question_key=k, text=f"We meet [TO CONFIRM: {gap}].", origin="ai", to_confirm=[gap]
+        )
+        for k in (need.key, plan.key)
+    }
+    c = build_checklist(req, answers, date(2026, 11, 7))
+    assert [n.text for n in c.inputs_needed] == [gap]

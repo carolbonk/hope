@@ -734,6 +734,8 @@ def build_checklist(
             )
         )
         for item in a.to_confirm if a else []:
+            if any(same_need(item, n.text) for n in needed):
+                continue  # asked once; the answer is reused for every question
             given = next((v for k, v in (facts or {}).items() if same_need(item, k)), None)
             needed.append(
                 InputNeeded(owner=owner_for(item), text=item, question_key=q.key, answer=given)
