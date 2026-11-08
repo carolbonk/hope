@@ -66,13 +66,14 @@ export function formFromProfile(profile: OrgProfile, base: ProfileForm): Profile
     .filter(Boolean);
   const usd = profile.currency === "USD" && profile.annualBudget !== null ? Math.round(profile.annualBudget) : null;
   const fiscal = /(\d{2}-\d{2})\s*$/.exec(profile.fiscalYear)?.[1];
+  const population = profile.targetPopulation.trim() || base.programs.find((b) => b.people_served)?.people_served || "";
   const programs: ProgramForm[] = profile.programs.map((p) => {
     const old = base.programs.find((b) => b.program_id === p.id);
     return {
       program_id: old ? old.program_id : null,
       name: p.name,
       description: p.description,
-      people_served: old ? old.people_served : profile.targetPopulation,
+      people_served: old ? old.people_served : population,
       annual_served: p.served,
       age_range: old ? old.age_range : null,
     };

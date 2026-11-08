@@ -137,6 +137,12 @@ describe("formFromProfile", () => {
     expect([kept.currency, kept.annualBudget]).toEqual(["EUR", 900_000]);
   });
 
+  it("new program falls back to an existing population", () => {
+    const p = { ...browser(), targetPopulation: " " };
+    p.programs = [...p.programs, { id: "p-new", name: "Food pantry", description: "Weekly groceries for families in need.", outcomes: "", served: null }];
+    expect(formFromProfile(p, DEMO_FORM).programs[1]?.people_served).toBe(DEMO_FORM.programs[0]?.people_served);
+  });
+
   it("keeps program outcomes by id", () => {
     const p = browser();
     p.programs = [{ ...p.programs[0]!, outcomes: "1,200 children seen" }];
