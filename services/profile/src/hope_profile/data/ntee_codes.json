@@ -1,0 +1,4667 @@
+[
+{
+"code": "A",
+"label": "Arts, Culture & Humanities",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A01",
+"label": "Alliances & Advocacy",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A02",
+"label": "Management & Technical Assistance",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A03",
+"label": "Professional Societies & Associations",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A11",
+"label": "Single Organization Support",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A12",
+"label": "Fund Raising & Fund Distribution",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A19",
+"label": "Support N.E.C.",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A20",
+"label": "Arts & Culture",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": [
+"arts",
+"culture"
+]
+},
+{
+"code": "A23",
+"label": "Cultural & Ethnic Awareness",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A24",
+"label": "Folk Arts",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A25",
+"label": "Arts Education",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A26",
+"label": "Arts & Humanities Councils & Agencies",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A27",
+"label": "Community Celebrations",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A30",
+"label": "Media & Communications",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A31",
+"label": "Film & Video",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A32",
+"label": "Television",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A33",
+"label": "Printing & Publishing",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A34",
+"label": "Radio",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A40",
+"label": "Visual Arts",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A50",
+"label": "Museums",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A51",
+"label": "Art Museums",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A52",
+"label": "Children's Museums",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A53",
+"label": "Folk Arts Museums",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A54",
+"label": "History Museums",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A56",
+"label": "Natural History & Natural Science Museums",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A57",
+"label": "Science & Technology Museums",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A60",
+"label": "Performing Arts",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A61",
+"label": "Performing Arts Centers",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A62",
+"label": "Dance",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A63",
+"label": "Ballet",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A65",
+"label": "Theater",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A68",
+"label": "Music",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A69",
+"label": "Symphony Orchestras",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A70",
+"label": "Humanities",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A80",
+"label": "Historical Organizations",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A82",
+"label": "Historical Societies & Historic Preservation",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A84",
+"label": "Commemorative Events",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A90",
+"label": "Arts Services",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "A99",
+"label": "Arts, Culture & Humanities N.E.C.",
+"group": "A",
+"group_label": "Arts, Culture & Humanities",
+"keywords": []
+},
+{
+"code": "B",
+"label": "Education",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B01",
+"label": "Alliances & Advocacy",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B02",
+"label": "Management & Technical Assistance",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B03",
+"label": "Professional Societies & Associations",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B11",
+"label": "Single Organization Support",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B12",
+"label": "Fund Raising & Fund Distribution",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B19",
+"label": "Support N.E.C.",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B20",
+"label": "Elementary & Secondary Schools",
+"group": "B",
+"group_label": "Education",
+"keywords": [
+"school",
+"elementary",
+"secondary"
+]
+},
+{
+"code": "B21",
+"label": "Preschools",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B24",
+"label": "Primary & Elementary Schools",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B25",
+"label": "Secondary & High Schools",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B28",
+"label": "Special Education",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B29",
+"label": "Charter Schools",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B30",
+"label": "Vocational & Technical Schools",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B40",
+"label": "Higher Education",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B41",
+"label": "Two-Year Colleges",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B42",
+"label": "Undergraduate Colleges",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B43",
+"label": "Universities",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B50",
+"label": "Graduate & Professional Schools",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B60",
+"label": "Adult Education",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B70",
+"label": "Libraries",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B80",
+"label": "Student Services",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B82",
+"label": "Scholarships & Student Financial Aid",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B83",
+"label": "Student Sororities & Fraternities",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B84",
+"label": "Alumni Associations",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B90",
+"label": "Educational Services",
+"group": "B",
+"group_label": "Education",
+"keywords": [
+"tutoring",
+"literacy"
+]
+},
+{
+"code": "B92",
+"label": "Remedial Reading & Encouragement",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B94",
+"label": "Parent & Teacher Groups",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "B99",
+"label": "Education N.E.C.",
+"group": "B",
+"group_label": "Education",
+"keywords": []
+},
+{
+"code": "C",
+"label": "Environment",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C01",
+"label": "Alliances & Advocacy",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C02",
+"label": "Management & Technical Assistance",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C03",
+"label": "Professional Societies & Associations",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C11",
+"label": "Single Organization Support",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C12",
+"label": "Fund Raising & Fund Distribution",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C19",
+"label": "Support N.E.C.",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C20",
+"label": "Pollution Abatement & Control",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C27",
+"label": "Recycling",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C30",
+"label": "Natural Resources Conservation & Protection",
+"group": "C",
+"group_label": "Environment",
+"keywords": [
+"natural resources",
+"conservation"
+]
+},
+{
+"code": "C32",
+"label": "Water Resources, Wetlands Conservation & Management",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C34",
+"label": "Land Resources Conservation",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C35",
+"label": "Energy Resources Conservation & Development",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C36",
+"label": "Forest Conservation",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C40",
+"label": "Botanical, Horticultural & Landscape Services",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C41",
+"label": "Botanical Gardens & Arboreta",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C42",
+"label": "Garden Clubs",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C50",
+"label": "Environmental Beautification",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C60",
+"label": "Environmental Education",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "C99",
+"label": "Environment N.E.C.",
+"group": "C",
+"group_label": "Environment",
+"keywords": []
+},
+{
+"code": "D",
+"label": "Animal-Related",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D01",
+"label": "Alliances & Advocacy",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D02",
+"label": "Management & Technical Assistance",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D03",
+"label": "Professional Societies & Associations",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D11",
+"label": "Single Organization Support",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D12",
+"label": "Fund Raising & Fund Distribution",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D19",
+"label": "Support N.E.C.",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D20",
+"label": "Animal Protection & Welfare",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D30",
+"label": "Wildlife Preservation & Protection",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D31",
+"label": "Protection of Endangered Species",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D32",
+"label": "Bird Sanctuaries",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D33",
+"label": "Fisheries Resources",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D34",
+"label": "Wildlife Sanctuaries",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D40",
+"label": "Veterinary Services",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D50",
+"label": "Zoos & Aquariums",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D60",
+"label": "Animal Services N.E.C.",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D61",
+"label": "Animal Training",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "D99",
+"label": "Animal-Related N.E.C.",
+"group": "D",
+"group_label": "Animal-Related",
+"keywords": []
+},
+{
+"code": "E",
+"label": "Health Care",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E01",
+"label": "Alliances & Advocacy",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E02",
+"label": "Management & Technical Assistance",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E03",
+"label": "Professional Societies & Associations",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E11",
+"label": "Single Organization Support",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E12",
+"label": "Fund Raising & Fund Distribution",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E19",
+"label": "Support N.E.C.",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E20",
+"label": "Hospitals",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E21",
+"label": "Community Health Systems",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E22",
+"label": "General Hospitals",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E24",
+"label": "Specialty Hospitals",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E30",
+"label": "Ambulatory & Primary Health Care",
+"group": "E",
+"group_label": "Health Care",
+"keywords": [
+"primary care",
+"ambulatory"
+]
+},
+{
+"code": "E31",
+"label": "Group Health Practices",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E32",
+"label": "Community Clinics",
+"group": "E",
+"group_label": "Health Care",
+"keywords": [
+"clinic",
+"dental",
+"preventive care",
+"community health center"
+]
+},
+{
+"code": "E40",
+"label": "Reproductive Health Care",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E42",
+"label": "Family Planning",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E50",
+"label": "Rehabilitative Care",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E60",
+"label": "Health Support",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E61",
+"label": "Blood Banks",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E62",
+"label": "Emergency Medical Services & Transport",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E65",
+"label": "Organ & Tissue Banks",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E70",
+"label": "Public Health",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E80",
+"label": "Health (General & Financing)",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E86",
+"label": "Patient & Family Support",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E90",
+"label": "Nursing",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E91",
+"label": "Nursing Facilities",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E92",
+"label": "Home Health Care",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "E99",
+"label": "Health Care N.E.C.",
+"group": "E",
+"group_label": "Health Care",
+"keywords": []
+},
+{
+"code": "F",
+"label": "Mental Health & Crisis Intervention",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F01",
+"label": "Alliances & Advocacy",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F02",
+"label": "Management & Technical Assistance",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F03",
+"label": "Professional Societies & Associations",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F11",
+"label": "Single Organization Support",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F12",
+"label": "Fund Raising & Fund Distribution",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F19",
+"label": "Support N.E.C.",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F20",
+"label": "Substance Abuse Dependency, Prevention & Treatment",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": [
+"substance abuse",
+"addiction",
+"recovery"
+]
+},
+{
+"code": "F21",
+"label": "Substance Abuse Prevention",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F22",
+"label": "Substance Abuse Treatment",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F30",
+"label": "Mental Health Treatment",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": [
+"mental health",
+"behavioral health",
+"counseling"
+]
+},
+{
+"code": "F31",
+"label": "Psychiatric Hospitals",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F32",
+"label": "Community Mental Health Centers",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F33",
+"label": "Residential Mental Health Treatment",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F40",
+"label": "Hot Lines & Crisis Intervention",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F42",
+"label": "Sexual Assault Services",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F50",
+"label": "Addictive Disorders N.E.C.",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F52",
+"label": "Smoking Addiction",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F53",
+"label": "Eating Disorders & Addictions",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F54",
+"label": "Gambling Addiction",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F60",
+"label": "Counseling",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F70",
+"label": "Mental Health Disorders",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F80",
+"label": "Mental Health Associations",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "F99",
+"label": "Mental Health & Crisis Intervention N.E.C.",
+"group": "F",
+"group_label": "Mental Health & Crisis Intervention",
+"keywords": []
+},
+{
+"code": "G",
+"label": "Voluntary Health Associations & Medical Disciplines",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G01",
+"label": "Alliances & Advocacy",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G02",
+"label": "Management & Technical Assistance",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G03",
+"label": "Professional Societies & Associations",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G11",
+"label": "Single Organization Support",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G12",
+"label": "Fund Raising & Fund Distribution",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G19",
+"label": "Support N.E.C.",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G20",
+"label": "Birth Defects & Genetic Diseases",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G25",
+"label": "Down Syndrome",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G30",
+"label": "Cancer",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G32",
+"label": "Breast Cancer",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G40",
+"label": "Diseases of Specific Organs",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G41",
+"label": "Eye Diseases, Blindness & Vision Impairments",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G42",
+"label": "Ear & Throat Diseases",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G43",
+"label": "Heart & Circulatory System Diseases & Disorders",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G44",
+"label": "Kidney Diseases",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G45",
+"label": "Lung Diseases",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G48",
+"label": "Brain Disorders",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G50",
+"label": "Nerve, Muscle & Bone Diseases",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G51",
+"label": "Arthritis",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G54",
+"label": "Epilepsy",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G60",
+"label": "Allergy-Related Diseases",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G61",
+"label": "Asthma",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G70",
+"label": "Digestive Diseases & Disorders",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G80",
+"label": "Specifically Named Diseases",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G81",
+"label": "AIDS",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G83",
+"label": "Alzheimers Disease",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G84",
+"label": "Autism",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G90",
+"label": "Medical Disciplines",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G92",
+"label": "Biomedicine & Bioengineering",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G94",
+"label": "Geriatrics",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G96",
+"label": "Neurology & Neuroscience",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G98",
+"label": "Pediatrics",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "G99",
+"label": "Voluntary Health Associations & Medical Disciplines N.E.C.",
+"group": "G",
+"group_label": "Voluntary Health Associations & Medical Disciplines",
+"keywords": []
+},
+{
+"code": "H",
+"label": "Medical Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H01",
+"label": "Alliances & Advocacy",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H02",
+"label": "Management & Technical Assistance",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H03",
+"label": "Professional Societies & Associations",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H11",
+"label": "Single Organization Support",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H12",
+"label": "Fund Raising & Fund Distribution",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H19",
+"label": "Support N.E.C.",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H20",
+"label": "Birth Defects & Genetic Diseases Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H25",
+"label": "Down Syndrome Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H30",
+"label": "Cancer Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H32",
+"label": "Breast Cancer Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H40",
+"label": "Diseases of Specific Organs Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H41",
+"label": "Eye Diseases, Blindness & Vision Impairments Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H42",
+"label": "Ear & Throat Diseases Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H43",
+"label": "Heart & Circulatory System Diseases & Disorders Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H44",
+"label": "Kidney Diseases Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H45",
+"label": "Lung Diseases Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H48",
+"label": "Brain Disorders Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H50",
+"label": "Nerve, Muscle & Bone Diseases Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H51",
+"label": "Arthritis Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H54",
+"label": "Epilepsy Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H60",
+"label": "Allergy-Related Diseases Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H61",
+"label": "Asthma Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H70",
+"label": "Digestive Diseases & Disorders Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H80",
+"label": "Specifically Named Diseases Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H81",
+"label": "AIDS Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H83",
+"label": "Alzheimers Disease Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H84",
+"label": "Autism Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H90",
+"label": "Medical Disciplines Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H92",
+"label": "Biomedicine & Bioengineering Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H94",
+"label": "Geriatrics Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H96",
+"label": "Neurology & Neuroscience Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H98",
+"label": "Pediatrics Research",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "H99",
+"label": "Medical Research N.E.C.",
+"group": "H",
+"group_label": "Medical Research",
+"keywords": []
+},
+{
+"code": "I",
+"label": "Crime & Legal-Related",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I01",
+"label": "Alliances & Advocacy",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I02",
+"label": "Management & Technical Assistance",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I03",
+"label": "Professional Societies & Associations",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I11",
+"label": "Single Organization Support",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I12",
+"label": "Fund Raising & Fund Distribution",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I19",
+"label": "Support N.E.C.",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I20",
+"label": "Crime Prevention",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I21",
+"label": "Youth Violence Prevention",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I23",
+"label": "Drunk Driving-Related",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I30",
+"label": "Correctional Facilities",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I31",
+"label": "Half-Way Houses for Offenders & Ex-Offenders",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I40",
+"label": "Rehabilitation Services for Offenders",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I43",
+"label": "Inmate Support",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I44",
+"label": "Prison Alternatives",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I50",
+"label": "Administration of Justice",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I51",
+"label": "Dispute Resolution & Mediation",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I60",
+"label": "Law Enforcement",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I70",
+"label": "Protection Against Abuse",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I71",
+"label": "Spouse Abuse Prevention",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I72",
+"label": "Child Abuse Prevention",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I73",
+"label": "Sexual Abuse Prevention",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I80",
+"label": "Legal Services",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I83",
+"label": "Public Interest Law",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "I99",
+"label": "Crime & Legal-Related N.E.C.",
+"group": "I",
+"group_label": "Crime & Legal-Related",
+"keywords": []
+},
+{
+"code": "J",
+"label": "Employment",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J01",
+"label": "Alliances & Advocacy",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J02",
+"label": "Management & Technical Assistance",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J03",
+"label": "Professional Societies & Associations",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J11",
+"label": "Single Organization Support",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J12",
+"label": "Fund Raising & Fund Distribution",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J19",
+"label": "Support N.E.C.",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J20",
+"label": "Employment Preparation & Procurement",
+"group": "J",
+"group_label": "Employment",
+"keywords": [
+"job training",
+"workforce"
+]
+},
+{
+"code": "J21",
+"label": "Vocational Counseling",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J22",
+"label": "Job Training",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J30",
+"label": "Vocational Rehabilitation",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J32",
+"label": "Goodwill Industries",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J33",
+"label": "Sheltered Employment",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J40",
+"label": "Labor Unions",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "J99",
+"label": "Employment N.E.C.",
+"group": "J",
+"group_label": "Employment",
+"keywords": []
+},
+{
+"code": "K",
+"label": "Food, Agriculture & Nutrition",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K01",
+"label": "Alliances & Advocacy",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K02",
+"label": "Management & Technical Assistance",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K03",
+"label": "Professional Societies & Associations",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K11",
+"label": "Single Organization Support",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K12",
+"label": "Fund Raising & Fund Distribution",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K19",
+"label": "Support N.E.C.",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K20",
+"label": "Agricultural Programs",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K25",
+"label": "Farmland Preservation",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K26",
+"label": "Animal Husbandry",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K28",
+"label": "Farm Bureaus & Granges",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K30",
+"label": "Food Programs",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K31",
+"label": "Food Banks & Pantries",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": [
+"food bank",
+"pantry",
+"meals",
+"hunger"
+]
+},
+{
+"code": "K34",
+"label": "Congregate Meals",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K35",
+"label": "Soup Kitchens",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K36",
+"label": "Meals on Wheels",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K40",
+"label": "Nutrition",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K50",
+"label": "Home Economics",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K90",
+"label": "Limited-Service Restaurants",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K91",
+"label": "Supermarkets and Other Grocery (except Convenience) Stores",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K92",
+"label": "Convenience Stores",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K93",
+"label": "Fruit and Vegetable Markets",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K94",
+"label": "All Other Specialty Food Stores",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K95",
+"label": "Food (Health) Supplement Stores",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K96",
+"label": "Warehouse Clubs and Supercenters",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K97",
+"label": "Food Service Contractors",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K98",
+"label": "Full-Service Restaurants",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "K99",
+"label": "Food, Agriculture & Nutrition N.E.C.",
+"group": "K",
+"group_label": "Food, Agriculture & Nutrition",
+"keywords": []
+},
+{
+"code": "L",
+"label": "Housing & Shelter",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L01",
+"label": "Alliances & Advocacy",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L02",
+"label": "Management & Technical Assistance",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L03",
+"label": "Professional Societies & Associations",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L11",
+"label": "Single Organization Support",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L12",
+"label": "Fund Raising & Fund Distribution",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L19",
+"label": "Support N.E.C.",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L20",
+"label": "Housing Development, Construction & Management",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L21",
+"label": "Low-Income & Subsidized Rental Housing",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L22",
+"label": "Senior Citizens Housing & Retirement Communities",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L24",
+"label": "Independent Housing for People with Disabilities",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L25",
+"label": "Housing Rehabilitation",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L30",
+"label": "Housing Search Assistance",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L40",
+"label": "Temporary Housing",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L41",
+"label": "Homeless Shelters",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": [
+"homeless",
+"shelter"
+]
+},
+{
+"code": "L50",
+"label": "Homeowners & Tenants Associations",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L80",
+"label": "Housing Support",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L81",
+"label": "Home Improvement & Repairs",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L82",
+"label": "Housing Expense Reduction Support",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "L99",
+"label": "Housing & Shelter N.E.C.",
+"group": "L",
+"group_label": "Housing & Shelter",
+"keywords": []
+},
+{
+"code": "M",
+"label": "Public Safety, Disaster Preparedness & Relief",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M01",
+"label": "Alliances & Advocacy",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M02",
+"label": "Management & Technical Assistance",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M03",
+"label": "Professional Societies & Associations",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M11",
+"label": "Single Organization Support",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M12",
+"label": "Fund Raising & Fund Distribution",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M19",
+"label": "Support N.E.C.",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M20",
+"label": "Disaster Preparedness & Relief Services",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M23",
+"label": "Search & Rescue Squads",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M24",
+"label": "Fire Prevention",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M40",
+"label": "Safety Education",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M41",
+"label": "First Aid",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M42",
+"label": "Automotive Safety",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M60",
+"label": "Public Safety Benevolent Associations",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "M99",
+"label": "Public Safety, Disaster Preparedness & Relief N.E.C.",
+"group": "M",
+"group_label": "Public Safety, Disaster Preparedness & Relief",
+"keywords": []
+},
+{
+"code": "N",
+"label": "Recreation & Sports",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N01",
+"label": "Alliances & Advocacy",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N02",
+"label": "Management & Technical Assistance",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N03",
+"label": "Professional Societies & Associations",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N11",
+"label": "Single Organization Support",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N12",
+"label": "Fund Raising & Fund Distribution",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N19",
+"label": "Support N.E.C.",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N20",
+"label": "Camps",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N30",
+"label": "Physical Fitness & Community Recreational Facilities",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N31",
+"label": "Community Recreational Centers",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N32",
+"label": "Parks & Playgrounds",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N40",
+"label": "Sports Associations & Training Facilities",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N50",
+"label": "Recreational Clubs",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N52",
+"label": "Fairs",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N60",
+"label": "Amateur Sports",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N61",
+"label": "Fishing & Hunting",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N62",
+"label": "Basketball",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N63",
+"label": "Baseball & Softball",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N64",
+"label": "Soccer",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N65",
+"label": "Football",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N66",
+"label": "Racquet Sports",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N67",
+"label": "Swimming & Other Water Recreation",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N68",
+"label": "Winter Sports",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N69",
+"label": "Equestrian",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N70",
+"label": "Amateur Sports Competitions",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N71",
+"label": "Olympics",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N72",
+"label": "Special Olympics",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N80",
+"label": "Professional Athletic Leagues",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "N99",
+"label": "Recreation & Sports N.E.C.",
+"group": "N",
+"group_label": "Recreation & Sports",
+"keywords": []
+},
+{
+"code": "O",
+"label": "Youth Development",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O01",
+"label": "Alliances & Advocacy",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O02",
+"label": "Management & Technical Assistance",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O03",
+"label": "Professional Societies & Associations",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O11",
+"label": "Single Organization Support",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O12",
+"label": "Fund Raising & Fund Distribution",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O19",
+"label": "Support N.E.C.",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O20",
+"label": "Youth Centers & Clubs",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O21",
+"label": "Boys Clubs",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O22",
+"label": "Girls Clubs",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O23",
+"label": "Boys & Girls Clubs",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O30",
+"label": "Adult & Child Matching Programs",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O31",
+"label": "Big Brothers & Big Sisters",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O40",
+"label": "Scouting",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O41",
+"label": "Boy Scouts of America",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O42",
+"label": "Girl Scouts of the U.S.A.",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O43",
+"label": "Camp Fire",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O50",
+"label": "Youth Development Programs",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": [
+"youth",
+"mentor",
+"after-school"
+]
+},
+{
+"code": "O51",
+"label": "Youth Community Service Clubs",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O52",
+"label": "Youth Development - Agricultural",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O53",
+"label": "Youth Development - Business",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O54",
+"label": "Youth Development - Citizenship",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O55",
+"label": "Youth Development - Religious Leadership",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "O99",
+"label": "Youth Development N.E.C.",
+"group": "O",
+"group_label": "Youth Development",
+"keywords": []
+},
+{
+"code": "P",
+"label": "Human Services",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P01",
+"label": "Alliances & Advocacy",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P02",
+"label": "Management & Technical Assistance",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P03",
+"label": "Professional Societies & Associations",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P11",
+"label": "Single Organization Support",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P12",
+"label": "Fund Raising & Fund Distribution",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P19",
+"label": "Support N.E.C.",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P20",
+"label": "Human Service Organizations",
+"group": "P",
+"group_label": "Human Services",
+"keywords": [
+"human services",
+"social services"
+]
+},
+{
+"code": "P21",
+"label": "American Red Cross",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P22",
+"label": "Urban League",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P24",
+"label": "Salvation Army",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P26",
+"label": "Volunteers of America",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P27",
+"label": "Young Mens or Womens Associations",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P28",
+"label": "Neighborhood Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P29",
+"label": "Thrift Shops",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P30",
+"label": "Children & Youth Services",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P31",
+"label": "Adoption",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P32",
+"label": "Foster Care",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P33",
+"label": "Child Day Care",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P40",
+"label": "Family Services",
+"group": "P",
+"group_label": "Human Services",
+"keywords": [
+"family services",
+"parenting"
+]
+},
+{
+"code": "P42",
+"label": "Single Parent Agencies",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P43",
+"label": "Family Violence Shelters",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P44",
+"label": "In-Home Assistance",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P45",
+"label": "Family Services for Adolescent Parents",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P46",
+"label": "Family Counseling",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P47",
+"label": "Pregnancy Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P50",
+"label": "Personal Social Services",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P51",
+"label": "Financial Counseling",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P52",
+"label": "Transportation Assistance",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P58",
+"label": "Gift Distribution",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P60",
+"label": "Emergency Assistance",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P61",
+"label": "Travelers Aid",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P62",
+"label": "Victims Services",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P70",
+"label": "Residential Care & Adult Day Programs",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P71",
+"label": "Adult Day Care",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P73",
+"label": "Group Homes",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P74",
+"label": "Hospices",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P75",
+"label": "Supportive Housing for Older Adults",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P76",
+"label": "Homes for Children & Adolescents",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P80",
+"label": "Centers to Support the Independence of Specific Populations",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P81",
+"label": "Senior Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P82",
+"label": "Developmentally Disabled Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P83",
+"label": "Women's Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P84",
+"label": "Ethnic & Immigrant Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P85",
+"label": "Homeless Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P86",
+"label": "Blind & Visually Impaired Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P87",
+"label": "Deaf & Hearing Impaired Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P88",
+"label": "LGBT Centers",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "P99",
+"label": "Human Services N.E.C.",
+"group": "P",
+"group_label": "Human Services",
+"keywords": []
+},
+{
+"code": "Q",
+"label": "International, Foreign Affairs & National Security",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q01",
+"label": "Alliances & Advocacy",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q02",
+"label": "Management & Technical Assistance",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q03",
+"label": "Professional Societies & Associations",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q11",
+"label": "Single Organization Support",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q12",
+"label": "Fund Raising & Fund Distribution",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q19",
+"label": "Support N.E.C.",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q20",
+"label": "Promotion of International Understanding",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q21",
+"label": "International Cultural Exchange",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q22",
+"label": "International Academic Exchange",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q23",
+"label": "International Exchange N.E.C.",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q30",
+"label": "International Development",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q31",
+"label": "International Agricultural Development",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q32",
+"label": "International Economic Development",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q33",
+"label": "International Relief",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q34",
+"label": "International Educational Development",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q35",
+"label": "International Democracy & Civil Society Development",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q36",
+"label": "International Science & Technology Development",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q38",
+"label": "International Environment, Population & Sustainability",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q39",
+"label": "International Health Development",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q40",
+"label": "International Peace & Security",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q41",
+"label": "Arms Control & Peace",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q42",
+"label": "United Nations Associations",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q43",
+"label": "National Security",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q50",
+"label": "International Affairs, Foreign Policy, & Globalization",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q51",
+"label": "International Economic & Trade Policy",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q70",
+"label": "International Human Rights",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q71",
+"label": "International Migration & Refugee Issues",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "Q99",
+"label": "International, Foreign Affairs & National Security N.E.C.",
+"group": "Q",
+"group_label": "International, Foreign Affairs & National Security",
+"keywords": []
+},
+{
+"code": "R",
+"label": "Civil Rights, Social Action & Advocacy",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R01",
+"label": "Alliances & Advocacy",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R02",
+"label": "Management & Technical Assistance",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R03",
+"label": "Professional Societies & Associations",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R11",
+"label": "Single Organization Support",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R12",
+"label": "Fund Raising & Fund Distribution",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R19",
+"label": "Support N.E.C.",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R20",
+"label": "Civil Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R21",
+"label": "Immigrants' Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R22",
+"label": "Minority Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R23",
+"label": "Disabled Persons Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R24",
+"label": "Womens Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R25",
+"label": "Seniors Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R26",
+"label": "Lesbian & Gay Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R27",
+"label": "Patients' Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R28",
+"label": "Children's Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R29",
+"label": "Employee & Workers' Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R30",
+"label": "Intergroup & Race Relations",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R40",
+"label": "Voter Education & Registration",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R60",
+"label": "Civil Liberties",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R61",
+"label": "Reproductive Rights",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R62",
+"label": "Right to Life",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R63",
+"label": "Censorship, Freedom of Speech & Press",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R65",
+"label": "Freedom of Religion Issues",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R67",
+"label": "Right to Die & Euthanasia",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "R99",
+"label": "Civil Rights, Social Action & Advocacy N.E.C.",
+"group": "R",
+"group_label": "Civil Rights, Social Action & Advocacy",
+"keywords": []
+},
+{
+"code": "S",
+"label": "Community Improvement & Capacity Building",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S01",
+"label": "Alliances & Advocacy",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S02",
+"label": "Management & Technical Assistance",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S03",
+"label": "Professional Societies & Associations",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S11",
+"label": "Single Organization Support",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S12",
+"label": "Fund Raising & Fund Distribution",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S19",
+"label": "Support N.E.C.",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S20",
+"label": "Community & Neighborhood Development",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S21",
+"label": "Community Coalitions",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S22",
+"label": "Neighborhood & Block Associations",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S30",
+"label": "Economic Development",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S31",
+"label": "Urban & Community Economic Development",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S32",
+"label": "Rural Economic Development",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S40",
+"label": "Business & Industry",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S41",
+"label": "Chambers of Commerce & Business Leagues",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S43",
+"label": "Small Business Development",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S46",
+"label": "Boards of Trade",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S47",
+"label": "Real Estate Associations",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S50",
+"label": "Nonprofit Management",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S80",
+"label": "Community Service Clubs",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S81",
+"label": "Womens Service Clubs",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S82",
+"label": "Mens Service Clubs",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "S99",
+"label": "Community Improvement & Capacity Building N.E.C.",
+"group": "S",
+"group_label": "Community Improvement & Capacity Building",
+"keywords": []
+},
+{
+"code": "T",
+"label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T01",
+"label": "Alliances & Advocacy",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T02",
+"label": "Management & Technical Assistance",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T03",
+"label": "Professional Societies & Associations",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T11",
+"label": "Single Organization Support",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T12",
+"label": "Fund Raising & Fund Distribution",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T19",
+"label": "Support N.E.C.",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T20",
+"label": "Private Grantmaking Foundations",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T21",
+"label": "Corporate Foundations",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T22",
+"label": "Private Independent Foundations",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T23",
+"label": "Private Operating Foundations",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T30",
+"label": "Public Foundations",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T31",
+"label": "Community Foundations",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T40",
+"label": "Voluntarism Promotion",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T50",
+"label": "Philanthropy, Charity & Voluntarism Promotion",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T70",
+"label": "Federated Giving Programs",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T90",
+"label": "Named Trusts N.E.C.",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "T99",
+"label": "Philanthropy, Voluntarism & Grantmaking Foundations N.E.C.",
+"group": "T",
+"group_label": "Philanthropy, Voluntarism & Grantmaking Foundations",
+"keywords": []
+},
+{
+"code": "U",
+"label": "Science & Technology",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U01",
+"label": "Alliances & Advocacy",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U02",
+"label": "Management & Technical Assistance",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U03",
+"label": "Professional Societies & Associations",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U11",
+"label": "Single Organization Support",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U12",
+"label": "Fund Raising & Fund Distribution",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U19",
+"label": "Support N.E.C.",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U20",
+"label": "General Science",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U21",
+"label": "Marine Science & Oceanography",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U30",
+"label": "Physical & Earth Sciences",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U31",
+"label": "Astronomy",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U33",
+"label": "Chemistry & Chemical Engineering",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U34",
+"label": "Mathematics",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U36",
+"label": "Geology",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U40",
+"label": "Engineering & Technology",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U41",
+"label": "Computer Science",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U42",
+"label": "Engineering",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U50",
+"label": "Biological & Life Sciences",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "U99",
+"label": "Science & Technology N.E.C.",
+"group": "U",
+"group_label": "Science & Technology",
+"keywords": []
+},
+{
+"code": "V",
+"label": "Social Science",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V01",
+"label": "Alliances & Advocacy",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V02",
+"label": "Management & Technical Assistance",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V03",
+"label": "Professional Societies & Associations",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V11",
+"label": "Single Organization Support",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V12",
+"label": "Fund Raising & Fund Distribution",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V19",
+"label": "Support N.E.C.",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V20",
+"label": "Social Science",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V21",
+"label": "Anthropology & Sociology",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V22",
+"label": "Economics",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V23",
+"label": "Behavioral Science",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V24",
+"label": "Political Science",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V25",
+"label": "Population Studies",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V26",
+"label": "Law & Jurisprudence",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V30",
+"label": "Interdisciplinary Research",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V31",
+"label": "Black Studies",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V32",
+"label": "Womens Studies",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V33",
+"label": "Ethnic Studies",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V34",
+"label": "Urban Studies",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V35",
+"label": "International Studies",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V36",
+"label": "Gerontology",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V37",
+"label": "Labor Studies",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "V99",
+"label": "Social Science N.E.C.",
+"group": "V",
+"group_label": "Social Science",
+"keywords": []
+},
+{
+"code": "W",
+"label": "Public & Societal Benefit",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W01",
+"label": "Alliances & Advocacy",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W02",
+"label": "Management & Technical Assistance",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W03",
+"label": "Professional Societies & Associations",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W11",
+"label": "Single Organization Support",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W12",
+"label": "Fund Raising & Fund Distribution",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W19",
+"label": "Support N.E.C.",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W20",
+"label": "Government & Public Administration",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W22",
+"label": "Public Finance, Taxation & Monetary Policy",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W24",
+"label": "Citizen Participation",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W30",
+"label": "Military & Veterans Organizations",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W40",
+"label": "Public Transportation Systems",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W50",
+"label": "Telecommunications",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W60",
+"label": "Financial Institutions",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W61",
+"label": "Credit Unions",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W70",
+"label": "Leadership Development",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": [
+"leadership"
+]
+},
+{
+"code": "W80",
+"label": "Public Utilities",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W90",
+"label": "Consumer Protection",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "W99",
+"label": "Public & Societal Benefit N.E.C.",
+"group": "W",
+"group_label": "Public & Societal Benefit",
+"keywords": []
+},
+{
+"code": "X",
+"label": "Religion-Related",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X01",
+"label": "Alliances & Advocacy",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X02",
+"label": "Management & Technical Assistance",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X03",
+"label": "Professional Societies & Associations",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X11",
+"label": "Single Organization Support",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X12",
+"label": "Fund Raising & Fund Distribution",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X19",
+"label": "Support N.E.C.",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X20",
+"label": "Christianity",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X21",
+"label": "Protestant",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X22",
+"label": "Roman Catholic",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X30",
+"label": "Judaism",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X40",
+"label": "Islam",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X50",
+"label": "Buddhism",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X70",
+"label": "Hinduism",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X80",
+"label": "Religious Media & Communications",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X81",
+"label": "Religious Film & Video",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X82",
+"label": "Religious Television",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X83",
+"label": "Religious Printing & Publishing",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X84",
+"label": "Religious Radio",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X90",
+"label": "Interfaith Coalitions",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "X99",
+"label": "Religion-Related N.E.C.",
+"group": "X",
+"group_label": "Religion-Related",
+"keywords": []
+},
+{
+"code": "Y",
+"label": "Mutual & Membership Benefit",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y01",
+"label": "Alliances & Advocacy",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y02",
+"label": "Management & Technical Assistance",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y03",
+"label": "Professional Societies & Associations",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y05",
+"label": "Research Institutes & Public Policy Analysis",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y11",
+"label": "Single Organization Support",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y12",
+"label": "Fund Raising & Fund Distribution",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y19",
+"label": "Support N.E.C.",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y20",
+"label": "Insurance Providers",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y22",
+"label": "Local Benevolent Life Insurance Associations",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y23",
+"label": "Mutual Insurance Companies & Associations",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y24",
+"label": "Supplemental Unemployment Compensation",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y25",
+"label": "State-Sponsored Workers Compensation Reinsurance Organizations",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y30",
+"label": "Pension & Retirement Funds",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y33",
+"label": "Teachers Retirement Fund Associations",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y34",
+"label": "Employee Funded Pension Trusts",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y35",
+"label": "Multi-Employer Pension Plans",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y40",
+"label": "Fraternal Societies",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y41",
+"label": "Fraternal Beneficiary Societies",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y42",
+"label": "Domestic Fraternal Societies",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y43",
+"label": "Voluntary Employees Beneficiary Associations (Non-Government)",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y44",
+"label": "Voluntary Employees Beneficiary Associations Government)",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y50",
+"label": "Cemeteries",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Y99",
+"label": "Mutual & Membership Benefit N.E.C.",
+"group": "Y",
+"group_label": "Mutual & Membership Benefit",
+"keywords": []
+},
+{
+"code": "Z",
+"label": "Unknown",
+"group": "Z",
+"group_label": "Unknown",
+"keywords": []
+},
+{
+"code": "Z99",
+"label": "Unknown",
+"group": "Z",
+"group_label": "Unknown",
+"keywords": []
+}
+]

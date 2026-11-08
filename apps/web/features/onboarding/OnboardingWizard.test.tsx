@@ -2,7 +2,9 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FixtureOnboardingApi } from "@/api/onboarding/fixture";
 import { DEMO_FORM, FixtureProfileApi } from "@/api/profile/fixture";
-import { AFTER_ONBOARDING, OnboardingWizard } from "./OnboardingWizard";
+import { ProblemError } from "@/api/http";
+import { invalidateSession } from "@/api/session";
+import { AFTER_ONBOARDING, LOGIN_AGAIN, OnboardingWizard } from "./OnboardingWizard";
 import { DRAFT_KEY } from "./useOnboardingDraft";
 
 const nav = vi.hoisted(() => {
@@ -38,6 +40,8 @@ vi.mock("next/navigation", async () => {
   };
 });
 
+vi.mock("@/api/session", async (orig) => ({ ...(await orig<typeof import("@/api/session")>()), invalidateSession: vi.fn() }));
+
 const renderWizard = (profile = new FixtureProfileApi("empty"), onboarding = new FixtureOnboardingApi()) => {
   render(<OnboardingWizard profile={profile} onboarding={onboarding} />);
   return { profile };
@@ -48,6 +52,7 @@ const title = () => screen.getByRole("heading", { level: 1 });
 beforeEach(() => {
   act(() => nav.set(""));
   nav.replace.mockReset();
+  vi.mocked(invalidateSession).mockReset();
   window.localStorage.clear();
 });
 
@@ -104,6 +109,37 @@ describe("OnboardingWizard", () => {
     await user.click(screen.getByRole("button", { name: "Finish and find grants" }));
     expect(nav.replace).toHaveBeenCalledWith(AFTER_ONBOARDING);
     expect((await profile.getProfile())!.version).toBe(4);
+  });
+
+  it("redirects to sign in on 401 at mount", async () => {
+    const profile = new FixtureProfileApi("empty");
+    profile.getProfile = () => Promise.reject(new ProblemError(401, "not_signed_in", "Sign in to continue."));
+    renderWizard(profile);
+    await vi.waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/login?next=%2Fonboarding"));
+    expect(LOGIN_AGAIN).toBe("/login?next=%2Fonboarding");
+  });
+
+  it("redirects to sign in on 401 at save", async () => {
+    const user = userEvent.setup();
+    const profile = new FixtureProfileApi("existing");
+    profile.saveProfile = () => Promise.reject(new ProblemError(401, "not_signed_in", "Sign in to continue."));
+    renderWizard(profile);
+    await user.click(await screen.findByRole("button", { name: "Finish and find grants" }));
+    expect(nav.replace).toHaveBeenCalledWith("/login?next=%2Fonboarding");
+    expect(invalidateSession).not.toHaveBeenCalled();
+  });
+
+  it("invalidates the session after finish, before redirecting", async () => {
+    const user = userEvent.setup();
+    let invalidatedFirst = false;
+    vi.mocked(invalidateSession).mockImplementation(() => {
+      invalidatedFirst = !nav.replace.mock.calls.length;
+    });
+    renderWizard(new FixtureProfileApi("existing"));
+    await user.click(await screen.findByRole("button", { name: "Finish and find grants" }));
+    expect(invalidateSession).toHaveBeenCalledOnce();
+    expect(invalidatedFirst).toBe(true);
+    expect(nav.replace).toHaveBeenCalledWith(AFTER_ONBOARDING);
   });
 
   it("server errors map to steps", async () => {
