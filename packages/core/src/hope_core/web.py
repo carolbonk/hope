@@ -11,12 +11,15 @@ import io
 import ipaddress
 import json
 import socket
+import time
+import zipfile
 from collections.abc import Callable
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import urldefrag, urljoin, urlsplit
 from urllib.robotparser import RobotFileParser
+from xml.etree import ElementTree
 
 import httpx
 from pydantic import BaseModel
@@ -28,6 +31,9 @@ MAX_BYTES = 5 * 1024 * 1024
 MAX_REDIRECTS = 5
 TIMEOUT = 15.0
 ALLOWED_PORTS = {"http": 80, "https": 443}
+RETRY_AFTER_MAX = 5.0  # one retry on 429 when the site asks for at most this many seconds
+DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+_W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
 Resolver = Callable[[str], list[str]]
 
@@ -224,6 +230,34 @@ def parse_pdf(data: bytes, url: str, final_url: str) -> Page:
     )
 
 
+def parse_docx(data: bytes, url: str, final_url: str) -> Page:
+    """Paragraph text of a Word file (`word/document.xml`); no DTDs, capped unzipped size."""
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as docx:
+            if docx.getinfo("word/document.xml").file_size > MAX_BYTES * 4:
+                raise FetchError("too_large", url)
+            xml = docx.read("word/document.xml")
+    except (zipfile.BadZipFile, KeyError) as exc:
+        raise FetchError("unsupported_content_type", DOCX) from exc
+    if b"<!DOCTYPE" in xml or b"<!ENTITY" in xml:
+        raise FetchError("unsupported_content_type", DOCX)
+    try:
+        root = ElementTree.fromstring(xml)
+    except ElementTree.ParseError as exc:
+        raise FetchError("unsupported_content_type", DOCX) from exc
+    lines = ("".join(t.text or "" for t in p.iter(f"{_W}t")).strip() for p in root.iter(f"{_W}p"))
+    text = "\n".join(line for line in lines if line)
+    return Page(url=url, final_url=final_url, text=text, content_type=DOCX)
+
+
+def _retry_after(response: httpx.Response) -> float | None:
+    """Seconds a 429 asks us to wait, if short enough to wait once; else None (give up)."""
+    value = response.headers.get("retry-after", "1").strip()
+    if not value.isdigit() or float(value) > RETRY_AFTER_MAX:
+        return None
+    return float(value)
+
+
 def _robots_allows(client: httpx.Client, url: str, resolver: Resolver) -> bool:
     parts = urlsplit(url)
     robots_url = f"{parts.scheme}://{parts.netloc}/robots.txt"
@@ -248,6 +282,7 @@ def fetch(
     resolver: Resolver = system_resolver,
     transport: httpx.BaseTransport | None = None,
     respect_robots: bool = True,
+    sleep: Callable[[float], None] = time.sleep,
 ) -> Page:
     url, _ = urldefrag(url.strip())
     check_url(url, resolver)
@@ -256,6 +291,9 @@ def fetch(
             raise FetchError("robots_disallowed", url)
         try:
             final_url, response = _get(client, url, resolver)
+            if response.status_code == 429 and (wait := _retry_after(response)) is not None:
+                sleep(wait)
+                final_url, response = _get(client, url, resolver)
         except httpx.HTTPError as exc:
             raise FetchError("network", type(exc).__name__) from exc
     if response.status_code >= 400:
@@ -263,6 +301,10 @@ def fetch(
     content_type = response.headers.get("content-type", "").split(";")[0].strip().lower()
     if content_type == "application/pdf" or response.content[:5] == b"%PDF-":
         return parse_pdf(response.content, url, final_url)
+    if content_type == DOCX or (
+        response.content[:2] == b"PK" and urlsplit(final_url).path.lower().endswith(".docx")
+    ):
+        return parse_docx(response.content, url, final_url)
     if content_type in ("text/html", "application/xhtml+xml", ""):
         return parse_html(response.text, url, final_url)
     if content_type.startswith("text/"):

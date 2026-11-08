@@ -589,7 +589,7 @@ Commands: `uv run pytest -q services/discovery services/pillar`, the lint/mypy c
    `hrsa.gov`). The same URLs return 200 to `curl` with the same `User-Agent`, and 403 to plain `httpx`, so
    the block is on the client fingerprint, not the headers or the IP pinning. No header change fixes it, and
    Hope shouldn't work around bot protection. Other failures: `network` (one site's TLS chain is incomplete),
-   `http_429`, and `unsupported_content_type` for `.docx` application forms. Nothing for H0 to change now.
+   and `http_429` (a short `Retry-After` is now retried once; Vercel's 429 bot challenge sends none and still fails). `.docx` application forms are now read as text by `fetch`.
 
 ## Out of scope
 
