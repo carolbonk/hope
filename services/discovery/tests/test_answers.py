@@ -222,18 +222,18 @@ def test_covid_19_is_not_a_figure() -> None:
 def test_sentences_without_a_source_are_reported() -> None:
     def mixed(messages: list[Message], schema: dict[str, Any]) -> dict[str, Any]:
         return {
-            "text": "Our clinic serves rural families today. We will run quarterly workshops.",
+            "text": "Our clinic serves rural families today. We will run community workshops.",
             "claims": [{"sentence": "Our clinic serves rural families today.", "refs": ["P1"]}],
             "to_confirm": ["what is needed", "[TO CONFIRM: board size]"],
         }
 
     result = drafter(mixed).draft(agency_profile(), GRANT, Requirements(), q("Describe it."))
-    assert result.unsourced == ["We will run quarterly workshops."]
+    assert result.unsourced == ["We will run community workshops."]
     assert result.to_confirm == ["board size"]
     assert result.citations[-1] == {
         "ref": None,
         "kind": "unsourced",
-        "text": "We will run quarterly workshops.",
+        "text": "We will run community workshops.",
     }
 
 
@@ -266,3 +266,53 @@ def test_staff_facts_fill_gaps_instead_of_to_confirm() -> None:
     )
     assert "timeline and milestones" not in result.to_confirm
     assert "local data on need" in result.to_confirm
+
+
+def test_plan_specifics_not_in_the_profile_become_to_confirm() -> None:
+    from hope_discovery.answers import guard_specifics
+
+    text, bad = guard_specifics(
+        "We host quarterly workshops in 8-week cohorts starting March 2027, with pre- and"
+        " post-surveys. Clinics run weekly.",
+        "Our clinic runs weekly walk-in hours.",
+    )
+    assert "quarterly" not in text.replace("'quarterly'", "")
+    assert "[TO CONFIRM: how often (draft said 'quarterly')]" in text
+    assert {"quarterly", "8-week", "March 2027"} <= set(bad)
+    assert any("pre- and post-surveys" in b for b in bad)
+    assert "Clinics run weekly." in text
+
+
+def test_regression_no_quarterly_workshops_from_a_thin_profile() -> None:
+    def padded(messages: list[Message], schema: dict[str, object]) -> dict[str, object]:
+        return {
+            "text": "We will host quarterly workshops and track results with satisfaction surveys.",
+            "claims": [],
+            "to_confirm": [],
+        }
+
+    result = drafter(padded).draft(agency_profile(), GRANT, Requirements(), q("Describe it."))
+    assert "quarterly workshops" not in result.text
+    assert "satisfaction surveys" not in result.text.replace("'satisfaction surveys'", "")
+    assert "quarterly" in result.unsupported
+
+
+def test_certification_and_ai_questions_go_to_staff() -> None:
+    calls: list[int] = []
+
+    def never(messages: list[Message], schema: dict[str, object]) -> dict[str, object]:
+        calls.append(1)
+        return {"text": "Yes.", "claims": [], "to_confirm": []}
+
+    for prompt in (
+        "Did you use AI tools to prepare this application?",
+        "I certify that the information in this application is true.",
+    ):
+        result = drafter(never).draft(agency_profile(), GRANT, Requirements(), q(prompt))
+        assert result.text.startswith("[TO CONFIRM: staff must answer")
+    assert calls == []
+    assert (
+        not drafter()
+        .draft(agency_profile(), GRANT, Requirements(), q("Aid to families?"))
+        .text.startswith("[TO CONFIRM: staff")
+    )

@@ -268,6 +268,78 @@ def guard_figures(text: str, sources: str) -> tuple[str, list[str]]:
     return text, bad
 
 
+# --- plan specifics must come from somewhere -----------------------------------------------------
+
+_SPECIFICS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    (
+        "how often",
+        re.compile(
+            r"\b(?:daily|weekly|bi-?weekly|monthly|bi-?monthly|quarterly|annually|semi-?annually"
+            r"|(?:once|twice|three times) (?:a|per) (?:day|week|month|quarter|year)"
+            r"|every (?:\w+ )?(?:days?|weeks?|months?|quarters?|years?))\b",
+            re.I,
+        ),
+    ),
+    (
+        "how long",
+        re.compile(
+            r"\b(?:\d+|one|two|three|four|five|six|eight|ten|twelve)[- ](?:minute|hour|day|week"
+            r"|month)s?(?:-long)?\b",
+            re.I,
+        ),
+    ),
+    (
+        "when",
+        re.compile(
+            r"\b(?:Q[1-4]|(?:first|second|third|fourth) quarter|(?:January|February|March|April"
+            r"|June|July|August|September|October|November|December)(?: \d{1,2})?(?:,? 20\d\d)?"
+            r"|May(?: \d{1,2})?,? 20\d\d)\b"
+        ),
+    ),
+    (
+        "how results are measured",
+        re.compile(
+            r"\bpre-?(?:\s*(?:and|/|&)\s*)?post-?(?:\s*(?:program|test|intervention))?"
+            r"(?:\s*(?:surveys?|assessments?|tests?|questionnaires?))?"
+            r"|\b(?:satisfaction|participant|follow-up) surveys?\b"
+            r"|\b(?:focus groups?|logic model)\b",
+            re.I,
+        ),
+    ),
+)
+
+
+def guard_specifics(text: str, sources: str) -> tuple[str, list[str]]:
+    """Frequencies, durations, dates and measurement tools a reviewer will hold the nonprofit
+    to: any the profile, staff or funder never stated becomes a TO CONFIRM, so a thin profile
+    can't turn into 'quarterly workshops'."""
+    known = " ".join(sources.lower().split())
+    bad: list[str] = []
+    for kind, pattern in _SPECIFICS:
+        for m in pattern.finditer(TO_CONFIRM.sub("", text)):
+            phrase = m.group(0).strip()
+            if phrase and " ".join(phrase.lower().split()) not in known and phrase not in bad:
+                bad.append(phrase)
+                text = re.sub(
+                    rf"(?<![\w-]){re.escape(phrase)}(?![\w-])",
+                    f"[TO CONFIRM: {kind} (draft said '{phrase}')]",
+                    text,
+                )
+    return text, bad
+
+
+# Certifications, attestations and AI-use questions are the nonprofit's to answer, never Hope's.
+_STAFF_ONLY = re.compile(
+    r"\b(?:certif(?:y|ies|ication)|attest|affirm|under penalty|signature|sign(?:ed)? by"
+    r"|lobbying|conflicts? of interest|debar|artificial intelligence|generative|chatgpt)\b"
+    r"|\bAI\b"
+)
+
+
+def staff_only(prompt: str) -> bool:
+    return bool(_STAFF_ONLY.search(prompt))
+
+
 # --- the model call ------------------------------------------------------------------------------
 
 
@@ -294,7 +366,9 @@ SYSTEM = (
     " don't state. Stay within the limit. Plain paragraphs, no"
     " headings, no markdown, and no [P#]/[W#] refs in the text itself: the text is pasted into"
     " the funder's form. For each sentence that states a fact, add a claim with the refs it"
-    " relies on."
+    " relies on. No stand-ins for missing specifics ('regularly', 'ongoing', 'periodic"
+    " surveys'). Say 'we will' only for plans the facts state; otherwise [TO CONFIRM: is this"
+    " planned?]."
 )
 
 _INLINE_REFS = re.compile(
@@ -381,6 +455,15 @@ class AnswerDrafter:
     ) -> DraftResult:
         """`facts` are what staff supplied for this application (need -> answer); they count
         as profile facts."""
+        if staff_only(question.prompt):
+            need = "staff must answer this themselves (certification, signature or AI use)"
+            return DraftResult(
+                text=f"[TO CONFIRM: {need}]",
+                citations=[],
+                to_confirm=[need],
+                over_limit=False,
+                count=0,
+            )
         digest = build_answer_digest(profile)
         for need, answer in (facts or {}).items():
             digest.add(f"staff.{question_key(need)}", f"{need}: {answer}")
@@ -428,6 +511,8 @@ class AnswerDrafter:
             )
             draft = _clean(self._call([*messages, Message("assistant", draft.text), shorter]))
         text, bad = guard_figures(draft.text.strip(), sources)
+        text, vague = guard_specifics(text, sources)
+        bad += vague
         refs = digest.by_ref()
         web = {r: (t, u) for r, t, u in quotes}
         citations: list[dict[str, Any]] = []
