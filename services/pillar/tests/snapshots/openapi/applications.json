@@ -202,6 +202,26 @@
             "title": "Questions Status",
             "type": "string"
           },
+          "requirements": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Requirements"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requirements_job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequirementsJob"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "stage": {
             "enum": [
               "saved",
@@ -243,6 +263,8 @@
           "questions_status",
           "updated_at",
           "version",
+          "requirements",
+          "requirements_job",
           "ask",
           "approvals",
           "evidence",
@@ -320,6 +342,85 @@
           "decision"
         ],
         "title": "ApprovalBody",
+        "type": "object"
+      },
+      "Attachment": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "quote",
+          "url"
+        ],
+        "title": "Attachment",
+        "type": "object"
+      },
+      "BudgetRequirements": {
+        "properties": {
+          "format": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "indirect_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "match_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_request_amount": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "BudgetRequirements",
         "type": "object"
       },
       "CommentBody": {
@@ -479,6 +580,40 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "Limit": {
+        "properties": {
+          "includes_spaces": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Includes Spaces"
+          },
+          "max": {
+            "title": "Max",
+            "type": "integer"
+          },
+          "unit": {
+            "enum": [
+              "words",
+              "characters",
+              "pages"
+            ],
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit",
+          "max"
+        ],
+        "title": "Limit",
+        "type": "object"
+      },
       "Money": {
         "properties": {
           "amount_minor": {
@@ -496,6 +631,231 @@
           "amount_minor"
         ],
         "title": "Money",
+        "type": "object"
+      },
+      "PageRead": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "read",
+              "failed",
+              "no_info"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "status"
+        ],
+        "title": "PageRead",
+        "type": "object"
+      },
+      "Question": {
+        "properties": {
+          "conflict": {
+            "default": false,
+            "title": "Conflict",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Limit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limit_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Text"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "required": {
+            "default": true,
+            "title": "Required",
+            "type": "boolean"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "prompt",
+          "url"
+        ],
+        "title": "Question",
+        "type": "object"
+      },
+      "Requirements": {
+        "properties": {
+          "attachments": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Attachment"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/BudgetRequirements",
+            "default": {}
+          },
+          "eligibility": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Sourced"
+            },
+            "title": "Eligibility",
+            "type": "array"
+          },
+          "pages": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PageRead"
+            },
+            "title": "Pages",
+            "type": "array"
+          },
+          "prompt_version": {
+            "default": "requirements-1",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "questions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "submission": {
+            "$ref": "#/components/schemas/Submission",
+            "default": {}
+          }
+        },
+        "title": "Requirements",
+        "type": "object"
+      },
+      "RequirementsJob": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "job_id": {
+            "format": "uuid",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "error",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "RequirementsJob",
+        "type": "object"
+      },
+      "Sourced": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "url"
+        ],
+        "title": "Sourced",
         "type": "object"
       },
       "StageBody": {
@@ -517,6 +877,44 @@
           "to"
         ],
         "title": "StageBody",
+        "type": "object"
+      },
+      "Submission": {
+        "properties": {
+          "deadline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deadline_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline Date"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sourced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "Submission",
         "type": "object"
       },
       "ValidationError": {
@@ -815,6 +1213,49 @@
           }
         },
         "summary": "Record Evidence",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/requirements/jobs": {
+      "post": {
+        "description": "Start (or restart) reading this grant's application requirements from its pages.",
+        "operationId": "read_requirements_v1_applications__application_id__requirements_jobs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Requirements",
         "tags": [
           "applications"
         ]

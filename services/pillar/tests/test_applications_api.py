@@ -190,3 +190,79 @@ def test_other_tenant_sees_nothing(api: TestClient, grant: GrantCandidate) -> No
 
 def test_requires_sign_in(hope_api: TestClient) -> None:
     problem(hope_api.get("/v1/applications"), 401, "not_signed_in")
+
+
+class OnePageWeb:
+    def __init__(self, url: str) -> None:
+        self.url = url
+
+    def search(self, query: str, max_results: int = 8) -> list[Any]:
+        return []
+
+    def fetch(self, url: str) -> Any:
+        from hope_core.web import FetchError, Page
+
+        if url != self.url:
+            raise FetchError("http_403", url)
+        return Page(
+            url=url,
+            final_url=url,
+            title="Apply",
+            text="Describe the community need your program addresses? (500 words)"
+            " Upload your IRS determination letter. Applications are due March 1, 2027.",
+        )
+
+
+@pytest.fixture
+def inline_jobs(monkeypatch: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
+    monkeypatch.setenv("HOPE_JOBS_INLINE", "1")
+    get_settings.cache_clear()
+    return monkeypatch
+
+
+def test_requirements_job_reads_questions(
+    api: TestClient, grant: GrantCandidate, inline_jobs: pytest.MonkeyPatch
+) -> None:
+    from hope_core.model_gateway import MockProvider, ModelGateway
+    from hope_discovery import mock
+    from hope_pillar.api import applications
+
+    inline_jobs.setattr(
+        applications,
+        "default_tools",
+        lambda: (ModelGateway([mock.register(MockProvider())]), OnePageWeb(grant.url)),
+    )
+    app = saved_app(api, grant)
+    assert app["requirements"] is None and app["requirements_job"] is None
+    started = api.post(f"/v1/applications/{app['application_id']}/requirements/jobs")
+    assert started.status_code == 202, started.text
+    body = started.json()
+    assert body["questions_status"] == "found"
+    assert body["requirements_job"]["status"] == "done"
+    (question,) = body["requirements"]["questions"]
+    assert question["limit"] == {"unit": "words", "max": 500, "includes_spaces": None}
+    assert [a["name"] for a in body["requirements"]["attachments"]] == ["IRS determination letter"]
+    assert body["requirements"]["submission"]["deadline_date"] == "2027-03-01"
+    assert body["events"][0]["kind"] == "requirements"
+    assert body["events"][0]["payload"]["questions"] == 1
+
+
+def test_requirements_not_found_when_pages_blocked(
+    api: TestClient, grant: GrantCandidate, inline_jobs: pytest.MonkeyPatch
+) -> None:
+    from hope_core.model_gateway import MockProvider, ModelGateway
+    from hope_discovery import mock
+    from hope_pillar.api import applications
+
+    inline_jobs.setattr(
+        applications,
+        "default_tools",
+        lambda: (ModelGateway([mock.register(MockProvider())]), OnePageWeb("https://nowhere")),
+    )
+    app = saved_app(api, grant)
+    body = api.post(f"/v1/applications/{app['application_id']}/requirements/jobs").json()
+    assert body["questions_status"] == "not_found"
+    assert body["requirements"]["pages"] == [
+        {"url": grant.url, "status": "failed", "reason": "http_403"}
+    ]
+    problem(api.post(f"/v1/applications/{uuid4()}/requirements/jobs"), 404, "application_not_found")

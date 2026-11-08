@@ -8,10 +8,14 @@ from typing import Annotated, Any, Literal, NoReturn
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Response
+from hope_core import jobs, store
 from hope_core.auth import Principal, ProblemException, get_principal
 from hope_core.db import connect, tenant_tx
 from hope_core.money import Money
+from hope_core.settings import get_settings
 from hope_core.store import Tx
+from hope_discovery.requirements import Requirements, RequirementsReader
+from hope_discovery.runner import default_tools
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -34,6 +38,7 @@ EventKind = Literal[
 ]
 
 EVENTS_SHOWN = 50
+REQUIREMENTS_KIND = "requirements"
 # Stage moves a caller may ask for; approval -> drafting happens only via director approval.
 MOVES: dict[tuple[str, str], str | None] = {
     ("saved", "eligibility"): None,
@@ -63,6 +68,14 @@ class EventView(BaseModel):
     at: datetime
 
 
+class RequirementsJob(BaseModel):
+    job_id: UUID
+    status: str
+    error: str | None
+    started_at: datetime | None
+    finished_at: datetime | None
+
+
 class ApplicationSummary(BaseModel):
     application_id: UUID
     grant_id: UUID
@@ -78,6 +91,8 @@ class ApplicationSummary(BaseModel):
 
 class ApplicationView(ApplicationSummary):
     version: int
+    requirements: Requirements | None
+    requirements_job: RequirementsJob | None
     ask: Money | None
     approvals: dict[Step, Approval]
     evidence: dict[str, Evidence]
@@ -165,10 +180,27 @@ def _view(tx: Tx, row: dict[str, Any]) -> ApplicationView:
         (row["application_id"], EVENTS_SHOWN),
     )
     events = [EventView.model_validate(e) for e in tx.fetchall()]
+    tx.execute(
+        "SELECT questions, attachments, budget, submission, eligibility, pages"
+        " FROM application_requirements WHERE application_id = %s"
+        " ORDER BY revision DESC LIMIT 1",
+        (row["application_id"],),
+    )
+    req = tx.fetchone()
+    requirements = Requirements.model_validate(req) if req else None
+    job = store.latest_job(tx, REQUIREMENTS_KIND, str(row["application_id"]))
     ask = (
         Money(amount_minor=row["ask_minor"], currency=row["currency"]) if row["ask_minor"] else None
     )
-    return ApplicationView.model_validate(row | {"ask": ask, "events": events})
+    return ApplicationView.model_validate(
+        row
+        | {
+            "ask": ask,
+            "events": events,
+            "requirements": requirements,
+            "requirements_job": job.model_dump() if job else None,
+        }
+    )
 
 
 def _update(tx: Tx, application_id: UUID, version: int, **fields: Any) -> None:
@@ -349,4 +381,72 @@ def comment(
     with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
         _row(tx, aid)
         add_event(tx, aid, "comment", principal.user_id, text=body.text)
+        return _respond(tx, aid, response)
+
+
+# --- requirements (H6 step 2) -----------------------------------------------------------------
+
+
+def run_requirements(application_id: UUID, grant_url: str) -> dict[str, Any]:
+    """Job body: read the funder's pages, then store a new requirements revision."""
+    gateway, web = default_tools()
+    req = RequirementsReader(gateway, web).read(grant_url)
+    status = "found" if req.questions else "not_found"
+    data = req.model_dump(mode="json")
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        tx.execute(
+            "INSERT INTO application_requirements (application_id, tenant_id, revision, questions,"
+            " attachments, budget, submission, eligibility, pages)"
+            " SELECT %s, current_tenant(), coalesce(max(revision), 0) + 1, %s, %s, %s, %s, %s, %s"
+            " FROM application_requirements WHERE application_id = %s",
+            (
+                application_id,
+                *(Jsonb(data[k]) for k in REQ_FIELDS),
+                application_id,
+            ),
+        )
+        tx.execute(
+            "UPDATE applications SET questions_status = %s WHERE application_id = %s",
+            (status, application_id),
+        )
+        counts = {
+            "questions": len(req.questions),
+            "attachments": len(req.attachments),
+            "pages_read": sum(p.status == "read" for p in req.pages),
+            "pages_failed": sum(p.status == "failed" for p in req.pages),
+        }
+        add_event(tx, application_id, "requirements", None, status=status, **counts)
+    return {"status": status, **counts}
+
+
+REQ_FIELDS = ("questions", "attachments", "budget", "submission", "eligibility", "pages")
+
+
+@router.post("/applications/{application_id}/requirements/jobs", status_code=202)
+def read_requirements(
+    application_id: str, principal: PrincipalDep, response: Response
+) -> ApplicationView:
+    """Start (or restart) reading this grant's application requirements from its pages."""
+    aid = _app_uuid(application_id)
+    with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
+        row = _row(tx, aid)
+        tx.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"requirements:{aid}",))
+        running = store.latest_job(tx, REQUIREMENTS_KIND, str(aid))
+        if running and running.status in ("queued", "running"):
+            raise ProblemException(409, "job_running", "Requirements are already being read")
+        job = store.create_job(tx, REQUIREMENTS_KIND, str(aid), principal.user_id)
+        tx.execute(
+            "UPDATE applications SET questions_status = 'reading' WHERE application_id = %s",
+            (aid,),
+        )
+        url = row["url"]
+    jobs.start_job(
+        REQUIREMENTS_KIND,
+        run_requirements,
+        aid,
+        url,
+        job_id=job.job_id,
+        created_by=principal.user_id,
+    )
+    with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
         return _respond(tx, aid, response)
