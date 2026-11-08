@@ -42,7 +42,7 @@ DATE_DAY_FIRST = re.compile(
     r"\b(?P<day>\d{1,2})(?:st|nd|rd|th)?\s+(?P<month>" + _MONTH_RX + r")\.?,?\s+(?P<year>\d{4})\b",
     re.I,
 )
-DATE_US = re.compile(r"\b(?P<month>\d{1,2})/(?P<day>\d{1,2})/(?P<year>\d{4})\b")
+DATE_US = re.compile(r"\b(?P<month>\d{1,2})/(?P<day>\d{1,2})/(?P<year>\d{4}|\d{2})\b(?!/)")
 DATE_ISO = re.compile(r"\b(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})\b")
 DATE_YEARLESS = re.compile(
     r"\b(?:" + _MONTH_RX + r")\.?\s+\d{1,2}(?:st|nd|rd|th)?\b|\b\d{1,2}/\d{1,2}\b(?!/)", re.I
@@ -52,11 +52,10 @@ ROLLING = re.compile(
     r"|\bongoing basis\b|\bany time\b|\banytime\b",
     re.I,
 )
-MONEY = re.compile(
-    r"(?:\$|\bUSD\s?)\s*(?P<num>\d{1,3}(?:,\d{3})+|\d+)(?P<frac>\.\d+)?"
-    r"(?:\s*(?P<mult>million|billion|thousand|mm|m|k|b)\b)?",
-    re.I,
-)
+_NUM = r"(?P<num>\d{1,3}(?:,\d{3})+|\d+)(?P<frac>\.\d+)?"
+_MULT = r"(?:\s*(?P<mult>million|billion|thousand|mm|m|k|b)\b)?"
+MONEY = re.compile(r"(?:\$|\bUSD\s?)\s*" + _NUM + _MULT, re.I)
+MONEY_WORDS = re.compile(r"\b" + _NUM + _MULT + r"\s*(?:USD|dollars)\b", re.I)  # "50,000 dollars"
 NON_USD = re.compile(r"[€£¥]|\b(?:EUR|GBP|CAD|AUD|MXN|COP)\b|\bC\$|\bA\$", re.I)
 MULTIPLIERS = {"thousand": 10**3, "k": 10**3, "million": 10**6, "m": 10**6, "mm": 10**6}
 MULTIPLIERS |= {"billion": 10**9, "b": 10**9}
@@ -78,8 +77,11 @@ class DeadlineParse:
 
 
 def _amounts(text: str) -> list[tuple[Money, int, int]]:
-    found = []
-    for m in MONEY.finditer(text):
+    found: list[tuple[Money, int, int]] = []
+    matches = [*MONEY.finditer(text), *MONEY_WORDS.finditer(text)]
+    for m in sorted(matches, key=lambda m: m.start()):
+        if any(s < m.end() and m.start() < e for _, s, e in found):
+            continue
         major = Decimal(m.group("num").replace(",", "") + (m.group("frac") or ""))
         mult = (m.group("mult") or "").lower()
         found.append((Money.from_decimal(major * MULTIPLIERS.get(mult, 1)), m.start(), m.end()))
@@ -109,8 +111,10 @@ def _dates(text: str) -> list[date]:
                 continue
             month = m.group("month")
             month_no = int(month) if month.isdigit() else MONTHS[month.lower().rstrip(".")]
+            year = int(m.group("year"))
+            year += 2000 if year < 100 else 0  # "3/3/27"
             try:
-                out.append((m.start(), date(int(m.group("year")), month_no, int(m.group("day")))))
+                out.append((m.start(), date(year, month_no, int(m.group("day")))))
             except ValueError:
                 continue
             taken.append((m.start(), m.end()))
@@ -130,5 +134,150 @@ def parse_deadline(quote: str | None, today: date) -> DeadlineParse:
     return DeadlineParse(future[0] if future else None, rolling, dates, yearless)
 
 
+def has_money(text: str) -> bool:
+    """Any amount, USD or not (`€50,000` is an amount quote, just not one code converts)."""
+    return bool(MONEY.search(text) or MONEY_WORDS.search(text) or NON_USD.search(text))
+
+
 def has_money_or_date(sentence: str) -> bool:
-    return bool(MONEY.search(sentence) or _dates(sentence) or DATE_YEARLESS.search(sentence))
+    return bool(
+        MONEY.search(sentence)
+        or MONEY_WORDS.search(sentence)
+        or _dates(sentence)
+        or DATE_YEARLESS.search(sentence)
+    )
+
+
+# --- Finding the facts on the page when the model's quote is missing or unusable -----------------
+
+_CLAUSE = re.compile(r"(?<=[.!?;])\s+(?=[A-Z0-9(\"'$])|\n+|\s+\u2022\s+|\s{3,}")
+AWARD_WORDS = re.compile(
+    r"\bawards?(?::| of| range| ranging| up to| between| amounts?| sizes?)"
+    r"|\bgrants? (?:of|range|ranging|sizes?|amounts?|up to|between)"
+    r"|\bup to\b|\bmaximum\b|\bmax\.?\s|\branging\b|\branges? from"
+    r"|\brequest(?:s|ed)? (?:of|up to|between)"
+    r"|\bper (?:organization|applicant|project|grant|year|award|agency|grantee|recipient)\b"
+    r"|\bfunding (?:of|amount|level)|\bbetween \$",
+    re.I,
+)
+TOTAL_WORDS = re.compile(
+    r"\btotal\b|\btotaling\b|\bavailable\b|\bpool\b|\bbudget\b|\bhas (?:awarded|granted|invested)"
+    r"|\b(?:over|more than|nearly|almost) \$|\bin (?:total )?(?:grants|funding|awards)\b"
+    r"|\bdistributed\b|\braised\b|\bsince \d{4}|\bendowment\b|\binvest(?:s|ed|ment)\b"
+    r"|\bmatch(?:ing)?\b|\bfee\b|\bcost\b|\bsalary\b"
+    r"|\b(?:grants|funds|dollars|total) awarded\b|\bawarded (?:to date|since|so far)\b",
+    re.I,
+)
+DEADLINE_WORDS = re.compile(
+    r"\bdeadline|\bdue\b|\bclos(?:e|es|ing)\b|\bsubmi(?:t|tted|ssions?)\b|\bno later than\b"
+    r"|\bapply by\b|\baccepted (?:until|through|by)\b|\bapplications? (?:open|window|period)\b"
+    r"|\bmust be received\b|\bletters? of (?:intent|inquiry)\b|\bLOI\b",
+    re.I,
+)
+PAST_WORDS = re.compile(
+    r"\bwere due\b|\bwas due\b|\bclosed\b|\bpast\b|\bprevious\b|\blast year", re.I
+)
+QUOTE_MAX = 300
+
+
+@dataclass(frozen=True)
+class AwardPick:
+    """What code makes of a quote with money in it. `text` is the part naming one award; `total`
+    means the wording reads as program totals or cumulative giving, not one award."""
+
+    text: str
+    amount: AmountParse
+    total: bool
+
+
+def pick_award(quote: str, context: str = "") -> AwardPick | None:
+    """`up to $1 million in grants, ranging from $5,000 to $50,000 per organization` → the
+    `$5,000 to $50,000` part. `context` is the page clause around the quote, read for total wording
+    when the quote alone has none (`$16.3 million` in "…awards $16.3 million in grants")."""
+    for part in re.split(r"[,;]\s+", quote):
+        if _amounts(part) and AWARD_WORDS.search(part) and not TOTAL_WORDS.search(part):
+            parsed = parse_amount(part)
+            if parsed is not None and parsed.max is not None:
+                return AwardPick(part.strip(), parsed, False)
+    parsed = parse_amount(quote)
+    if parsed is None or parsed.max is None:
+        return None
+    total = bool(TOTAL_WORDS.search(quote)) or bool(
+        context and TOTAL_WORDS.search(context) and not AWARD_WORDS.search(context)
+    )
+    return AwardPick(quote, parsed, total)
+
+
+def context_of(quote: str, pages: list[str]) -> str:
+    """The page clause that contains `quote` (case and spacing ignored), else ""."""
+    q = " ".join(quote.lower().split())
+    for text in pages:
+        for clause in clauses(text):
+            if q and q in " ".join(clause.lower().split()):
+                return clause
+    return ""
+
+
+@dataclass(frozen=True)
+class Found:
+    """A fact code found on the page itself: the clause it came from (a real quote) and its page."""
+
+    text: str
+    page: int
+
+
+def clauses(text: str) -> list[str]:
+    return [c.strip() for c in _CLAUSE.split(text) if c and c.strip()]
+
+
+def _clip(clause: str, start: int, end: int) -> str:
+    """At most `QUOTE_MAX` characters of `clause`, centred on [start, end)."""
+    if len(clause) <= QUOTE_MAX:
+        return clause
+    lo = max(0, min(start - 120, len(clause) - QUOTE_MAX))
+    return clause[lo : lo + QUOTE_MAX].strip()
+
+
+def find_amount(pages: list[str]) -> tuple[Found, AmountParse] | None:
+    """The best per-award amount stated on the pages: a clause with a USD figure and award wording,
+    and none of the wording of program totals or costs. Earliest wins on ties."""
+    best: tuple[int, Found, AmountParse] | None = None
+    for page_no, text in enumerate(pages, start=1):
+        for clause in clauses(text):
+            if not _amounts(clause) or not AWARD_WORDS.search(clause):
+                continue
+            pick = pick_award(clause, clause)
+            if pick is None or pick.total or not AWARD_WORDS.search(pick.text):
+                continue
+            found = _amounts(pick.text)
+            quote = _clip(pick.text, found[0][1], found[-1][2]) if found else pick.text
+            score = len(AWARD_WORDS.findall(pick.text))
+            if best is None or score > best[0]:
+                best = (score, Found(quote, page_no), pick.amount)
+    return (best[1], best[2]) if best else None
+
+
+def find_deadline(pages: list[str], today: date) -> tuple[Found, DeadlineParse] | None:
+    """The earliest future date the pages give as a deadline, else a rolling statement.
+
+    Only clauses with deadline wording count. Past dates found this way never mark a grant expired:
+    pages often mention last cycle's dates."""
+    dated: tuple[date, Found] | None = None
+    rolling: Found | None = None
+    for page_no, text in enumerate(pages, start=1):
+        for clause in clauses(text):
+            if not DEADLINE_WORDS.search(clause) and not ROLLING.search(clause):
+                continue
+            if PAST_WORDS.search(clause):
+                continue
+            future = [d for d in _dates(clause) if d >= today]
+            if future and DEADLINE_WORDS.search(clause):
+                if dated is None or min(future) < dated[0]:
+                    dated = (min(future), Found(_clip(clause, 0, len(clause)), page_no))
+            elif rolling is None and ROLLING.search(clause) and not _dates(clause):
+                rolling = Found(_clip(clause, 0, len(clause)), page_no)
+    if dated:
+        return dated[1], parse_deadline(dated[1].text, today)
+    if rolling:
+        return rolling, DeadlineParse(None, rolling=True)
+    return None

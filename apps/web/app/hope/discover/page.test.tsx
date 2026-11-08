@@ -1,12 +1,30 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { CheckCard } from "@/lib/hope/sync/opportunities";
 import type { Opportunity } from "@/lib/hope/types";
 import DiscoverPage from "./page";
 
 const fetchOpportunities = vi.fn<() => Promise<Opportunity[] | null>>();
+const fetchCheckCards = vi.fn<() => Promise<CheckCard[]>>();
 vi.mock("@/lib/hope/sync/opportunities", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/hope/sync/opportunities")>()),
   fetchOpportunities: () => fetchOpportunities(),
+  fetchCheckCards: () => fetchCheckCards(),
 }));
+
+const check = (id: string, over: Partial<CheckCard> = {}): CheckCard => ({
+  id,
+  title: "Community Grants Supporting Charitable Causes in NCW",
+  funder: "Community Foundation of NCW",
+  url: `https://cfncw.example.org/${id}`,
+  summary: "Grants for charitable causes in north central Washington.",
+  amount: null,
+  amountText: null,
+  otherCurrency: null,
+  deadline: null,
+  deadlineText: "Rolling",
+  verifiedAt: "2026-11-07",
+  ...over,
+});
 
 const found = (id: string, name: string): Opportunity => ({
   id,
@@ -29,6 +47,8 @@ const found = (id: string, name: string): Opportunity => ({
 beforeEach(() => {
   window.localStorage.clear();
   fetchOpportunities.mockReset();
+  fetchCheckCards.mockReset();
+  fetchCheckCards.mockResolvedValue([]);
 });
 
 it("sync off renders deck and panel once without requests", async () => {
@@ -60,4 +80,40 @@ it("verified cards show source and no demo chip; save pass undo work", async () 
   fireEvent.keyDown(document.body, { key: "ArrowLeft" });
   await act(async () => {});
   expect(state()).toContain("passed");
+});
+
+it("grants missing amount or deadline join the deck as marked check cards, after complete ones", async () => {
+  fetchOpportunities.mockResolvedValue([found("g-1", "Rural Oral Health Access Grant 2027")]);
+  fetchCheckCards.mockResolvedValue([check("g-9", { amountText: "Grants are made possible through donors." })]);
+  render(<DiscoverPage />);
+  await act(async () => {});
+  expect(screen.queryByTestId("check-card")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Pass" }));
+  await act(async () => {});
+  const card = screen.getByTestId("check-card");
+  expect(card).toHaveTextContent("Check amount and deadline");
+  expect(card).toHaveTextContent("Amount not found");
+  expect(card).toHaveTextContent('Page says: "Grants are made possible through donors."');
+  expect(card).toHaveTextContent("Rolling, no fixed date");
+  expect(card).not.toHaveTextContent("$");
+  expect(screen.getByRole("link", { name: /Open funder page/ })).toHaveAttribute("href", "https://cfncw.example.org/g-9");
+  expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+  fireEvent.keyDown(document.body, { key: "ArrowRight" });
+  expect(screen.getByTestId("check-card")).toBeInTheDocument();
+  fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+  await act(async () => {});
+  expect(screen.queryByTestId("check-card")).not.toBeInTheDocument();
+});
+
+it("check cards replace demo cards and show what is known", async () => {
+  fetchOpportunities.mockResolvedValue(null);
+  fetchCheckCards.mockResolvedValue([check("g-8", { amount: { min: 5000, max: 50000, currency: "USD" }, amountText: "ranging from $5,000 to $50,000 per organization", deadlineText: "by 5 p.m. PDT on Sept. 18" })]);
+  render(<DiscoverPage />);
+  await act(async () => {});
+  expect(screen.queryByText(/Fictional opportunity/)).not.toBeInTheDocument();
+  const card = screen.getByTestId("check-card");
+  expect(card).toHaveTextContent("Check deadline");
+  expect(card).toHaveTextContent("$5,000–$50,000");
+  expect(card).toHaveTextContent("Deadline not found");
+  expect(card).toHaveTextContent('Page says: "by 5 p.m. PDT on Sept. 18"');
 });

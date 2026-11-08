@@ -17,7 +17,8 @@ workspace, H4) or passes. With the backend on, Hope can also **find new real gra
 put them in the same deck.
 
 Within 5 seconds the screen must answer:
-1. **Is this a good fit for us?** Card: amount, deadline, "Why it fits", eligibility chip.
+1. **Is this a good fit for us?** Card: amount, deadline, "Why it fits", eligibility chip. A found grant
+   Hope couldn't fully read is a "check amount/deadline" card that says what is unknown.
 2. **Is it real?** Demo cards say "Fictional opportunity · Demo data"; found grants show their source URL
    and "Verified {date}".
 3. **Can Hope find more?** The run panel: "Find new grants", or the live progress of the current run.
@@ -107,11 +108,32 @@ fold; filters stay in their `<details>`.
 | Activity | `steps[]` | "hh:mm:ss · {text}"; `skip` ⊘ muted, `warning` ⚠, `error` ✕; rows with `url` link out (new tab, `rel="noopener noreferrer"`) |
 | Done summary | `counts` | "Found {found} grants · {new} new · {skipped_expired} skipped because the deadline passed · took {duration}"; zero parts are left out |
 | Needs a check | `candidates[]` where `needsCheck(c)` is set (shared helper from `lib/hope/sync/opportunities.ts`) | "{n} found grant(s) need a check (no amount or deadline on the page):" + title links to `url` |
+| Check card | `fetchCheckCards()` (`CheckCard`, undecided `status=new` grants where `needsCheck` is set) | See "Check amount/deadline cards" below. Copy in `app/hope/discover/copy.ts` (EN + ES) |
+
+### Check amount/deadline cards
+
+Found grants with no amount, no deadline or a non-UI currency go to the **back of the deck**, after every
+complete card, in the same `SwipeCard` shell. They never borrow a number or date they don't have:
+
+- Badge (gold, ⚠): "Check amount" / "Check deadline" / "Check amount and deadline"; then funder, title and
+  "Hope found this grant but couldn't read every detail from the funder's page. Check the page before you
+  plan around it."
+- Amount: the known range (`money()`), else "Amount not found" (or "Not in a currency Hope shows ({code})").
+  Deadline: "{n} days" + "Due {YYYY-MM-DD}", else "Rolling, no fixed date" when the page said rolling, else
+  "Deadline not found". Under each, the page's own words when Hope quoted any: `Page says: "{quote}"`.
+- Summary, then the source link with "Verified {date}". No "Why it fits" box and no eligibility chip
+  (those need an `Opportunity`).
+- Actions: Undo, Pass (✕ / ← / swipe left) and "Open funder page ↗" (new tab). No Save: Saved, Deadlines and
+  the workspace need an amount and a date. Pass mirrors to `/v1/grants/{id}/pass` (H3's outbox) and hides
+  the card; it isn't in Undo's history. → and swipe right do nothing on these cards.
+- Shown only with no filter set (filters compare amounts, dates and tags these cards don't have).
+- When any check cards exist, demo cards leave the deck, so live finds never hide behind fictional ones.
 
 ## 5. Components
 
-- **Unchanged:** `Deck`, `CardBody`, `SwipeCard`, `RoundButton`, `Details`, `Select`, `EmptyState` in
-  `page.tsx`, and `PageIntro`, `DemoTag`, `ClientOnly` from `components/hope/ui.tsx`.
+- **Unchanged:** `CardBody`, `RoundButton`, `Details`, `Select`, `EmptyState` in `page.tsx`. `Deck` now
+  appends check cards and `SwipeCard` no longer takes an unused `opp` prop; **new** `CheckCardBody` and
+  `useCheckCards` in `page.tsx`, copy in `app/hope/discover/copy.ts`. Also unchanged: `PageIntro`, `DemoTag`, `ClientOnly` from `components/hope/ui.tsx`.
 - **New:** `components/hope/discovery/DiscoveryPanel.tsx`, a `glass-panel` box (`rounded-xl glass-panel p-4`,
   like the mobile filters `<details>`). It uses `eyebrow`, `btnPrimary`, `btnSecondary`, `input`, `focusRing`
   from `components/hope/ui.tsx`. The bar is a `div` with `role="progressbar"` in `bg-teal-ink` on a
@@ -223,7 +245,8 @@ and only `lib/hope/sync/opportunities.ts` converts it (`/ 100`).
 - [ ] AC8 On mount with `running_job_id` set, the panel resumes that run.
 - [ ] AC9 The live region is throttled and the progressbar exposes `aria-valuenow` / `aria-valuetext`.
 - [ ] AC10 EN and ES copy both render (header toggle).
-- [ ] AC11 No change to `app/globals.css`, `components/ui/**` or the deck components beyond mounting the panel.
+- [ ] AC11 No change to `app/globals.css`, `components/ui/**` or the deck components beyond mounting the panel and adding check cards.
+- [ ] AC12 Grants missing an amount or deadline show as marked check cards after the complete ones, with unknowns shown as unknown and the page quote when there is one; Pass hides them; there is no Save; they replace demo cards.
 
 ## 13. Test plan (Vitest, offline)
 
@@ -238,6 +261,7 @@ and only `lib/hope/sync/opportunities.ts` converts it (`/ 100`).
 | AC8 | `DiscoveryPanel.test.tsx::resumes running job on mount` |
 | AC9 | `DiscoveryPanel.test.tsx::throttled announcements and progressbar aria` |
 | AC10 | `DiscoveryPanel.test.tsx::renders es copy` |
+| AC12 | `page.test.tsx::grants missing amount or deadline join the deck as marked check cards, after complete ones`, `::check cards replace demo cards and show what is known` |
 | contract | `components/hope/discovery/api.test.ts::parses every w3 mock` |
 
 ## 14. Open questions
@@ -245,6 +269,6 @@ and only `lib/hope/sync/opportunities.ts` converts it (`/ 100`).
 - **Show cited AI fit reasons on the card?** Recommended: not in the hackathon. It needs new optional
   `Opportunity` fields in the shared `lib/hope/types.ts`, to be agreed first. Until then the AI reasons live
   in `GET /v1/grants`.
-- **Show grants with no amount or deadline as cards?** Same dependency; for now they are in the panel's
-  "needs a check" list.
+- **Save a check card?** Not yet: Saved, Deadlines and the workspace read `Opportunity`, which needs an
+  amount and a date. Allowing it needs optional fields in the shared `lib/hope/types.ts`.
 - **"Stop search" button?** No for the hackathon: runs are capped at 5 minutes and have no side effects.

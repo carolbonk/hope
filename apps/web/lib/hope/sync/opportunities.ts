@@ -9,11 +9,31 @@ export type GrantCard = {
   funder: string;
   url: string;
   summary: string | null;
+  amount_text?: string | null;
   amount_max: Money | null;
   amount_min?: Money | null;
+  deadline_text?: string | null;
   deadline: string | null;
   eligibility_summary?: string | null;
   discovered_at: string;
+};
+
+/** A found grant the deck can't use as a full card: what Hope read, with the unknowns left unknown. */
+export type CheckCard = {
+  id: string;
+  title: string;
+  funder: string;
+  url: string;
+  summary: string | null;
+  /** Major units, only when the page gave an amount in a UI currency. */
+  amount: { min: number; max: number; currency: Currency } | null;
+  /** The page's own words, when Hope quoted any. */
+  amountText: string | null;
+  /** Set when the page's amount is in a currency the UI doesn't show. */
+  otherCurrency: string | null;
+  deadline: string | null;
+  deadlineText: string | null;
+  verifiedAt: string;
 };
 
 export type NeedsCheckReason = "no_amount" | "no_deadline" | "currency";
@@ -91,6 +111,26 @@ export function toOpportunity(card: GrantCard): Opportunity | null {
   };
 }
 
+/** A card for the "check amount/deadline" part of the deck, or `null` when `toOpportunity` takes it. */
+export function toCheckCard(card: GrantCard): CheckCard | null {
+  if (!needsCheck(card)) return null;
+  const max = card.amount_max && isCurrency(card.amount_max.currency) ? card.amount_max : null;
+  const text = (t: string | null | undefined) => t?.trim() || null;
+  return {
+    id: card.grant_id,
+    title: card.title,
+    funder: card.funder,
+    url: card.url,
+    summary: text(card.summary),
+    amount: max ? { min: (card.amount_min ?? max).amount_minor / 100, max: max.amount_minor / 100, currency: (max.currency ?? "USD") as Currency } : null,
+    amountText: text(card.amount_text),
+    otherCurrency: card.amount_max && !max ? (card.amount_max.currency ?? null) : null,
+    deadline: card.deadline,
+    deadlineText: text(card.deadline_text),
+    verifiedAt: card.discovered_at.slice(0, 10),
+  };
+}
+
 type GrantList = { items: GrantCard[]; total?: number };
 const PAGE = 100;
 
@@ -105,15 +145,37 @@ async function listAll(status: (typeof STATUSES)[number]): Promise<GrantCard[]> 
   }
 }
 
+let inflight: Promise<GrantCard[][]> | null = null;
+
+/** One set of `/v1/grants` reads shared by callers in the same moment (Discover asks twice on mount). */
+function listStatuses(): Promise<GrantCard[][]> {
+  inflight ??= Promise.all(STATUSES.map(listAll)).finally(() => {
+    inflight = null;
+  });
+  return inflight;
+}
+
 /** H0's contract: never rejects; `null` = use the demo catalog (sync off, nothing found yet, or any error). */
 export async function fetchOpportunities(): Promise<Opportunity[] | null> {
   if (!online) return null;
   try {
-    const lists = await Promise.all(STATUSES.map(listAll));
+    const lists = await listStatuses();
     const cards = lists.flatMap((l) => l.map(toOpportunity)).filter((o): o is Opportunity => o !== null);
     return cards.length ? cards : null;
   } catch (err) {
     console.warn("hope sync: opportunities", err);
     return null;
+  }
+}
+
+/** Undecided found grants missing an amount, a deadline or a UI currency. Never rejects; `[]` when sync is off or on error. */
+export async function fetchCheckCards(): Promise<CheckCard[]> {
+  if (!online) return [];
+  try {
+    const [fresh = []] = await listStatuses();
+    return fresh.map(toCheckCard).filter((c): c is CheckCard => c !== null);
+  } catch (err) {
+    console.warn("hope sync: check cards", err);
+    return [];
   }
 }

@@ -91,6 +91,50 @@ describe("toOpportunity", () => {
   });
 });
 
+describe("toCheckCard", () => {
+  it("keeps what is known and leaves the rest unknown", async () => {
+    const { toCheckCard } = await load(false);
+    expect(toCheckCard(card())).toBeNull();
+    expect(toCheckCard(card({ deadline: null, deadline_text: "by 5 p.m. PDT on Sept. 18" }))).toMatchObject({
+      id: "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+      title: "Rural Oral Health Access Grant 2027",
+      amount: { min: 75000, max: 75000, currency: "USD" },
+      amountText: "up to $75,000 per year",
+      otherCurrency: null,
+      deadline: null,
+      deadlineText: "by 5 p.m. PDT on Sept. 18",
+      verifiedAt: "2026-11-07",
+    });
+    expect(toCheckCard(card({ amount_max: null, amount_text: null }))).toMatchObject({ amount: null, amountText: null, deadline: "2027-03-03" });
+    expect(toCheckCard(card({ amount_max: { amount_minor: 5_000_000, currency: "CAD" } }))).toMatchObject({ amount: null, otherCurrency: "CAD" });
+  });
+});
+
+describe("fetchCheckCards", () => {
+  it("sync off or error gives none", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetch = vi.fn(async () => Promise.reject(new TypeError("offline")));
+    vi.stubGlobal("fetch", fetch);
+    expect(await (await load(false)).fetchCheckCards()).toEqual([]);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(await (await load(true)).fetchCheckCards()).toEqual([]);
+  });
+
+  it("lists only undecided incomplete grants and shares the reads with the deck", async () => {
+    const { fetchCheckCards, fetchOpportunities } = await load(true);
+    const fetch = vi.fn(async (url: string) => {
+      const status = new URL(url).searchParams.get("status");
+      if (status === "new") return json({ items: [card(), card({ grant_id: "g-check", amount_max: null })] });
+      return json({ items: status === "passed" ? [card({ grant_id: "g-passed", deadline: null })] : [] });
+    });
+    vi.stubGlobal("fetch", fetch);
+    const [opps, checks] = await Promise.all([fetchOpportunities(), fetchCheckCards()]);
+    expect(opps!.map((o) => o.id)).toEqual(["3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10"]);
+    expect(checks.map((c) => c.id)).toEqual(["g-check"]);
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+});
+
 describe("fetchOpportunities", () => {
   it("sync off makes no request", async () => {
     const fetch = vi.fn();
