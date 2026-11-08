@@ -1,5 +1,5 @@
 import { NTEE_CODES } from "@/api/onboarding/ntee";
-import { ProblemError, type ProfileApi, type ProfileForm, type ProfileView } from "./types";
+import { ProblemError, type ProfileApi, type ProfileForm, type ProfileSections, type ProfileView } from "./types";
 
 export type ProfileFixtureMode = "empty" | "existing" | "invalid" | "conflict" | "network";
 
@@ -76,6 +76,20 @@ export class FixtureProfileApi implements ProfileApi {
     if (this.current && !etag) throw new ProblemError(428, "if_match_required", "If-Match is required.");
     if (this.current && etag !== this.current.etag) throw new ProblemError(409, "version_conflict", "Someone else saved the profile while you were editing.");
     this.current = view(structuredClone(form), (this.current?.version ?? 0) + 1);
+    return structuredClone(this.current);
+  }
+
+  async patchProfile(sections: ProfileSections, etag: string): Promise<ProfileView> {
+    await this.wait();
+    if (this.mode === "network") throw new TypeError("Failed to fetch");
+    if (this.mode === "invalid")
+      throw new ProblemError(422, "validation_error", "Validation failed", [
+        { field: "programs.0.description", code: "too_short", message: "Write at least 20 characters." },
+      ]);
+    if (this.mode === "conflict") throw new ProblemError(409, "version_conflict", "Someone else saved the profile while you were editing.");
+    if (!this.current) throw new ProblemError(404, "profile_not_found", "No profile yet.");
+    if (etag !== this.current.etag) throw new ProblemError(409, "version_conflict", "Someone else saved the profile while you were editing.");
+    this.current = view({ ...this.current.form, ...structuredClone(sections) }, this.current.version + 1);
     return structuredClone(this.current);
   }
 }
