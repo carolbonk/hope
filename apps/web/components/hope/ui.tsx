@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { online } from "@/api/http";
-import { invalidateSession, logout, useSession } from "@/api/session";
+import { signOut as endSession, useSession } from "@/api/session";
 import { useToday } from "@/components/useToday";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
@@ -106,11 +106,8 @@ function OnlineAccount() {
   const name = me.display_name.length > 24 ? `${me.display_name.slice(0, 23)}…` : me.display_name;
   const signOut = () => {
     setFailed(false);
-    logout().then(
-      () => {
-        invalidateSession();
-        router.replace("/login");
-      },
+    endSession().then(
+      () => router.replace("/login"),
       () => setFailed(true),
     );
   };
