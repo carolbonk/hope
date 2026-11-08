@@ -7,9 +7,12 @@ from uuid import UUID
 
 import pytest
 from hope_core.model_gateway import RunBudget
+from hope_core.web import Page
 from hope_discovery.agent import (
+    INFERRED_YEAR_CONCERN,
     PROGRAM_TOTAL_CONCERN,
     SEARCH_UNAVAILABLE,
+    YEARLESS_CONCERN,
     DiscoveryFailed,
     grant_id_for,
 )
@@ -180,6 +183,33 @@ def test_quotes_without_an_amount_or_date_are_dropped(run_agent: Any) -> None:
     (grant,) = repo.candidates.values()
     assert grant.amount_text is None and grant.amount_max is None
     assert grant.deadline is None and grant.deadline_text == "Rolling"
+
+
+class _YearlessWeb(ScriptedWeb):
+    def __init__(self, sentence: str) -> None:
+        super().__init__(hits=[ORAL])
+        self.sentence = sentence
+
+    def fetch(self, url: str) -> Page:
+        page = super().fetch(url)
+        text = page.text.replace("Deadline: Applications due March 3, 2027.", self.sentence)
+        return page.model_copy(update={"text": text})
+
+
+@pytest.mark.parametrize(
+    "sentence", ["Deadline: Applications due March 3.", "Applications are due March 3 each year."]
+)
+def test_yearless_deadline_dated_from_the_page(run_agent: Any, sentence: str) -> None:
+    def quoted(messages: Any, schema: Any) -> dict[str, Any]:
+        return extract_responder(messages, schema) | {"deadline": {"text": sentence, "page": 1}}
+
+    for override in (quoted, lambda m, s: extract_responder(m, s) | {"deadline": None}):
+        repo, _ = run_agent(web=_YearlessWeb(sentence), overrides={PageExtraction: override})
+        (grant,) = repo.candidates.values()
+        assert grant.deadline == date(2027, 3, 3)
+        assert grant.deadline_text == sentence
+        assert INFERRED_YEAR_CONCERN in grant.concerns
+        assert YEARLESS_CONCERN not in grant.concerns
 
 
 def test_program_total_quote_replaced_by_award_on_page(run_agent: Any) -> None:
