@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Route | `/hope/saved` and `/hope/deadlines` (no query parameters) |
-| Files | `apps/web/app/hope/saved/page.tsx`, `apps/web/app/hope/deadlines/page.tsx` (built by PR #34) |
+| Files | `apps/web/app/hope/saved/page.tsx`, `apps/web/app/hope/deadlines/page.tsx` (PR #34), `apps/web/components/hope/deadlines/**` (Table/Calendar views, PRs #39 and #41) |
 | Built by | H3 (keeps them working, two small fixes, tests). Decisions are made on SC24 Discover |
 | Primary users | Executive director or development lead of a small nonprofit, weekly |
 | Can act | Anyone in this browser (no roles). The only action here is opening the workspace |
@@ -28,9 +28,10 @@ Saved card:
 1. **Opportunity name** (display font), with the funder above it in small caps.
 2. **Maximum amount and due date** on one line.
 3. **Stage bar** (5 stages), showing how far along the application is.
-4. **"Open workspace ↗"**. The whole card is the link.
+4. **"Open workspace ↗"**, the next action, in 35% liquid glass (`glass-nav`, PR #43). The whole card is the link.
 
-Deadlines row: the **name**, then "stage · next step", then a **days pill** whose colour shows urgency.
+Deadlines: a **Table / Calendar** tab switch (Table by default). Table row: **name** and funder, "stage · next step",
+the date, then a **days pill** whose colour shows urgency. Calendar: a month grid with one chip per deadline.
 
 ## 3. Wireframe
 
@@ -38,7 +39,7 @@ Deadlines row: the **name**, then "stage · next step", then a **days pill** who
 
 ```text
 ┌───────────────────────────────────────────────────────────────────────────────────────────┐
-│ [Hope]   Our profile   Discover   (Saved (2))   Deadlines                     [EN | ES]  │  <- HopeNav (H0)
+│ hope✳        Discover   (Saved (2))   Deadlines                 [EN | ES] [Account ▾]     │  <- HopeNav (SC00)
 │ ● Due soon: Back-to-School Event Sponsorship (9d) · General Operating Support (12d)       │  <- DeadlineReminder (H0)
 ├───────────────────────────────────────────────────────────────────────────────────────────┤
 │ FROM POSSIBILITY TO PROGRESS                                                              │  <- PageIntro eyebrow
@@ -58,19 +59,23 @@ Deadlines row: the **name**, then "stage · next step", then a **days pill** who
 `/hope/deadlines`:
 
 ```text
-│ KEEP MOMENTUM                                                                             │
+│ KEEP MOMENTUM                                                      [ Table | Calendar ]  │  <- DeadlineViewTabs
 │ Upcoming deadlines                                                                        │
-│ ┌ glass-control, border gold ───────────────────────────────────────────────────────────┐ │
-│ │ Back-to-School Event Sponsorship                                    [Due soon · 9d]   │ │
-│ │ Saved · Start the eligibility review.                                                 │ │
+│   OPPORTUNITY              STAGE                    DEADLINE          STATUS              │
+│ ┌ glass-panel, gold left edge ──────────────────────────────────────────────────────────┐ │
+│ │ Back-to-School Event…    Saved · Start the        Nov 17, 2026      [Due soon · 9d]   │ │
+│ │ Tidal Bank Giving        eligibility review.                                          │ │
 │ └───────────────────────────────────────────────────────────────────────────────────────┘ │
-│ ┌ glass-control, border line ───────────────────────────────────────────────────────────┐ │
-│ │ Youth Mentoring Grants                                                     [21d]      │ │
-│ │ Drafting · Complete and review each section.                                          │ │
+│ ┌ glass-panel ──────────────────────────────────────────────────────────────────────────┐ │
+│ │ Youth Mentoring Grants   Drafting · Complete…     Nov 29, 2026               [21d]    │ │
 │ └───────────────────────────────────────────────────────────────────────────────────────┘ │
+
+Calendar tab: ‹ November 2026 › over a 7-column glass grid (Monday first in ES); each deadline is a glass chip
+on its day, linking to its application. Opens on the month of the next deadline.
 ```
 
-Mobile (< 640 px): Saved is one column. Deadlines rows keep the pill on the right.
+Mobile (< 640 px): Saved is one column. Table rows stack their fields; Calendar chips become dots with that month's
+deadlines listed under the grid.
 
 ## 4. Content inventory
 
@@ -92,12 +97,14 @@ All values come from `useHope().state` and `useOpportunities()`, joined by `appl
 ## 5. Components
 
 - `PageIntro`, `Panel`, `StageBar`, `ClientOnly`, `btnPrimary`, `focusRing` and `money`/`daysUntil`
-  from `components/hope/ui.tsx` (H0). Liquid-glass classes `glass-panel` / `glass-control`.
-- No new components. Don't restyle; `app/globals.css` and `components/ui/**` stay as they are.
+  from `components/hope/ui.tsx` (H0). Liquid-glass classes `glass-panel` / `glass-nav`.
+- `components/hope/deadlines/`: `DeadlineViewTabs` (tablist, sliding highlight), `DeadlineTable` (fixed 11rem Status
+  column so columns line up), `DeadlineCalendar`, `DeadlineBadge`, `items.ts`. Views fade in with `animate-view-in`.
 
 ## 6. Interactions
 
-1. **Open workspace:** a card (Saved) or row (Deadlines) links to `/hope/applications/{o.id}`.
+1. **Open workspace:** a card (Saved), a table row or a calendar chip (Deadlines) links to `/hope/applications/{o.id}`.
+5. **Deadlines view:** the Table / Calendar tabs switch views (click, or ←/→/Home/End); ‹ › page months in Calendar.
 2. **Empty state CTA:** links to `/hope/discover`.
 3. **Live updates:** the lists re-render when `hope:state:v1` changes in this tab or another (`useStoredJson`).
 4. **Language:** the EN/ES toggle in the nav switches every string (`useHopeT()`).
@@ -128,7 +135,8 @@ when Discover saves, passes or undoes.
 ## 9. Responsive behaviour
 
 - ≥ 640 px: Saved is a 2-column grid (`sm:grid-cols-2`).
-- < 640 px: one column. Deadlines is always one column.
+- < 640 px: one column. Deadlines Table rows stack; the Calendar shows dots plus a month list.
+- Checked at the Tailwind breakpoints 375 / 640 / 768 / 1024 / 1280 / 1536 px with no horizontal overflow.
 
 ## 10. Accessibility
 
@@ -136,6 +144,7 @@ when Discover saves, passes or undoes.
 - Each card or row is a single link with a visible focus ring (`focusRing`).
 - The stage bar is an `ol` labelled with the current stage, and the current step has `aria-current="step"`.
 - The days pill always has text. Colour is never alone.
+- The view switch is a `role="tablist"` with roving `tabIndex`; each view is a `role="tabpanel"`.
 
 ## 11. Fixture data
 
@@ -162,6 +171,7 @@ open one on Deadlines in due order.
 - [ ] AC5 Both empty states render the exact copy and link to `/hope/discover`.
 - [ ] AC6 ES renders the Spanish copy.
 - [ ] AC7 Neither page imports `api/` or calls `fetch`.
+- [ ] AC8 Deadlines switches between Table and Calendar by click and keyboard, every row and chip links to its application, and the Calendar pages months.
 
 ## 14. Test plan
 
@@ -174,6 +184,7 @@ open one on Deadlines in due order.
 | AC5 | `saved/page.test.tsx::empty state`, `deadlines/page.test.tsx::empty state` |
 | AC6 | `deadlines/page.test.tsx::spanish copy` |
 | AC7 | `saved/page.test.tsx::makes no network calls` (`fetch` spy never called) |
+| AC8 | `components/hope/deadlines/DeadlineViews.test.tsx` (tab switching by click and keyboard, links, month paging) |
 
 ## 15. Open questions
 

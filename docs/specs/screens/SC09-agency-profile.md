@@ -13,7 +13,7 @@
 
 One place for everything the nonprofit tells Hope: identity, mission and programs, capacity, the **document
 dossier**, and a review. Discover's match reasons and the H4 workspace (`requirementStatus`, `oppDocs`) read the same
-`OrgProfile`. Users arrive from the "Profile" item in `HopeNav`, and from "Update in your dossier →" in the H4 workspace.
+`OrgProfile`. Users arrive from "Our profile" in the `HopeNav` account menu, and from "Update in your dossier →" in the H4 workspace.
 
 Within 5 seconds the screen must answer:
 1. How far along is our profile? (the 5-step rail and the "Profile n/5 steps complete" notice)
@@ -37,7 +37,7 @@ Inside `app/hope/layout.tsx` (`HopeNav` with the EN/ES toggle, `HopeFooter`).
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│ hope✳     Discover   Saved (2)   Deadlines   [Profile]                         EN | ES   │  <- HopeNav (glass-chrome)
+│ hope✳     Discover   Saved (2)   Deadlines                      EN | ES   [Account ▾]   │  <- HopeNav (glass-nav)
 ├──────────────────────────────────────────────────────────────────────────────────────────┤
 │ THE HEART OF YOUR MATCHES                                                                 │  <- PageIntro
 │ Start with your purpose.                                                                  │

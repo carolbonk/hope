@@ -42,7 +42,7 @@ Desktop (≥ 1024 px). Everything exists except the run panel:
 ┌ aside 13.5rem ──────────┬ main ─────────────────────────────────────────────────────────────┐
 │ YOUR ORGANIZATION        │ PageIntro (eyebrow, heading, sub)                      [DemoTag]  │
 │ Tidepath Family Alliance │ [profile incomplete notice | pending-items note]                 │
-│ Miami-Dade · Mentoring…  │ (toast, aria-live)                                               │
+│ Miami-Dade · Mentoring…  │ (toast, aria-live, 5 s)                                             │
 │ [ Edit profile ↗ ]       │ ┌ card (glass-control) ─────────────────┐  HOW THE MATCH WORKS   │
 │ ┌ Find real grants ────┐ │ │ art band · purpose     [Fictional · Demo]│  1 … 2 … 3 …          │
 │ │ Hope searches the web │ │ │ FUNDER                                │                        │

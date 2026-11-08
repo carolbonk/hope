@@ -23,7 +23,7 @@ screen answers:
 ## 2. Layout (desktop; mobile stacks the columns)
 
 ```text
-[hope✳ nav: Discover · Saved · Deadlines · Our profile        EN|ES]
+[hope✳ nav: Discover · Saved · Deadlines        EN|ES · Account ▾]
 Funder (demo) · Opportunity name              $25,000–$50,000 · Due in 21 days
 [ StageBar: saved ▸ eligibility ▸ approval ▸ drafting ▸ ready ]
 Next action: Confirm every requirement with evidence, then send to internal approval.   [Send to internal approval]
