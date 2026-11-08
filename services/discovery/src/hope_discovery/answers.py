@@ -600,7 +600,14 @@ class AnswerDrafter:
             ):
                 confirm.append(item)
         sourced = {c.sentence.strip() for c in draft.claims if set(c.refs) & seen}
-        unsourced = [x for x in sentences(text) if x not in sourced and not TO_CONFIRM.search(x)]
+        filled = [ans for ans, line in staff.values() if line in used]
+        unsourced = [
+            x
+            for x in sentences(text)
+            if x not in sourced
+            and not TO_CONFIRM.search(x)
+            and not any(x in ans or ans in x for ans in filled)
+        ]
         citations += [{"ref": None, "kind": "unsourced", "text": x} for x in unsourced]
         return DraftResult(
             text=text,
