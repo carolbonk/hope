@@ -257,3 +257,12 @@ def test_same_staff_ask_is_listed_once() -> None:
         "specific funding sources after this grant", "funding sources after this grant"
     )
     assert not same_need("timeline and milestones", "funding sources after this grant")
+
+
+def test_staff_facts_fill_gaps_instead_of_to_confirm() -> None:
+    facts = {"timeline and milestones": "Launch in March 2027 and finish 3 cohorts by June."}
+    result = drafter().draft(
+        agency_profile(), GRANT, Requirements(), q("Describe the project timeline."), facts=facts
+    )
+    assert "timeline and milestones" not in result.to_confirm
+    assert "local data on need" in result.to_confirm

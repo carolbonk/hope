@@ -306,6 +306,13 @@
             "title": "Evidence",
             "type": "object"
           },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/FactView"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
           "funder": {
             "title": "Funder",
             "type": "string"
@@ -397,6 +404,7 @@
           "requirements_job",
           "questions",
           "answers",
+          "facts",
           "answers_job",
           "checklist",
           "ask",
@@ -748,7 +756,8 @@
               "send_back",
               "requirements",
               "draft",
-              "edit"
+              "edit",
+              "fact"
             ],
             "title": "Kind",
             "type": "string"
@@ -847,6 +856,66 @@
         "title": "EvidenceBody",
         "type": "object"
       },
+      "FactBody": {
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "default": "",
+            "description": "Empty removes the fact",
+            "maxLength": 4000,
+            "title": "Answer",
+            "type": "string"
+          },
+          "need": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Need",
+            "type": "string"
+          }
+        },
+        "required": [
+          "need"
+        ],
+        "title": "FactBody",
+        "type": "object"
+      },
+      "FactView": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "need": {
+            "title": "Need",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          }
+        },
+        "required": [
+          "need",
+          "answer",
+          "updated_by",
+          "updated_at"
+        ],
+        "title": "FactView",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -862,6 +931,18 @@
       },
       "InputNeeded": {
         "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What staff supplied; redraft to use it",
+            "title": "Answer"
+          },
           "owner": {
             "enum": [
               "program",
@@ -1826,6 +1907,75 @@
           }
         },
         "summary": "Export Application",
+        "tags": [
+          "applications"
+        ]
+      }
+    },
+    "/v1/applications/{application_id}/facts": {
+      "post": {
+        "description": "Staff answer a [TO CONFIRM] item once (e.g. the timeline); redrafts use it as a fact.\nAnswers staff already edited stay as they are.",
+        "operationId": "supply_fact_v1_applications__application_id__facts_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Supply Fact",
         "tags": [
           "applications"
         ]

@@ -51,6 +51,7 @@ EventKind = Literal[
     "requirements",
     "draft",
     "edit",
+    "fact",
 ]
 
 EVENTS_SHOWN = 50
@@ -121,12 +122,20 @@ class AnswerView(BaseModel):
     updated_at: datetime
 
 
+class FactView(BaseModel):
+    need: str
+    answer: str
+    updated_by: UUID | None
+    updated_at: datetime
+
+
 class ApplicationView(ApplicationSummary):
     version: int
     requirements: Requirements | None
     requirements_job: RequirementsJob | None
     questions: list[Question]
     answers: list[AnswerView]
+    facts: list[FactView]
     answers_job: RequirementsJob | None
     checklist: Checklist
     ask: Money | None
@@ -156,6 +165,12 @@ class PasteBody(BaseModel):
 class DraftBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
     confirm_overwrite: bool = False
+
+
+class FactBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    need: str = Field(min_length=1, max_length=300)
+    answer: str = Field("", max_length=4000, description="Empty removes the fact")
 
 
 class AnswerBody(BaseModel):
@@ -235,6 +250,7 @@ def _view(tx: Tx, row: dict[str, Any]) -> ApplicationView:
     events = [EventView.model_validate(e) for e in tx.fetchall()]
     requirements = latest_requirements(tx, row["application_id"])
     answers = load_answers(tx, row["application_id"])
+    facts = load_facts(tx, row["application_id"])
     job = store.latest_job(tx, REQUIREMENTS_KIND, str(row["application_id"]))
     answers_job = store.latest_job(tx, ANSWERS_KIND, str(row["application_id"]))
     ask = (
@@ -249,8 +265,9 @@ def _view(tx: Tx, row: dict[str, Any]) -> ApplicationView:
             "requirements_job": job.model_dump() if job else None,
             "questions": effective_questions(requirements),
             "answers": list(answers.values()),
+            "facts": list(facts.values()),
             "answers_job": answers_job.model_dump() if answers_job else None,
-            "checklist": checklist_for(requirements, answers),
+            "checklist": checklist_for(requirements, answers, facts),
         }
     )
 
@@ -276,9 +293,23 @@ def load_answers(tx: Tx, application_id: UUID) -> dict[str, AnswerView]:
     return {r["question_key"]: AnswerView.model_validate(r) for r in tx.fetchall()}
 
 
-def checklist_for(req: Requirements | None, answers: dict[str, AnswerView]) -> Checklist:
+def load_facts(tx: Tx, application_id: UUID) -> dict[str, FactView]:
+    tx.execute(
+        "SELECT need, answer, updated_by, updated_at FROM application_facts"
+        " WHERE application_id = %s ORDER BY updated_at",
+        (application_id,),
+    )
+    return {r["need"]: FactView.model_validate(r) for r in tx.fetchall()}
+
+
+def checklist_for(
+    req: Requirements | None,
+    answers: dict[str, AnswerView],
+    facts: dict[str, FactView] | None = None,
+) -> Checklist:
     plain = {k: Answer.model_validate(a.model_dump()) for k, a in answers.items()}
-    return build_checklist(req, plain, datetime.now().astimezone().date())
+    given = {k: f.answer for k, f in (facts or {}).items()}
+    return build_checklist(req, plain, datetime.now().astimezone().date(), given)
 
 
 def _update(tx: Tx, application_id: UUID, version: int, **fields: Any) -> None:
@@ -622,9 +653,12 @@ def _draft_one(
     if profile is None:
         raise ProblemException(422, "profile_incomplete", "Finish your profile first")
     others = {k: a.text for k, a in load_answers(tx, aid).items()}
+    facts = {k: f.answer for k, f in load_facts(tx, aid).items()}
     gateway, _web = default_tools()
     grant = GrantContext(row["title"], row["funder"], row["url"], row.get("summary") or "")
-    result = AnswerDrafter(gateway).draft(profile, grant, req or Requirements(), q, others)
+    result = AnswerDrafter(gateway).draft(
+        profile, grant, req or Requirements(), q, others, facts=facts
+    )
     tx.execute(
         "INSERT INTO application_answers (application_id, tenant_id, question_key, text, origin,"
         " model, prompt_version, citations, to_confirm, updated_by)"
@@ -745,6 +779,38 @@ def edit_answer(
             (aid, q.key, body.text, Jsonb(_open_confirms(body.text)), principal.user_id),
         )
         add_event(tx, aid, "edit", principal.user_id, question_key=q.key)
+        return _respond(tx, aid, response)
+
+
+@router.post("/applications/{application_id}/facts")
+def supply_fact(
+    application_id: str,
+    body: FactBody,
+    principal: PrincipalDep,
+    response: Response,
+    if_match: IfMatch = None,
+) -> ApplicationView:
+    """Staff answer a [TO CONFIRM] item once (e.g. the timeline); redrafts use it as a fact.
+    Answers staff already edited stay as they are."""
+    aid, version = _app_uuid(application_id), _version(if_match)
+    need, answer = " ".join(body.need.split()), body.answer.strip()
+    with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
+        _row(tx, aid)
+        _update(tx, aid, version)
+        if answer:
+            tx.execute(
+                "INSERT INTO application_facts (application_id, tenant_id, need, answer,"
+                " updated_by) VALUES (%s, current_tenant(), %s, %s, %s)"
+                " ON CONFLICT (application_id, need) DO UPDATE SET answer = EXCLUDED.answer,"
+                " updated_by = EXCLUDED.updated_by, updated_at = clock_timestamp()",
+                (aid, need, answer, principal.user_id),
+            )
+        else:
+            tx.execute(
+                "DELETE FROM application_facts WHERE application_id = %s AND need = %s",
+                (aid, need),
+            )
+        add_event(tx, aid, "fact", principal.user_id, need=need, removed=not answer)
         return _respond(tx, aid, response)
 
 

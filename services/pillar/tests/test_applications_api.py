@@ -372,3 +372,29 @@ def test_no_questions_uses_labelled_standard_sections(
     app = api.post(f"/v1/applications/{app['application_id']}/answers/draft-all").json()
     assert len(app["answers"]) == 6
     assert app["answers_job"]["result"] == {"drafted": 6, "skipped": 0}
+
+
+def test_staff_facts_replace_to_confirm_on_redraft(
+    api: TestClient, grant: GrantCandidate, drafting: pytest.MonkeyPatch
+) -> None:
+    app = saved_app(api, grant)
+    base = f"/v1/applications/{app['application_id']}"
+    app = api.post(f"{base}/requirements/paste", json={"text": PASTED_FORM}).json()
+    need = app["questions"][0]["key"]
+    app = api.post(f"{base}/answers/{need}/draft").json()
+    (asked,) = app["checklist"]["inputs_needed"][:1]
+    assert asked["text"] == "local data on need" and asked["answer"] is None
+
+    fact = {"need": "local data on need", "answer": "38% of residents live 30+ miles away."}
+    problem(api.post(f"{base}/facts", json=fact), 428, "if_match_required")
+    app = call(api, app, "facts", fact).json()
+    assert [(f["need"], f["answer"]) for f in app["facts"]] == [(fact["need"], fact["answer"])]
+    assert app["checklist"]["inputs_needed"][0]["answer"] == fact["answer"]
+    assert app["events"][0]["kind"] == "fact"
+
+    app = api.post(f"{base}/answers/{need}/draft").json()
+    answer = next(a for a in app["answers"] if a["question_key"] == need)
+    assert answer["to_confirm"] == []
+
+    app = call(api, app, "facts", {"need": fact["need"], "answer": ""}).json()
+    assert app["facts"] == []

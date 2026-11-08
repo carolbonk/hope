@@ -376,8 +376,13 @@ class AnswerDrafter:
         question: Question,
         others: dict[str, str] | None = None,
         today: date | None = None,
+        facts: dict[str, str] | None = None,
     ) -> DraftResult:
+        """`facts` are what staff supplied for this application (need -> answer); they count
+        as profile facts."""
         digest = build_answer_digest(profile)
+        for need, answer in (facts or {}).items():
+            digest.add(f"staff.{question_key(need)}", f"{need}: {answer}")
         quotes = grant_quotes(grant, req)
         topics = classify_question(question.prompt)
         focus = focus_refs(digest, topics)
@@ -439,9 +444,14 @@ class AnswerDrafter:
                     citations.append({"ref": ref, "kind": "funder", "url": web[ref][1],
                                       "text": web[ref][0]})  # fmt: skip
         confirm: list[str] = []
+        known = list(facts or {})
         for raw in [*TO_CONFIRM.findall(text), *draft.to_confirm, *gaps]:
             item = re.sub(r"^\[?\s*TO CONFIRM:?\s*|\]$", "", raw.strip(), flags=re.I).strip()
-            if item and item.lower() not in _VAGUE and not any(same_need(item, c) for c in confirm):
+            if (
+                item
+                and item.lower() not in _VAGUE
+                and not any(same_need(item, c) for c in [*confirm, *known])
+            ):
                 confirm.append(item)
         sourced = {c.sentence.strip() for c in draft.claims if set(c.refs) & seen}
         unsourced = [x for x in sentences(text) if x not in sourced and not TO_CONFIRM.search(x)]
@@ -557,6 +567,7 @@ class InputNeeded(BaseModel):
     owner: Owner
     text: str
     question_key: str | None = None
+    answer: str | None = Field(None, description="What staff supplied; redraft to use it")
 
 
 class Checklist(BaseModel):
@@ -575,7 +586,12 @@ def question_status(q: Question, a: Answer | None) -> str:
     return "edited" if a.origin == "human" else "drafted"
 
 
-def build_checklist(req: Requirements | None, answers: dict[str, Answer], today: date) -> Checklist:
+def build_checklist(
+    req: Requirements | None,
+    answers: dict[str, Answer],
+    today: date,
+    facts: dict[str, str] | None = None,
+) -> Checklist:
     items: list[ChecklistItem] = []
     needed: list[InputNeeded] = []
     for q in effective_questions(req):
@@ -596,7 +612,10 @@ def build_checklist(req: Requirements | None, answers: dict[str, Answer], today:
             )
         )
         for item in a.to_confirm if a else []:
-            needed.append(InputNeeded(owner=owner_for(item), text=item, question_key=q.key))
+            given = next((v for k, v in (facts or {}).items() if same_need(item, k)), None)
+            needed.append(
+                InputNeeded(owner=owner_for(item), text=item, question_key=q.key, answer=given)
+            )
     for att in req.attachments if req else []:
         doc = dossier_item(att.name)
         items.append(
