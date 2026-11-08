@@ -28,6 +28,7 @@ from hope_discovery.digest import ProfileDigest, build_digest
 from hope_discovery.glossary import TermExplained
 from hope_discovery.models import _clip_list, _clip_text
 from hope_discovery.requirements import Limit, Question, Requirements, question_key
+from hope_discovery.rules import RuleCheck
 
 log = logging.getLogger(__name__)
 
@@ -670,7 +671,7 @@ class Answer(BaseModel):
 
 
 class ChecklistItem(BaseModel):
-    kind: Literal["question", "attachment", "budget", "deadline", "submission", "prep"]
+    kind: Literal["question", "attachment", "budget", "deadline", "submission", "prep", "rule"]
     key: str
     label: str
     status: str
@@ -687,6 +688,8 @@ class InputNeeded(BaseModel):
     text: str
     question_key: str | None = None
     answer: str | None = Field(None, description="What staff supplied; redraft to use it")
+    fact: str | None = Field(None, description="The saved fact that answers it, if any")
+    rule: str | None = Field(None, description="The grant rule this comes from, if any")
 
 
 class Checklist(BaseModel):
@@ -711,9 +714,12 @@ def build_checklist(
     today: date,
     facts: dict[str, str] | None = None,
     terms: list[TermExplained] | None = None,
+    rules: list[RuleCheck] | None = None,
 ) -> Checklist:
     """`terms` adds the registrations and documents the funder's jargon asks for (SAM.gov,
-    letters of support, ...); Hope can't verify them, so they inform but don't block."""
+    letters of support, ...); Hope can't verify them, so they inform but don't block.
+    `rules` are this grant's eligibility, budget and conditional rules checked by code: a rule
+    not met blocks ready; one that applies or needs checking goes on staff's list."""
     items: list[ChecklistItem] = []
     needed: list[InputNeeded] = []
     for q in effective_questions(req):
@@ -736,9 +742,15 @@ def build_checklist(
         for item in a.to_confirm if a else []:
             if any(same_need(item, n.text) for n in needed):
                 continue  # asked once; the answer is reused for every question
-            given = next((v for k, v in (facts or {}).items() if same_need(item, k)), None)
+            fact = next((k for k in facts or {} if same_need(item, k)), None)
             needed.append(
-                InputNeeded(owner=owner_for(item), text=item, question_key=q.key, answer=given)
+                InputNeeded(
+                    owner=owner_for(item),
+                    text=item,
+                    question_key=q.key,
+                    answer=(facts or {}).get(fact) if fact else None,
+                    fact=fact,
+                )
             )
     for att in req.attachments if req else []:
         doc = dossier_item(att.name)
@@ -815,7 +827,22 @@ def build_checklist(
         )
         if t.status in ("action_needed", "at_risk") and t.owner:
             needed.append(InputNeeded(owner=t.owner, text=f"{t.term}: {t.todo or t.plain}"))
-    blocking = {"missing", "over_limit", "to_confirm", "upload_needed", "passed"}
+    for r in rules or []:
+        items.append(
+            ChecklistItem(
+                kind="rule",
+                key=r.key,
+                label=r.label,
+                status=r.status,
+                detail=r.reason,
+                owner=r.owner,
+                quote=r.quote,
+                url=r.url,
+            )
+        )
+        if r.todo and r.status in ("not_met", "unknown", "applies"):
+            needed.append(InputNeeded(owner=r.owner, text=r.todo, rule=r.key))
+    blocking = {"missing", "over_limit", "to_confirm", "upload_needed", "passed", "not_met"}
     return Checklist(
         items=items,
         inputs_needed=needed,

@@ -91,13 +91,7 @@ function Workspace({ oppId }: { oppId: string }) {
       <EligibilityPanel opp={opp} app={app} up={up} />
       <ApprovalPanel app={app} up={up} />
       {online && GRANT_ID.test(opp.id) ? (
-        app.stage === "drafting" || app.stage === "ready" ? (
-          <ApplyWorkspace grantId={opp.id} />
-        ) : (
-          <Panel title={a.sectionsTitle}>
-            <p className="rounded-xl bg-cream px-3 py-2 text-sm">🔒 {a.locked}</p>
-          </Panel>
-        )
+        <ApplyWorkspace grantId={opp.id} />
       ) : (
         <DraftPanel opp={opp} app={app} up={up} />
       )}

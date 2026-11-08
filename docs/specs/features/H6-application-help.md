@@ -89,6 +89,33 @@ Starts automatically after the first save, and again on "Re-read requirements". 
 `inputs_needed[]` lists every `[TO CONFIRM: ...]` from drafts plus checklist gaps, grouped for program / finance /
 director, so the right person fills them.
 
+### C2. This grant's own rules (`hope_discovery.rules`, code only)
+
+The reader copies each eligibility, budget and conditional sentence word for word (`eligibility`, `budget.*`,
+`conditions`; attachments worded "if…" / "requests over $X…" count as conditional too). On every read, code
+checks them against the profile and the request amount (`ask`, set with `POST …/ask`) and returns `rules[]`:
+`{key, kind: eligibility|budget|conditional, label, status, reason, quote, url, owner, todo, confirmed_by_staff}`.
+
+- Eligibility: 501(c)(3) / fiscal sponsor / government, SAM.gov (status and expiry vs deadline), UEI, state and
+  county vs service area, annual budget limits, years operating. `met | not_met | unknown`.
+- Budget: request vs maximum; match % × request vs `capacity.cost_share_capacity` ("Line up $75,000 in match");
+  indirect cap vs `financials.indirect_rate`. All money is integer cents.
+- Conditional: request or budget thresholds, fiscal sponsor; `applies | not_applicable | unknown`.
+- Staff settle what code can't with `POST …/evidence {requirement_id: rule.key, status: yes|no}`.
+- Moving to review is blocked until every eligibility rule is `met`. A `not_met` rule blocks ready (override
+  with a reason). `todo`s of open rules go to `inputs_needed` for their owner.
+
+### C3. What changed
+
+Each read is a new revision. The view returns `changes[]` between the last two: questions added or removed,
+limits, uploads, deadline, maximum request, eligibility and conditional rules, each with the old value.
+
+### C4. Answers given once
+
+`POST …/facts` saves the answer on the application and in `org_facts` (one per nonprofit). Every other
+application gets it in `facts[]` with `shared: true`, so its `[TO CONFIRM]` is pre-answered and drafts use it.
+Clearing the answer removes it everywhere.
+
 ### D. Drafting an answer (LLM per question)
 
 `POST /v1/applications/{id}/answers/{question_key}/draft` (or `.../draft-all`, a job):
@@ -122,7 +149,9 @@ director, so the right person fills them.
 | POST | `/v1/applications/{id}/answers/{key}/draft` | one answer; `confirm_overwrite` |
 | POST | `/v1/applications/{id}/answers/draft-all` | job |
 | PATCH | `/v1/applications/{id}/answers/{key}` | human edit, `If-Match` |
-| POST | `/v1/applications/{id}/evidence` | H4 eligibility evidence per requirement |
+| POST | `/v1/applications/{id}/evidence` | H4 eligibility evidence per requirement, or a rule's `key` |
+| POST | `/v1/applications/{id}/ask` | `{amount_minor}`; budget and conditional rules use it |
+| POST | `/v1/applications/{id}/facts` | answer once; shared with every application |
 | POST | `/v1/applications/{id}/comments` | |
 | POST | `/v1/applications/{id}/approvals` | |
 | POST | `/v1/applications/{id}/stage` | code-checked transition |
@@ -141,6 +170,8 @@ Errors use the existing problem format: 401 `not_signed_in`, 404 `application_no
   to_confirm jsonb, word_count, char_count, updated_by, updated_at)`
 - `application_events (event_id, application_id, kind, actor, payload jsonb, at)` for comments, evidence,
   approvals, stage changes and drafts.
+- `0723_application_rules.sql`: `application_requirements.conditions jsonb`; `org_facts (tenant_id, need,
+  answer, updated_by, updated_at)` for answers reused across applications.
 
 Shared contracts (`ApplicationView`, `Requirement`, `ChecklistItem`, `AnswerView`) go in `hope_core.schemas`,
 then `hope-export-schemas`.
