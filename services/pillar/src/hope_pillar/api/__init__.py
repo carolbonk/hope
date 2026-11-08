@@ -43,7 +43,9 @@ def bootstrap() -> None:
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     bootstrap()
+    sweeper = jobs.start_stale_sweeper()
     yield
+    sweeper.set()
 
 
 def create_app(services: Services | None = None, *, legacy: bool = False) -> FastAPI:

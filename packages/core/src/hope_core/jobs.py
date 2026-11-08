@@ -65,8 +65,26 @@ def start_job(
 
 
 def fail_interrupted_jobs() -> int:
-    """Startup hook: jobs left `running` by a previous process are marked failed."""
+    """Jobs whose worker stopped heartbeating (crash, restart) are marked failed."""
     return _with_tx(store.fail_interrupted_jobs)
+
+
+def start_stale_sweeper(interval: float = 60.0) -> threading.Event:
+    """Keep failing stale jobs while the API runs, so a crash just before a restart still ends.
+
+    Set the returned event to stop the sweeper."""
+    stop = threading.Event()
+
+    def _sweep() -> None:
+        while not stop.wait(interval):
+            try:
+                if failed := fail_interrupted_jobs():
+                    log.info("marked %d interrupted jobs failed", failed)
+            except Exception:
+                log.warning("stale job sweep failed", exc_info=True)
+
+    threading.Thread(target=_sweep, daemon=True, name="hope-job-sweeper").start()
+    return stop
 
 
 def _heartbeat(job_id: UUID, stop: threading.Event) -> None:

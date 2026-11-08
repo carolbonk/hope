@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Iterator
 from typing import Any
 from uuid import UUID
@@ -101,6 +102,27 @@ def test_interrupted_jobs_fail_on_startup() -> None:
     assert job(running.job_id).error == "Interrupted by restart"
     assert job(live.job_id).status == "running", "a job heartbeating in another process stays"
     assert job(queued.job_id).status == "queued"
+
+
+def test_sweeper_fails_jobs_that_go_stale_after_startup() -> None:
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        crashed = store.create_job(tx, "discovery")
+        store.update_job_progress(tx, crashed.job_id, {"current_step": "Reading"})
+    assert jobs.fail_interrupted_jobs() == 0  # still fresh at startup
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        tx.execute(
+            "UPDATE jobs SET heartbeat_at = now() - interval '10 minutes' WHERE job_id = %s",
+            (crashed.job_id,),
+        )
+    stop = jobs.start_stale_sweeper(interval=0.05)
+    try:
+        for _ in range(100):
+            if job(crashed.job_id).status == "failed":
+                break
+            time.sleep(0.05)
+    finally:
+        stop.set()
+    assert job(crashed.job_id).error == "Interrupted by restart"
 
 
 def test_a_queued_job_is_claimed_once() -> None:
