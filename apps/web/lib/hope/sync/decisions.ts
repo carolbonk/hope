@@ -61,6 +61,7 @@ let scheduled = false;
 
 async function flush(): Promise<void> {
   clearTimeout(retryTimer);
+  retryTimer = undefined;
   for (;;) {
     const next = Object.entries(readOutbox().pending)
       .filter(([, e]) => e.attempts < MAX_ATTEMPTS)
@@ -86,7 +87,7 @@ async function flush(): Promise<void> {
       const attempts = entry.attempts + 1;
       settle(grantId, entry, (e) => ({ ...e, attempts }));
       const delay = BACKOFF_MS[attempts - 1];
-      if (delay !== undefined) retryTimer = setTimeout(() => void flushDecisions(), delay);
+      if (delay !== undefined) retryTimer = setTimeout(flushDecisions, delay);
       return;
     }
   }
@@ -127,12 +128,13 @@ export function mirrorDecision(oppId: string, decision: DecisionStatus): void {
     updateOutbox((pending) => {
       pending[oppId] = { status: decision, attempts: 0, at: new Date().toISOString() };
     });
-    // On the next microtask, so a burst (save, undo, pass) coalesces into one request.
+    // On the next microtask, so a burst (save, undo, pass) coalesces into one request. During a
+    // backoff the entry waits for the retry timer, so new swipes don't use up earlier entries' attempts.
     if (scheduled) return;
     scheduled = true;
     void Promise.resolve().then(() => {
       scheduled = false;
-      return flushDecisions();
+      return retryTimer === undefined ? flushDecisions() : undefined;
     });
   } catch (err) {
     warn(err);

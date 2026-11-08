@@ -146,6 +146,23 @@ it("retries with backoff", async () => {
   expect(outbox().pending).toEqual({});
 });
 
+it("new decisions wait for the backoff", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+  const fetch = stubFetch(new TypeError("Failed to fetch"), w4("grants.save/ok"), w4("grants.pass/ok"), w4("grants.save/ok"));
+  const { mirrorDecision } = await load();
+  mirrorDecision(G1, "saved");
+  await vi.advanceTimersByTimeAsync(500);
+  mirrorDecision(G2, "passed");
+  await vi.advanceTimersByTimeAsync(100);
+  mirrorDecision(G3, "saved");
+  await vi.advanceTimersByTimeAsync(100);
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(outbox().pending[G1].attempts).toBe(1);
+  await vi.advanceTimersByTimeAsync(1_300);
+  expect(urls(fetch)).toEqual([`${API}/v1/grants/${G1}/save`, `${API}/v1/grants/${G1}/save`, `${API}/v1/grants/${G2}/pass`, `${API}/v1/grants/${G3}/save`]);
+  expect(outbox().pending).toEqual({});
+});
+
 it("drops 404 and 422", async () => {
   const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
   const fetch = stubFetch(w4("grants.save/not_found"), w4("grants.pass/invalid_reason"), w4("grants.save/ok"));
