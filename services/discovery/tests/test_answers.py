@@ -235,3 +235,25 @@ def test_sentences_without_a_source_are_reported() -> None:
         "kind": "unsourced",
         "text": "We will run quarterly workshops.",
     }
+
+
+def test_elements_the_profile_lacks_become_to_confirm() -> None:
+    from hope_discovery.answers import missing_elements
+
+    digest = build_answer_digest(agency_profile())
+    gaps = missing_elements("Walk us through the activities and the timeline.", digest)
+    assert gaps == ["timeline and milestones"]
+    assert missing_elements("Tell us about your organization.", digest) == []
+    result = drafter().draft(
+        agency_profile(), GRANT, Requirements(), q("Describe the project timeline.")
+    )
+    assert "timeline and milestones" in result.to_confirm
+
+
+def test_same_staff_ask_is_listed_once() -> None:
+    from hope_discovery.answers import same_need
+
+    assert same_need(
+        "specific funding sources after this grant", "funding sources after this grant"
+    )
+    assert not same_need("timeline and milestones", "funding sources after this grant")
