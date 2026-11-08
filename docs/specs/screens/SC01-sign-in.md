@@ -201,3 +201,4 @@ No analytics in the hackathon. Success: from first sign-in to a finished onboard
 - Forgot password? Recommended default: no link in the hackathon (Hope sends no email).
 - No self sign-up (decided). The page only signs in. An admin creates each account with H0's `POST /v1/auth/signup`, which still
   requires the server's `HOPE_INVITE_CODE` (H0 section 1), so the code never appears in the UI. Every account joins the single organization.
+  On the deployed API the admin runs `hope-create-user --email … --name …` instead (see `docs/deploy.md`, "Create accounts").

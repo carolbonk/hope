@@ -8,9 +8,11 @@ import secrets
 from pathlib import Path
 
 from hope_core import store
-from hope_core.auth import hash_password, verify_password
+from hope_core.auth import verify_password
 from hope_core.db import connect, tenant_tx
 from hope_core.settings import get_settings
+
+from hope_pillar.accounts import create_user, set_password
 
 DEMO_EMAIL = "demo@hope.org"
 DEMO_PASSWORD = "hope-demo"
@@ -26,9 +28,9 @@ def seed_user() -> bool:
         user = store.get_user_by_email(tx, DEMO_EMAIL)
         if user is not None:
             if not verify_password(user.password_hash, DEMO_PASSWORD):
-                store.set_password_hash(tx, user.user_id, hash_password(DEMO_PASSWORD))
+                set_password(tx, user.user_id, DEMO_PASSWORD)
             return False
-        store.create_user(tx, DEMO_EMAIL, hash_password(DEMO_PASSWORD), DEMO_NAME)
+        create_user(tx, DEMO_EMAIL, DEMO_PASSWORD, DEMO_NAME)
     return True
 
 
