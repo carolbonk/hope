@@ -107,7 +107,9 @@ def test_a_queued_job_is_claimed_once() -> None:
     with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
         created = store.create_job(tx, "discovery")
     with (
-        connect() as a, connect() as b, tenant_tx(a, get_settings().tenant_id) as tx_a,
+        connect() as a,
+        connect() as b,
+        tenant_tx(a, get_settings().tenant_id) as tx_a,
         tenant_tx(b, get_settings().tenant_id) as tx_b,
     ):
         assert store.claim_job(tx_a, created.job_id, "discovery") is True
