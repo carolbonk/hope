@@ -32,6 +32,8 @@ from hope_discovery.urls import canonicalize, same_site
 log = logging.getLogger(__name__)
 
 PROMPT_VERSION = "requirements-1"
+PASTED = "pasted"
+PASTE_CHUNKS = 4
 MAX_PAGES = 6
 PAGE_CHARS = 14_000
 LINK_WORDS = re.compile(
@@ -148,6 +150,7 @@ class Question(BaseModel):
     key: str
     prompt: str
     url: str
+    source: Literal["page", "pasted", "standard"] = "page"
     section: str | None = None
     required: bool = True
     limit_text: str | None = None
@@ -320,6 +323,28 @@ class RequirementsReader:
             out.pages.append(PageRead(url=final, status="read" if found else "no_info"))
         return out
 
+    def read_text(self, text: str, base: Requirements | None = None) -> Requirements:
+        """Staff pasted the funder's form (or uploaded its PDF): read it like a page.
+
+        New questions are added to `base`; questions already there keep their key and answers."""
+        out = base.model_copy(deep=True) if base else Requirements()
+        cleaned = clean_text(text)
+        chunks = [cleaned[i : i + PAGE_CHARS] for i in range(0, len(cleaned), PAGE_CHARS)]
+        found = False
+        for chunk in chunks[:PASTE_CHUNKS]:
+            try:
+                ext = self._extract(PASTED, "Application form pasted by staff", chunk, [])
+            except BudgetExceededError:
+                break
+            if ext is not None:
+                found = self._merge(out, ext, chunk, PASTED) or found
+        out.pages.append(
+            PageRead(url=PASTED, status="read" if found else "no_info")
+            if chunks
+            else PageRead(url=PASTED, status="no_info", reason="empty")
+        )
+        return out
+
     def _extract(
         self, url: str, title: str, text: str, links: list[Link]
     ) -> RequirementsExtraction | None:
@@ -367,6 +392,7 @@ class RequirementsReader:
                 key=key,
                 prompt=prompt,
                 url=url,
+                source="pasted" if url == PASTED else "page",
                 section=item.section,
                 required=item.required,
                 limit_text=limit_text if limit_text else (prompt if limit else None),
@@ -410,7 +436,10 @@ class RequirementsReader:
 
 # --- offline responder ------------------------------------------------------------------------
 
-_Q_LINE = re.compile(r"([A-Z][^.?!]{10,300}\?)(\s*\([^)]{3,60}\))?")
+_Q_LINE = re.compile(
+    r"((?:Describe|Explain|List|Provide|Tell us|Share)[^.?!]{10,300}[.?]|[A-Z][^.?!]{10,300}\?)"
+    r"(\s*\([^)]{3,60}\)|\s+(?:Limit|Maximum|Max|Up to)\b[^.?!\n]{3,60}\.)?"
+)
 _ATTACH = re.compile(r"(?:Attach|Upload|Include) (?:your |a |the )?([^.]{3,80})\.", re.I)
 
 
