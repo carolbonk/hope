@@ -2,7 +2,7 @@ import { online, ProblemError } from "@/api/http";
 import { profileApi, type ProfileForm, type ProfileSections, type ProfileView } from "@/api/profile";
 import { validateStep, type StepId } from "@/features/onboarding/model";
 import { formFromProfile, profileFromOnboarding } from "../fromOnboarding";
-import { HOPE_KEY, normalizeProfile } from "../store";
+import { HOPE_KEY, normalizeProfile, PROFILE_STEPS } from "../store";
 import type { HopeState, OrgProfile } from "../types";
 
 // H1: keeps the browser profile (`useHope()`) and `/v1/profile` in step. Never rejects or throws.
@@ -130,8 +130,9 @@ export function loadRemoteProfile(): Promise<OrgProfile | null> {
       const view = await fetchBase();
       if (!view) return null;
       if (!local.updatedAt || Date.parse(local.updatedAt) < Date.parse(view.updated_at))
-        return { ...profileFromOnboarding(view.form, local), updatedAt: view.updated_at };
+        return { ...profileFromOnboarding(view.form, local, view.onboarding_complete), updatedAt: view.updated_at };
       if (current().pending) saveRemoteProfile(local);
+      if (view.onboarding_complete && local.completedSteps < PROFILE_STEPS) return { ...local, completedSteps: PROFILE_STEPS };
       return null;
     } catch (err) {
       warn(err);
