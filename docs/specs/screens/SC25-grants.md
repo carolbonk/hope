@@ -20,7 +20,9 @@ pages answer:
 **Secondary action:** go back to Discover when the list is empty.
 
 Save, Pass and Undo happen only on the Discover deck. H3's `lib/hope/sync/decisions.ts` mirrors them to the
-backend (H3 spec, Behaviour 1). These pages never call the API.
+backend (H3 spec, Behaviour 1). After sign-in, `HopeSync` loads the server's saved and passed grants back
+into `useHope()` (H3, Behaviour 1b), so a grant saved in another browser shows here too. These pages never
+call the API.
 
 ## 2. Information hierarchy
 
@@ -125,7 +127,7 @@ All values come from `useHope().state` and `useOpportunities()`, joined by `appl
 
 | Trigger | Call | Fields used | Cache / refetch |
 |---|---|---|---|
-| Mount | `useHope()` (`lib/hope/store.ts`) | `applications`, `decisions` | localStorage `hope:state:v1`, no polling |
+| Mount | `useHope()` (`lib/hope/store.ts`) | `applications`, `decisions` | localStorage `hope:state:v1`, no polling; updated once per page load from the server by H3's `HopeSync` load |
 | Mount | `useOpportunities()` (`lib/hope/opportunities.ts`) | `id, funder, name, amountMax, currency, deadline, source.kind` | H2's adapter |
 
 Neither page calls `/v1`. For reference, H3's decisions adapter (not these pages) sends
@@ -188,5 +190,5 @@ open one on Deadlines in due order.
 
 ## 15. Open questions
 
-- **Should Saved and Deadlines show grants saved in another browser?** Recommended default: no for the
-  hackathon. The browser is the source; pulling server status is out of scope (H3).
+- **Should Saved and Deadlines show grants saved in another browser?** Decided: yes. H3 loads the server's
+  saved and passed grants after sign-in (H3, Behaviour 1b); a decision this browser hasn't sent yet wins.

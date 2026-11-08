@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { useStoredJson } from "./storage";
 import { PROFILE_STEPS, record } from "./dossier";
-import { mirrorDecision } from "./sync/decisions";
+import { isGrantId, mirrorDecision, type RemoteDecisions } from "./sync/decisions";
 import { saveRemoteProfile } from "./sync/profile";
 import type { Application, Eligibility, HopeState, Opportunity, OrgProfile, ReqId, RequirementRecord, SectionId, Stage, TriState } from "./types";
 
@@ -89,6 +89,17 @@ export const applicationId = (orgId: string, oppId: string) => `app:${orgId}:${o
 
 const now = () => new Date().toISOString();
 
+/** The stored state as of now (a hook's render-time copy can be one write behind). */
+function latestState(): HopeState {
+  try {
+    const raw = window.localStorage.getItem(HOPE_KEY);
+    if (raw) return JSON.parse(raw) as HopeState;
+  } catch {
+    // unreadable storage: start from empty
+  }
+  return initial();
+}
+
 /** Sync adapters run after the local write and can never break a page. */
 function safely(call: () => void) {
   try {
@@ -98,7 +109,7 @@ function safely(call: () => void) {
   }
 }
 
-function newApplication(orgId: string, opp: Opportunity): Application {
+function newApplication(orgId: string, opp: Pick<Opportunity, "id">): Application {
   const at = now();
   const sections = Object.fromEntries(SECTION_IDS.map((id) => [id, { text: "", origin: "empty", updatedAt: null }])) as Application["sections"];
   return {
@@ -107,6 +118,33 @@ function newApplication(orgId: string, opp: Opportunity): Application {
     evidence: {}, sections, comments: [], activity: [{ at, event: "saved" }],
     createdAt: at, updatedAt: at,
   };
+}
+
+/** An application nobody has worked on yet (undo and a server reset may remove it). */
+const untouched = (a: Application | undefined) => !!a && a.activity.length <= 1 && a.stage === "saved";
+
+/**
+ * Applies the server's saved/passed grants to the browser state. Backend grants (UUID ids) follow the server,
+ * except ones this browser decided during the load or still has in the outbox. Demo ids are left alone, and an
+ * application with work in it is kept.
+ */
+export function mergeRemoteDecisions(s: HopeState, remote: RemoteDecisions): HopeState {
+  const local = remote.localIds();
+  const decisions = { ...s.decisions };
+  const applications = { ...s.applications };
+  for (const id of Object.keys(decisions)) {
+    if (!isGrantId(id) || local.has(id) || remote.decisions[id]) continue;
+    delete decisions[id];
+    const appId = applicationId(s.profile.id, id);
+    if (untouched(applications[appId])) delete applications[appId];
+  }
+  for (const [id, decision] of Object.entries(remote.decisions)) {
+    if (local.has(id)) continue;
+    if (decisions[id]?.decision !== decision) decisions[id] = { decision, at: now() };
+    const appId = applicationId(s.profile.id, id);
+    if (decision === "saved" && !applications[appId]) applications[appId] = newApplication(s.profile.id, { id });
+  }
+  return { ...s, decisions, applications, history: s.history.filter((id) => decisions[id]) };
 }
 
 /** Recorded evidence wins; otherwise known profile facts are checked; anything unanswered stays Unknown ("Needs review"). */
@@ -171,6 +209,12 @@ export function useHope() {
     [update],
   );
 
+  /** Writes decisions that came from the server onto the latest stored state; never echoes them back. */
+  const hydrateDecisions = useCallback(
+    (remote: RemoteDecisions) => setState(mergeRemoteDecisions(latestState(), remote)),
+    [setState],
+  );
+
   const decide = useCallback(
     (opp: Opportunity, decision: "saved" | "passed") => {
       update((s) => {
@@ -196,7 +240,7 @@ export function useHope() {
         const applications = { ...s.applications };
         const id = applicationId(s.profile.id, last);
         const a = applications[id];
-        if (a && a.activity.length <= 1 && a.stage === "saved") delete applications[id];
+        if (untouched(a)) delete applications[id];
         return { ...s, decisions, history: s.history.slice(0, -1), applications };
     });
     if (lastId) safely(() => mirrorDecision(lastId, "new"));
@@ -211,8 +255,8 @@ export function useHope() {
   const reset = useCallback(() => setState(initial()), [setState]);
 
   return useMemo(
-    () => ({ state, saveProfile, hydrateProfile, decide, undo, updateApplication, reset }),
-    [state, saveProfile, hydrateProfile, decide, undo, updateApplication, reset],
+    () => ({ state, saveProfile, hydrateProfile, hydrateDecisions, decide, undo, updateApplication, reset }),
+    [state, saveProfile, hydrateProfile, hydrateDecisions, decide, undo, updateApplication, reset],
   );
 }
 

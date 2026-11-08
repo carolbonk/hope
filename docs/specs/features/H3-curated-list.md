@@ -6,7 +6,7 @@
 | Depends on | H0 (auth, `hope_core.store`, `api/http.ts`, the `lib/hope/sync/` seam); H2 (fills `grant_candidates` and maps them into `useOpportunities()`) |
 | Screens | SC25 `/hope/saved` and `/hope/deadlines` (built by PR #34). SC26 has no page (see SC26) |
 | Migrations | none (`0710-0719` stays reserved; H0 already adds the status/reason columns) |
-| Status | Built (backend and sync PR #48, grants API test PR #52; UI by PR #34) |
+| Status | Built (backend and sync PR #48, grants API test PR #52; UI by PR #34; loading decisions back: Task A) |
 
 ## Goal
 
@@ -17,10 +17,12 @@ H3 adds three things and rebuilds nothing:
 1. **The real `/v1/grants` backend:** list, detail, and save / pass / reset of `grant_candidates`.
 2. **`lib/hope/sync/decisions.ts`:** mirrors each browser `decide` / `undo` to that backend, so the
    server knows what the team is pursuing (app-shell badge, H2's "known URL" skip, discovery job view).
+   After sign-in it also loads the server's saved and passed grants back into the browser (Behaviour 1b),
+   so Saved, Deadlines and the Discover deck match the server in any browser.
 3. **The Saved and Deadlines pages** keep working, with two small fixes and tests.
 
-The browser record stays the source of truth for the workspace. The server mirror never rolls back or
-rewrites browser state.
+The browser record stays the source of truth for the workspace. The mirror never rolls back browser
+state; the one-time load after sign-in (1b) only sets save/pass decisions for backend grants.
 
 ## Ground truth in `apps/web` (main)
 
@@ -39,12 +41,17 @@ rewrites browser state.
 
 ### 1. Decision sync (`lib/hope/sync/decisions.ts`)
 
-**Interface** (called by `store.ts`; H0 wires the two calls once, H3 never edits `store.ts`):
+**Interface** (called by `store.ts` and `sync/index.ts`):
 
 ```ts
 export type DecisionStatus = "saved" | "passed" | "new";
 export function mirrorDecision(oppId: string, status: DecisionStatus): void; // never throws, returns at once
 export function flushDecisions(): Promise<void>;                              // never rejects
+export function loadRemoteDecisions(): Promise<RemoteDecisions | null>;       // never rejects; null = sync off or error
+export type RemoteDecisions = {
+  decisions: Record<string, "saved" | "passed">; // the server's saved and passed grants
+  localIds: () => Set<string>;                   // decided in this browser during the load, or still in the outbox
+};
 ```
 
 - `decide(opp, d)` calls `mirrorDecision(opp.id, d)`. `undo()` calls `mirrorDecision(lastId, "new")`.
@@ -72,6 +79,24 @@ export function flushDecisions(): Promise<void>;                              //
      After 5 attempts, stop retrying until the next page load or `online` event.
 6. **Never touches browser state.** No rollback, no toast, no page change. A failed mirror only leaves
    the entry in the outbox.
+
+### 1b. Loading decisions back (`loadRemoteDecisions`, `useHope().hydrateDecisions`)
+
+Once per page load, after the session is `ready`, `HopeSync` (`lib/hope/sync/index.ts`) calls
+`loadRemoteDecisions()` alongside `loadRemoteProfile()` and `flushDecisions()`:
+1. It pages `GET /v1/grants?status=saved&include_past=true&limit=100&offset=N`, and the same for `passed`,
+   until it has `total` ids. Any error (401, network, 5xx) gives `null` and the browser stays as it is.
+2. Ids in the outbox when the load starts, and ids mirrored while it runs or still in the outbox when it is
+   applied, are `localIds()`: the browser's decision wins for them.
+3. When the profile load has settled, `useHope().hydrateDecisions(remote)` merges onto the latest stored
+   `hope:state:v1` (`mergeRemoteDecisions` in `store.ts`). It never calls `mirrorDecision`. For every backend
+   grant (UUID id) that isn't local:
+   - server `saved` / `passed` → `decisions[id]` gets that decision (`at` = now if it changed). A saved grant
+     with no application gets a new one at stage `saved`.
+   - not saved or passed on the server, but decided in the browser → the decision is removed, and its
+     application too if nobody worked on it (the same rule as `undo`).
+   - Demo ids (`opp-*`) and applications with work are never removed. `history` drops removed ids; server
+     decisions are not added to it (Undo stays per browser).
 
 ### 2. Backend (`services/pillar/src/hope_pillar/api/grants.py`)
 
@@ -186,12 +211,13 @@ services/pillar/tests/test_grants_api.py
 services/pillar/tests/snapshots/openapi/grants.json
 apps/web/lib/hope/sync/decisions.ts
 apps/web/lib/hope/sync/decisions.test.ts            (new)
+apps/web/lib/hope/sync/index.ts, index.test.ts      (Task A: the load after sign-in)
+apps/web/lib/hope/store.ts, store.test.ts           (Task A: hydrateDecisions / mergeRemoteDecisions only)
 apps/web/app/hope/saved/**                           (page.tsx + page.test.tsx)
 apps/web/app/hope/deadlines/**                       (page.tsx + page.test.tsx)
 ```
 
-Don't edit `lib/hope/store.ts` (H4), `lib/hope/opportunities.ts` and `app/hope/discover/**` (H2),
-`lib/hope/sync/index.ts` and `components/hope/ui.tsx` (H0), `app/globals.css` or `components/ui/**`.
+Don't edit the rest of `lib/hope/store.ts` (H4), `app/hope/discover/**` (H2), `components/hope/ui.tsx` (H0), `app/globals.css` or `components/ui/**`.
 `lib/hope/types.ts` and `lib/hope/i18n.ts` are shared: add keys, never rename them. H3 needs no new keys.
 
 ## Test seed
@@ -219,6 +245,7 @@ No test uses the network or an API key.
 - [ ] AC9 `grants.py` has no SQL and imports no `ModelGateway` or `hope_core.web`. Only `openapi/grants.json` changes.
 - [ ] AC10 `mirrorDecision` sends save / pass / reset for UUID ids only, coalesces per grant, retries network and 5xx errors with the backoff, drops 404/422, keeps entries on 401, and is a no-op with sync off. It never throws and never changes `hope:state:v1`.
 - [ ] AC11 The outbox survives a reload: entries left in `hope:sync:decisions:v1` are sent by `flushDecisions()`.
+- [ ] AC13 After sign-in in a clean browser, the server's saved and passed grants are in `decisions` (saved ones with an application), so Saved and Deadlines list them and Discover hides them. Pending or in-flight local decisions win, demo ids and worked-on applications are kept, nothing is mirrored back, and with sync off or on an error nothing changes.
 - [ ] AC12 SC25's acceptance criteria pass (Saved and Deadlines, including the two fixes).
 
 ## Test plan
@@ -237,6 +264,7 @@ No test uses the network or an API key.
 | AC10 | `apps/web/lib/hope/sync/decisions.test.ts`: `maps status to endpoint`, `skips demo ids`, `coalesces per grant`, `retries with backoff` (fake timers), `drops 404 and 422`, `keeps entries on 401`, `no-op when sync is off`, `never throws` | web unit |
 | AC11 | `decisions.test.ts::replays the outbox after reload` | web unit |
 | AC12 | `apps/web/app/hope/saved/page.test.tsx`, `apps/web/app/hope/deadlines/page.test.tsx` (SC25 section 14) | web unit |
+| AC13 | `decisions.test.ts`: `loads saved and passed grants from the server`, `reports grants pending in the outbox or decided during the load as local`, `loads nothing with sync off or on an error`; `store.test.ts` `hydrateDecisions` block; `sync/index.test.ts::hydrates server decisions after the profile, keeping both` | web unit |
 
 Checks: `uv run pytest services/pillar -q` and `pnpm --filter @hope/web typecheck && pnpm --filter @hope/web lint && pnpm --filter @hope/web test`.
 
@@ -244,7 +272,7 @@ Checks: `uv run pytest services/pillar -q` and `pnpm --filter @hope/web typechec
 
 - A grant list, filter bar or overview page in the web app: the Discover deck and the workspace cover them.
 - A pass-reason picker in the UI (the API accepts a reason; nothing sends one yet).
-- Pulling the server status back into the browser (two browsers can disagree; the browser wins locally).
+- Live updates from another browser while a page is open (decisions load once per page load).
 - Showing H2's LLM reasons, concerns and citations on the card.
 - Re-scoring, editing grant facts, bulk actions, sharing and notifications.
 
@@ -258,6 +286,7 @@ Checks: `uv run pytest services/pillar -q` and `pnpm --filter @hope/web typechec
 
 ## Decisions (recommended defaults, applied above)
 
-1. **Server status is a mirror, never the source.** The browser decides. The adapter pushes only.
+1. **The browser decides; the server is the shared record.** Swipes push through the outbox. Each page load
+   pulls the server's saved/passed grants back once (1b); a local decision not yet sent wins.
 2. **Undo maps to `reset`.** It also applies when the previous status was `passed`.
 3. **Pass reasons:** stored by the API (H0's columns), but not asked for in the hackathon UI.

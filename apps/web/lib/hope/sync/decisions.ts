@@ -1,5 +1,6 @@
-// Mirrors Discover decisions to `/v1/grants` through a localStorage outbox. Never throws or rejects;
-// with sync off it does nothing. The browser state (`hope:state:v1`) is never read or changed here.
+// Mirrors Discover decisions to `/v1/grants` through a localStorage outbox, and loads the server's saved and
+// passed grants back for `useHope().hydrateDecisions`. Never throws or rejects; with sync off it does nothing.
+// The browser state (`hope:state:v1`) is never read or changed here.
 import { apiFetch, online, ProblemError } from "@/api/http";
 
 export type DecisionStatus = "saved" | "passed" | "new";
@@ -12,6 +13,12 @@ const REQUESTS: Record<DecisionStatus, { action: string; body?: string }> = {
   saved: { action: "save" },
   passed: { action: "pass", body: "{}" },
   new: { action: "reset" },
+};
+
+export type RemoteDecisions = {
+  decisions: Record<string, "saved" | "passed">;
+  /** Grants this browser decided while the load ran, or still has in the outbox: the local decision wins. */
+  localIds: () => Set<string>;
 };
 
 type Entry = { status: DecisionStatus; attempts: number; at: string };
@@ -58,6 +65,9 @@ let again = false;
 let retryTimer: ReturnType<typeof setTimeout> | undefined;
 let loaded = false;
 let scheduled = false;
+let decidedDuringLoad: Set<string> | null = null;
+
+export const isGrantId = (id: string) => GRANT_ID.test(id);
 
 async function flush(): Promise<void> {
   clearTimeout(retryTimer);
@@ -123,8 +133,9 @@ export function flushDecisions(): Promise<void> {
 
 /** Fire-and-forget mirror of a swipe (or "new" on undo), after the local write. */
 export function mirrorDecision(oppId: string, decision: DecisionStatus): void {
-  if (!online || !GRANT_ID.test(oppId)) return;
+  if (!online || !isGrantId(oppId)) return;
   try {
+    decidedDuringLoad?.add(oppId);
     updateOutbox((pending) => {
       pending[oppId] = { status: decision, attempts: 0, at: new Date().toISOString() };
     });
@@ -138,6 +149,35 @@ export function mirrorDecision(oppId: string, decision: DecisionStatus): void {
     });
   } catch (err) {
     warn(err);
+  }
+}
+
+const PAGE = 100;
+
+async function grantIds(status: "saved" | "passed"): Promise<string[]> {
+  const ids: string[] = [];
+  for (let offset = 0; ; offset += PAGE) {
+    const page = await apiFetch<{ items: { grant_id: string }[]; total: number }>(
+      `/v1/grants?status=${status}&include_past=true&limit=${PAGE}&offset=${offset}`,
+    );
+    ids.push(...page.items.map((g) => g.grant_id));
+    if (page.items.length < PAGE || ids.length >= page.total) return ids;
+  }
+}
+
+/** The server's saved and passed grants. `null` = sync off or any error (keep the browser as it is). */
+export async function loadRemoteDecisions(): Promise<RemoteDecisions | null> {
+  if (!online) return null;
+  try {
+    const decided = (decidedDuringLoad = new Set(Object.keys(readOutbox().pending)));
+    const [saved, passed] = await Promise.all([grantIds("saved"), grantIds("passed")]);
+    const decisions: RemoteDecisions["decisions"] = {};
+    for (const id of saved) decisions[id] = "saved";
+    for (const id of passed) decisions[id] = "passed";
+    return { decisions, localIds: () => new Set([...decided, ...Object.keys(readOutbox().pending)]) };
+  } catch (err) {
+    warn(err);
+    return null;
   }
 }
 

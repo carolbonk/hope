@@ -41,12 +41,13 @@ function stubFetch(...responses: (Response | Error)[]) {
   return fetch;
 }
 
-const calls = (fetch: ReturnType<typeof stubFetch>) =>
+type FetchMock = { mock: { calls: unknown[][] } };
+const calls = (fetch: FetchMock) =>
   fetch.mock.calls.map((args) => {
     const [url, init] = args as unknown as [string, RequestInit];
     return { url, method: init.method, body: init.body, credentials: init.credentials };
   });
-const urls = (fetch: ReturnType<typeof stubFetch>) => calls(fetch).map((c) => c.url);
+const urls = (fetch: FetchMock) => calls(fetch).map((c) => c.url);
 const outbox = () => JSON.parse(window.localStorage.getItem(OUTBOX) ?? "null");
 const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
 
@@ -251,4 +252,62 @@ it("replays the outbox after reload", async () => {
   await flushDecisions();
   expect(urls(fetch)).toEqual([`${API}/v1/grants/${G1}/save`, `${API}/v1/grants/${G2}/pass`]);
   expect(outbox().pending).toEqual({});
+});
+
+const page = (ids: string[], total = ids.length) =>
+  new Response(JSON.stringify({ items: ids.map((grant_id) => ({ grant_id })), total }), { status: 200, headers: { "content-type": "application/json" } });
+
+/** `GET /v1/grants?status=…` answered from `lists`; posts get `grants.save/ok`. */
+function stubLists(lists: Record<string, string[]>, total?: Record<string, number>) {
+  const fetch = vi.fn((url: string) => {
+    const q = new URL(url).searchParams;
+    const status = q.get("status");
+    if (!status) return Promise.resolve(w4("grants.save/ok"));
+    const offset = Number(q.get("offset"));
+    const all = lists[status] ?? [];
+    return Promise.resolve(page(all.slice(offset, offset + Number(q.get("limit"))), total?.[status] ?? all.length));
+  });
+  vi.stubGlobal("fetch", fetch);
+  return fetch;
+}
+
+it("loads saved and passed grants from the server", async () => {
+  const many = Array.from({ length: 101 }, (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`);
+  const fetch = stubLists({ saved: [G1, ...many], passed: [G2] });
+  const { loadRemoteDecisions } = await load();
+  const remote = await loadRemoteDecisions();
+  expect(remote?.decisions[G1]).toBe("saved");
+  expect(remote?.decisions[many[100]!]).toBe("saved");
+  expect(remote?.decisions[G2]).toBe("passed");
+  expect(Object.keys(remote!.decisions)).toHaveLength(103);
+  expect(urls(fetch)).toEqual([
+    `${API}/v1/grants?status=saved&include_past=true&limit=100&offset=0`,
+    `${API}/v1/grants?status=passed&include_past=true&limit=100&offset=0`,
+    `${API}/v1/grants?status=saved&include_past=true&limit=100&offset=100`,
+  ]);
+  expect(calls(fetch).every((c) => c.credentials === "include")).toBe(true);
+});
+
+it("reports grants pending in the outbox or decided during the load as local", async () => {
+  window.localStorage.setItem(OUTBOX, JSON.stringify({ version: 1, pending: { [G1]: { status: "passed", attempts: 5, at: "2026-11-07T12:00:00.000Z" } } }));
+  stubLists({ saved: [G1, G2], passed: [] });
+  const { loadRemoteDecisions, mirrorDecision } = await load();
+  const loading = loadRemoteDecisions();
+  mirrorDecision(G3, "passed");
+  const remote = await loading;
+  await tick();
+  expect(outbox().pending[G3]).toBeUndefined();
+  expect(remote?.localIds()).toEqual(new Set([G1, G3]));
+});
+
+it("loads nothing with sync off or on an error", async () => {
+  vi.spyOn(console, "warn").mockImplementation(() => {});
+  const fetch = stubFetch(problem(401, "not_signed_in"), new Error("offline"));
+  const off = await load(false);
+  await expect(off.loadRemoteDecisions()).resolves.toBeNull();
+  expect(fetch).not.toHaveBeenCalled();
+  const { loadRemoteDecisions } = await load();
+  await expect(loadRemoteDecisions()).resolves.toBeNull();
+  await expect(loadRemoteDecisions()).resolves.toBeNull();
+  expect(window.localStorage.getItem("hope:state:v1")).toBeNull();
 });
