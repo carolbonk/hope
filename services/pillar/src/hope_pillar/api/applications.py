@@ -288,6 +288,10 @@ def _view(tx: Tx, row: dict[str, Any]) -> ApplicationView:
     )
     rules = rules_for(row, requirements, profile)
     job = store.latest_job(tx, REQUIREMENTS_KIND, str(row["application_id"]))
+    if row["questions_status"] == "reading" and not (job and job.status in ("queued", "running")):
+        row = row | {
+            "questions_status": "unread"
+        }  # the job died without saying so (crash, restart)
     answers_job = store.latest_job(tx, ANSWERS_KIND, str(row["application_id"]))
     return ApplicationView.model_validate(
         row
@@ -611,6 +615,24 @@ def comment(
 
 def run_requirements(application_id: UUID, grant_url: str) -> dict[str, Any]:
     """Job body: read the funder's pages, then store a new requirements revision."""
+    try:
+        return _read_requirements(application_id, grant_url)
+    except Exception:
+        stop_reading(get_settings().tenant_id, application_id)
+        raise
+
+
+def stop_reading(tenant_id: UUID, application_id: UUID) -> None:
+    """A failed read leaves the application `unread`, so it can be read again."""
+    with connect() as conn, tenant_tx(conn, tenant_id) as tx:
+        tx.execute(
+            "UPDATE applications SET questions_status = 'unread'"
+            " WHERE application_id = %s AND questions_status = 'reading'",
+            (application_id,),
+        )
+
+
+def _read_requirements(application_id: UUID, grant_url: str) -> dict[str, Any]:
     gateway, web = default_tools()
     req = RequirementsReader(gateway, web).read(grant_url)
     with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
@@ -682,14 +704,19 @@ def read_requirements(
             (aid,),
         )
         url = row["url"]
-    jobs.start_job(
-        REQUIREMENTS_KIND,
-        run_requirements,
-        aid,
-        url,
-        job_id=job.job_id,
-        created_by=principal.user_id,
-    )
+    try:
+        jobs.start_job(
+            REQUIREMENTS_KIND,
+            run_requirements,
+            aid,
+            url,
+            job_id=job.job_id,
+            created_by=principal.user_id,
+        )
+    except Exception:
+        jobs.finish(job.job_id, error="Could not start the job")
+        stop_reading(principal.tenant_id, aid)
+        raise
     with connect() as conn, tenant_tx(conn, principal.tenant_id) as tx:
         return _respond(tx, aid, response)
 
