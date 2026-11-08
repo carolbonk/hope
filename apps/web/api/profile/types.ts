@@ -1,3 +1,5 @@
+export { ProblemError, type FieldError } from "@/api/http";
+
 // Client view of H1's hackathon profile endpoints (docs/specs/features/H1-sign-in-and-profile.md).
 export type TaxStatus =
   | "501c3_public_charity"
@@ -60,25 +62,7 @@ export interface ProfileView {
   etag: string;
 }
 
-export interface FieldError {
-  field: string;
-  code: string;
-  message: string;
-}
-
 /** RFC 7807 problem from the API, keeping `code` and field `errors[]`. */
-export class ProblemError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-    readonly errors: FieldError[] = [],
-  ) {
-    super(message);
-    this.name = "ProblemError";
-  }
-}
-
 export interface ProfileApi {
   /** Resolves `null` when no profile exists yet (404 `profile_not_found`). */
   getProfile(): Promise<ProfileView | null>;

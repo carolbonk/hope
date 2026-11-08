@@ -40,6 +40,12 @@ const en = {
   },
 
   loading: "Loading your workspace…",
+  session: {
+    signOut: "Sign out",
+    signOutFailed: "Couldn't sign out. Try again.",
+    unreachableTitle: "Hope can't reach the server.",
+    unreachableBody: "Check that make demo is running, then try again.",
+  },
   unknown: "Unknown",
   yes: "Yes",
   no: "No",
@@ -355,6 +361,12 @@ const es: HopeDict = {
   },
 
   loading: "Cargando tu espacio…",
+  session: {
+    signOut: "Cerrar sesión",
+    signOutFailed: "No se pudo cerrar la sesión. Inténtalo de nuevo.",
+    unreachableTitle: "Hope no puede conectarse al servidor.",
+    unreachableBody: "Revisa que make demo esté en marcha y vuelve a intentarlo.",
+  },
   unknown: "Desconocido",
   yes: "Sí",
   no: "No",
