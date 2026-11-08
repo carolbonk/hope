@@ -24,7 +24,7 @@ from hope_core.money import Money
 from hope_core.schemas.agency_profile import AgencyProfile
 from pydantic import BaseModel, Field
 
-from hope_discovery.digest import ProfileDigest, build_digest
+from hope_discovery.digest import DigestLine, ProfileDigest, build_digest
 from hope_discovery.glossary import TermExplained
 from hope_discovery.models import _clip_list, _clip_text
 from hope_discovery.requirements import Limit, Question, Requirements, question_key
@@ -471,6 +471,23 @@ def limit_words(limit: Limit | None) -> str:
     return f"Limit: {limit.max} {unit}{spaces}. Aim for about {target}."
 
 
+def fill_staff_answers(
+    text: str, staff: dict[str, tuple[str, DigestLine]]
+) -> tuple[str, list[DigestLine]]:
+    """Code, not the model, swaps each [TO CONFIRM: need] that staff answered for their answer."""
+    used: list[DigestLine] = []
+
+    def swap(m: re.Match[str]) -> str:
+        hit = next((v for k, v in staff.items() if same_need(m.group(1).strip(), k)), None)
+        if hit is None:
+            return m.group(0)
+        if hit[1] not in used:
+            used.append(hit[1])
+        return hit[0]
+
+    return TO_CONFIRM.sub(swap, text), used
+
+
 class AnswerDrafter:
     def __init__(self, gateway: ModelGateway, budget: RunBudget | None = None) -> None:
         self.gateway = gateway
@@ -498,8 +515,11 @@ class AnswerDrafter:
                 count=0,
             )
         digest = build_answer_digest(profile)
+        staff: dict[str, tuple[str, DigestLine]] = {}
         for need, answer in (facts or {}).items():
             digest.add(f"staff.{question_key(need)}", f"{need}: {answer}")
+            if answer.strip() and digest.lines and digest.lines[-1].path.startswith("staff."):
+                staff[need] = (answer.strip(), digest.lines[-1])
         quotes = grant_quotes(grant, req)
         topics = classify_question(question.prompt)
         focus = focus_refs(digest, topics)
@@ -546,10 +566,16 @@ class AnswerDrafter:
         text, bad = guard_figures(draft.text.strip(), sources)
         text, vague = guard_specifics(text, sources)
         bad += vague
+        text, used = fill_staff_answers(text, staff)
         refs = digest.by_ref()
         web = {r: (t, u) for r, t, u in quotes}
         citations: list[dict[str, Any]] = []
         seen: set[str] = set()
+        for line in used:
+            if line.ref not in seen:
+                seen.add(line.ref)
+                citations.append({"ref": line.ref, "kind": "profile", "path": line.path,
+                                  "text": line.text})  # fmt: skip
         for claim in draft.claims:
             for ref in claim.refs:
                 if ref in seen:

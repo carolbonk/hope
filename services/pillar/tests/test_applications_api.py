@@ -395,6 +395,9 @@ def test_staff_facts_replace_to_confirm_on_redraft(
     app = api.post(f"{base}/answers/{need}/draft").json()
     answer = next(a for a in app["answers"] if a["question_key"] == need)
     assert answer["to_confirm"] == []
+    assert "TO CONFIRM" not in answer["text"] and fact["answer"] in answer["text"]
+    status = {i["key"]: i["status"] for i in app["checklist"]["items"] if i["kind"] == "question"}
+    assert status[need] != "to_confirm"
 
     app = call(api, app, "facts", {"need": fact["need"], "answer": ""}).json()
     assert app["facts"] == []
