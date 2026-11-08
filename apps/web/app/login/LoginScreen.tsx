@@ -8,6 +8,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { useI18n } from "@/components/I18nProvider";
 import { Logo } from "@/components/hope/ui";
 import { Button, Card, ErrorNotice, Loading, SuccessNotice, TextField } from "@/components/ui";
+import { AutoDismiss } from "@/components/ui/AutoDismiss";
 import { LOGIN_COPY, type LoginCopy } from "./copy";
 
 type Tab = "signin" | "signup";
@@ -285,7 +286,9 @@ export function LoginScreen() {
                   tabIndex={-1}
                   data-focus="formError"
                 >
-                  <ErrorNotice title={c.errorTitle}>{formError}</ErrorNotice>
+                  <AutoDismiss key={formError} onDismiss={() => setFormError(null)}>
+                    <ErrorNotice title={c.errorTitle}>{formError}</ErrorNotice>
+                  </AutoDismiss>
                 </div>
               )}
               {offline && <p className="text-sm text-bad">{c.offline}</p>}
