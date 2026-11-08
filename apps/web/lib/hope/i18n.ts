@@ -318,6 +318,16 @@ const en = {
     empty: "No saved opportunities yet, so no deadlines.",
     overdue: "Past due",
     soon: "Due soon",
+    view: "Deadline view",
+    table: "Table",
+    calendar: "Calendar",
+    colGrant: "Opportunity",
+    colStage: "Stage",
+    colDue: "Deadline",
+    colStatus: "Status",
+    prevMonth: "Previous month",
+    nextMonth: "Next month",
+    noneThisMonth: "No deadlines this month.",
   },
 };
 
@@ -639,6 +649,16 @@ const es: HopeDict = {
     empty: "Aún no hay oportunidades guardadas, así que no hay plazos.",
     overdue: "Vencido",
     soon: "Vence pronto",
+    view: "Vista de plazos",
+    table: "Tabla",
+    calendar: "Calendario",
+    colGrant: "Oportunidad",
+    colStage: "Etapa",
+    colDue: "Fecha límite",
+    colStatus: "Estado",
+    prevMonth: "Mes anterior",
+    nextMonth: "Mes siguiente",
+    noneThisMonth: "No hay plazos este mes.",
   },
 };
 
