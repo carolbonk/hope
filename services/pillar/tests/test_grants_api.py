@@ -551,3 +551,14 @@ def test_router_has_no_sql_or_model_calls() -> None:
             assert name not in {"ModelGateway", "execute", "executemany", "default_gateway"}
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             assert not SQL.search(node.value), node.value
+
+
+@pytest.mark.db
+def test_sort_amount_puts_non_usd_with_unknown(
+    api: TestClient, seeded: dict[str, GrantCandidate]
+) -> None:
+    euro = built("Euro", 99, 30, 58, amount_max=Money(amount_minor=99_000_000, currency="EUR"))
+    with connect() as conn, tenant_tx(conn, get_settings().tenant_id) as tx:
+        store.upsert_candidate(tx, euro)
+    body = api.get("/v1/grants", params={"sort": "amount"}).json()
+    assert ids(body, {**seeded, "EUR": euro}) == ["A", "B", "E", "EUR", "C", "D"]
