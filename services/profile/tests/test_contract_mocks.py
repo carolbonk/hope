@@ -9,7 +9,7 @@ import pytest
 pytestmark = pytest.mark.db
 
 MOCKS = Path(__file__).resolve().parents[3] / "contracts" / "mocks" / "w2"
-VOLATILE = {"updated_at"}
+VOLATILE = {"updated_at", "updated_by"}  # updated_by is the signed-in test user
 
 
 def mock(name: str) -> dict[str, Any]:
@@ -65,8 +65,8 @@ def test_responses_match_mocks(signed_in: Any) -> None:
     assert set(patched.json()) == set(mock("profile.patch/ok")["body"])
     got = http.get("/v1/profile")
     want = mock("profile.get/ok")["body"]
-    assert {k: v for k, v in got.json().items() if k not in {"updated_at", "version"}} == {
-        k: v for k, v in want.items() if k not in {"updated_at", "version"}
+    assert {k: v for k, v in got.json().items() if k not in VOLATILE | {"version"}} == {
+        k: v for k, v in want.items() if k not in VOLATILE | {"version"}
     }
     assert_matches(
         http.get("/v1/profile/ntee-codes", params={"q": "clinic"}), "ntee.search/ok", False
