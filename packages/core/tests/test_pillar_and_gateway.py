@@ -5,6 +5,7 @@ from hope_core.model_gateway import (
     MockProvider,
     ModelGateway,
     ModelTier,
+    NoResponderError,
     RunBudget,
     untrusted,
 )
@@ -48,6 +49,32 @@ def test_failover_to_second_provider() -> None:
     _, mock = gateway()
     gw = ModelGateway([Broken(), mock])
     assert gw.structured(ModelTier.SMALL, [Message("user", "proposal")], Verdict).is_rfp
+
+
+def test_lookup_errors_from_a_real_provider_fail_over() -> None:
+    class KeyErrorProvider:
+        name = "keyerror"
+
+        def complete_json(self, *args: object) -> tuple[dict[str, object], int]:
+            raise KeyError("choices")
+
+        def embed(self, texts: list[str]) -> list[list[float]]:
+            return []
+
+    _, mock = gateway()
+    gw = ModelGateway([KeyErrorProvider(), mock])
+    assert gw.structured(ModelTier.SMALL, [Message("user", "proposal")], Verdict).is_rfp
+
+
+def test_mock_without_responder_raises_instead_of_failing_over() -> None:
+    class Unregistered(BaseModel):
+        x: int
+
+    _, mock = gateway()
+    gw = ModelGateway([MockProvider(), mock])
+    with pytest.raises(NoResponderError) as info:
+        gw.structured(ModelTier.SMALL, [Message("user", "x")], Unregistered)
+    assert isinstance(info.value, LookupError)
 
 
 def test_run_budget_stops_runaway_loops() -> None:
