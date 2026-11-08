@@ -77,11 +77,14 @@ Users can explore opportunities with pending items; each call has its own requir
 "Request team review" stores `reviewRequest = { at, delivery: "local_only" }` and the UI states it was **not sent** — there is no backend, sign-in or reviewer queue. A backend should set `delivery: "sent"` only after the server accepts it.
 
 ### Opportunity (catalog, read-only for the nonprofit)
-`id, funder, name, amountMin, amountMax, currency, geography[], fundingType (grant|contract|sponsorship|in_kind), focusAreas[], purpose, deadline (YYYY-MM-DD), requirements[{ id, label, field?, expect? }], docs?: ReqId[] (documents this call asks for), federal?: boolean, source { kind: demo|verified, url?, verifiedAt? }, funderContext { previousGrantees[], awardHistory[], sourceUrl? } | null`
+`id, funder, name, amountMin, amountMax, currency, geography[], fundingType (grant|contract|sponsorship|in_kind), focusAreas[], purpose, deadline (YYYY-MM-DD), requirements[{ id, label, field?, expect? }], docs?: ReqId[] (documents this call asks for), federal?: boolean, source { kind: demo|verified, url?, verifiedAt? }, funderContext { previousGrantees[], awardHistory[], sourceUrl? } | null, fit? { score (0-100), reasons[{ text, unverified }], concerns[{ text, unverified }] }`
 
 - Every current opportunity is fictional, with `source.kind = "demo"` (`lib/hope/demo.ts`).
 - `verified` opportunities need `url` + `verifiedAt`; the card shows both.
 - `funderContext` is shown only when sourced; otherwise the UI shows an honest empty state.
+- `fit` exists only on found grants (H2): the discovery agent's score, reasons and concerns, shown labelled as an AI
+  suggestion with "(unverified)" on items no quote backs. It is never an eligibility claim; `matchReasons` stays the
+  deterministic explanation, and demo opportunities have no `fit`.
 
 ### Decision (discovery)
 `decisions[opportunityId] = { decision: saved|passed, at }` plus `history[]` for undo. **Saved means the nonprofit is interested. It never means the funder responded.**

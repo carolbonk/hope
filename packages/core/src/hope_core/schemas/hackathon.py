@@ -50,6 +50,9 @@ class GrantCandidate(Contract):
     url: str = Field(description="canonical grant page")
     summary: str = Field(description="1-3 plain-English sentences; may contain [cN] markers")
     amount_text: str | None = Field(None, description='quoted, e.g. "up to $50,000"')
+    amount_min: Money | None = Field(
+        None, description="parsed by code; lower end of a range, else None"
+    )
     amount_max: Money | None = Field(None, description="parsed by code, integer minor units")
     deadline_text: str | None = None
     deadline: date | None = Field(None, description="parsed by code; None for rolling or unknown")

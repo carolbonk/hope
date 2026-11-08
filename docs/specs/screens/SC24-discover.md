@@ -92,7 +92,8 @@ fold; filters stay in their `<details>`.
 | Card fields | `Opportunity` from `useOpportunities()` | Unchanged from PR #34 (`money()`, `daysUntil()`, `h.discover.*`) |
 | Demo chip, `DemoTag` | `opp.source.kind === "demo"` | Only on demo cards. Found grants have `source.kind = "verified"` |
 | Source line | `opp.source.url`, `opp.source.verifiedAt` | Found grants: link + "Verified {YYYY-MM-DD}" (the day Hope read the page) |
-| Why it fits | `matchReasons(opp, profile)` | Deterministic; unchanged. No AI text on the card |
+| Why it fits | `matchReasons(opp, profile)` | Deterministic; unchanged |
+| AI fit (found grants only) | `opp.fit` | Inside the "Why it could fit" box, after the reasons: "Hope's read of the funder page (AI suggestion, check the source)", "AI fit score {score}/100", the reasons, "Concerns" + the concerns; " (unverified)" after items with `unverified: true`. Never shown on demo cards; never changes the eligibility chip or the order |
 | Eligibility chip | `eligibility(opp, profile, app)` | Found grants always carry the `funder_eligibility` requirement, so they show "Needs review" until evidence is recorded in the workspace |
 | Panel heading | state | "Find real grants" / "Finding grants" / "✓ Search complete" / "The search didn't finish" |
 | Panel intro | — | "Hope searches the web with your profile and adds open grants to this deck." |
@@ -110,8 +111,10 @@ fold; filters stay in their `<details>`.
 
 ## 5. Components
 
-- **Unchanged:** `Deck`, `CardBody`, `SwipeCard`, `RoundButton`, `Details`, `Select`, `EmptyState` in
-  `page.tsx`, and `PageIntro`, `DemoTag`, `ClientOnly` from `components/hope/ui.tsx`.
+- **Unchanged:** `Deck`, `SwipeCard`, `RoundButton`, `Details`, `Select`, `EmptyState` in `page.tsx`, and
+  `PageIntro`, `DemoTag`, `ClientOnly` from `components/hope/ui.tsx`.
+- **`CardBody`** only gains the AI fit block (section 4) inside its existing "Why it could fit" box, using the
+  same `ul` classes as the `matchReasons` list.
 - **New:** `components/hope/discovery/DiscoveryPanel.tsx`, a `glass-panel` box (`rounded-xl glass-panel p-4`,
   like the mobile filters `<details>`). It uses `eyebrow`, `btnPrimary`, `btnSecondary`, `input`, `focusRing`
   from `components/hope/ui.tsx`. The bar is a `div` with `role="progressbar"` in `bg-teal-ink` on a
@@ -223,7 +226,8 @@ and only `lib/hope/sync/opportunities.ts` converts it (`/ 100`).
 - [ ] AC8 On mount with `running_job_id` set, the panel resumes that run.
 - [ ] AC9 The live region is throttled and the progressbar exposes `aria-valuenow` / `aria-valuetext`.
 - [ ] AC10 EN and ES copy both render (header toggle).
-- [ ] AC11 No change to `app/globals.css`, `components/ui/**` or the deck components beyond mounting the panel.
+- [ ] AC11 No change to `app/globals.css`, `components/ui/**` or the deck components beyond mounting the panel and the AI fit block.
+- [ ] AC12 Found cards show the AI fit block with its label, score, reasons, concerns and "(unverified)" marks; demo cards show none, and the block never changes the eligibility chip or the deck order.
 
 ## 13. Test plan (Vitest, offline)
 
@@ -238,13 +242,12 @@ and only `lib/hope/sync/opportunities.ts` converts it (`/ 100`).
 | AC8 | `DiscoveryPanel.test.tsx::resumes running job on mount` |
 | AC9 | `DiscoveryPanel.test.tsx::throttled announcements and progressbar aria` |
 | AC10 | `DiscoveryPanel.test.tsx::renders es copy` |
+| AC12 | `page.test.tsx::ai fit block on found cards only` |
 | contract | `components/hope/discovery/api.test.ts::parses every w3 mock` |
 
 ## 14. Open questions
 
-- **Show cited AI fit reasons on the card?** Recommended: not in the hackathon. It needs new optional
-  `Opportunity` fields in the shared `lib/hope/types.ts`, to be agreed first. Until then the AI reasons live
-  in `GET /v1/grants`.
-- **Show grants with no amount or deadline as cards?** Same dependency; for now they are in the panel's
+- **Show grants with no amount or deadline as cards?** Not yet: it would make `amountMin` / `amountMax` /
+  `deadline` optional, which Saved, Deadlines and H5 read as required. For now they are in the panel's
   "needs a check" list.
 - **"Stop search" button?** No for the hackathon: runs are capped at 5 minutes and have no side effects.

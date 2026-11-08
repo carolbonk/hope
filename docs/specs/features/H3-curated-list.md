@@ -140,8 +140,10 @@ nobody adds a model call here:
 | Serve fit (this spec) | H3 | stored `GrantCandidate` | none (no model) | `grants.py` code | `fit_band`, `urgency`, `days_left`, `unverified`, `hidden_past`, sort, counts, status, idempotency, pass-reason check | `store.upsert_candidate` seed in `test_grants_api.py` (below) |
 | Match reasons on the card | H4 (`store.ts`) | `Opportunity` + `OrgProfile` | none (no model) | — | `matchReasons`, `eligibility` | the demo catalog |
 
-The Discover card's "Why it could fit" comes from `matchReasons` (code), not from H2's LLM reasons.
-Showing the LLM reasons would need a new optional field on `Opportunity` and a page edit, which is out of scope.
+The Discover card's "Why it could fit" comes from `matchReasons` (code). Under it, for found grants only, H2
+renders the LLM's score, reasons and concerns that its adapter maps from this endpoint into the optional
+`Opportunity.fit`, labelled as an AI suggestion, with "(unverified)" on each `unverified: true` item. H3 doesn't
+edit `app/hope/discover/page.tsx`.
 
 ## Contracts
 
@@ -149,7 +151,10 @@ Showing the LLM reasons would need a new optional field on `Opportunity` and a p
   `hope_core.store.*`, `hope_core.errors`. No new shared contract.
 - **Endpoint models**, in `hope_pillar/api/grants.py` only: `CitedItem{text, citation_ids, unverified}`, `GrantCard`,
   `GrantDetail`, `GrantListPage`, `StatusChange`, `PassBody`.
-- **Money:** `amount_max` is `{amount_minor: int, currency}` on the wire, and is never a float.
+- **`GrantCard`** carries, besides the fields in `mocks/w4/grants.list/new.json`'s shape, `amount_min`
+  (`Money | null`, the lower end of a range) and `eligibility_summary` (`string | null`) straight from the stored
+  `GrantCandidate`. H2's web adapter reads both (amount range, eligibility requirement label).
+- **Money:** `amount_min` / `amount_max` are `{amount_minor: int, currency}` on the wire, and never floats.
   `sort=amount` compares `amount_minor` integers. Discovery parses only USD (H2), so a non-USD row sorts
   with the unknown ones. H3 never converts money; H2's adapter divides by 100 for the UI.
 - **Endpoints**, exactly as in `contracts/manifest.json` W4 and `contracts/mocks/w4/**`:

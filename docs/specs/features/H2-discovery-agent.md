@@ -148,6 +148,7 @@ Steps and their exact `current_step` texts:
    - `parse_amount(quote) -> AmountParse(min: Money | None, max: Money | None) | None`. Accepts `$50,000`,
      `$50K`, `$1.5 million`, `up to $25,000`, `$10,000-$25,000`, `between $5,000 and $15,000`. Integer
      cents only (`Decimal`, never `float`). Non-USD or unparseable → `None`; `amount_text` keeps the quote.
+     `min` is set only for a range (`$10,000-$25,000` → min 1000000, max 2500000); otherwise `min` is `None`.
      Ported from `hope_ingestion.parsing.validators.parse_money`.
    - `parse_deadline(quote, today) -> DeadlineParse(date | None, rolling: bool, all_dates: list[date])`.
      Accepts `March 3, 2027`, `3/3/2027`, `2027-03-03`, `Mar. 3 2027`. A date with no year is **not**
@@ -157,7 +158,8 @@ Steps and their exact `current_step` texts:
 8. **Drop expired** (code). Expired = every parsed date is before today, or call 2 said `closed_or_past`.
    "Skipping {title}: deadline has passed", `skipped_expired += 1`. Never upserted.
 9. **Score the fit** (LLM call 3, below). "Scoring fit: {title}". The page text is dropped after this step.
-10. **Save** (code). `store.upsert_candidate(tx, GrantCandidate(...))` with `grant_id =
+10. **Save** (code). `store.upsert_candidate(tx, GrantCandidate(...))` with `amount_min` / `amount_max` from
+    `AmountParse`, `grant_id =
     uuid5(NAMESPACE_URL, canonical_final_url)`, `url` = canonical final URL, `status="new"` (kept on
     conflict), `found_by_job_id`, `discovered_at = now`. Then a `candidate` event with `grant_id` and
     `is_new` (URL not in the table before), `candidates_found += 1`, and "Saved: {title} (fit {score})".
@@ -377,33 +379,43 @@ export function toOpportunity(card: GrantCard): Opportunity | null; // null when
 | `id` | `grant_id` | So the application is `app:org-local-1:<grant_id>` |
 | `funder`, `name` | `funder`, `title` | as-is |
 | `amountMax` | `amount_max.amount_minor` | `amount_minor / 100` (whole units, UI only; H0's rule) |
-| `amountMin` | `amount_min?.amount_minor` | same; until `amount_min` exists, `= amountMax` |
+| `amountMin` | `amount_min.amount_minor` | same; `= amountMax` when `amount_min` is null (a single amount or "up to") |
 | `currency` | `amount_max.currency` | must be a UI `Currency`; otherwise skipped (`needsCheck` = `"currency"`) |
 | `deadline` | `deadline` | `YYYY-MM-DD`; `null` (rolling or unknown) → skipped (`"no_deadline"`) |
 | `geography` | — | `[]` (the deck's geography filter and reason don't apply) |
 | `fundingType` | — | `"grant"` |
 | `focusAreas` | `title` + `summary` | `FOCUS_KEYWORDS` table over the UI focus keys (`mentoring`: mentor; `youth`: youth, young people, teen; `family`: family, families; `mental_health`: mental health, behavioral; `safety`: safety, violence; `school_based`: school; `capacity`: capacity, operating; `arts`: arts, mural), word-boundary, case-insensitive |
 | `purpose` | `title` + `summary` | "general operating" → `general_operating`, "capacity" → `capacity`, "capital" → `capital`, else `program` |
-| `requirements` | `eligibility_summary` (if present) | always `{ id: "funder_eligibility", label: eligibility_summary ?? "Funder's eligibility rules (check the source page)" }` (so a found grant is never "meets" by default); plus `{ id: "c3", label: "501(c)(3)", field: "has501c3", expect: "yes" }` when the text matches `/501\(c\)\(3\)/i` |
+| `requirements` | `eligibility_summary` (on the card; may be null) | always `{ id: "funder_eligibility", label: eligibility_summary ?? "Funder's eligibility rules (check the source page)" }` (so a found grant is never "meets" by default); plus `{ id: "c3", label: "501(c)(3)", field: "has501c3", expect: "yes" }` when the text matches `/501\(c\)\(3\)/i` |
 | `docs`, `federal` | `url` | `federal = host ends with ".gov"`; then `docs = ["uei", "sam"]` |
 | `source` | `url`, `discovered_at` | `{ kind: "verified", url, verifiedAt: discovered_at.slice(0, 10) }` |
 | `funderContext` | — | `null` |
+| `fit` | `fit_score`, `reasons`, `concerns` | `{ score: fit_score, reasons, concerns }`, each item reduced to `{ text, unverified }` (H3 already stripped the `[cN]` markers) |
 
 `needsCheck`: `amount_max` null → `"no_amount"`; `deadline` null (rolling or unknown) → `"no_deadline"`;
 currency not in the UI's `Currency` → `"currency"`. Those grants never become cards (the deck needs an
 amount and a date); the run panel lists them from the job's `candidates` with the same `needsCheck`.
 
-- No field is added to `lib/hope/types.ts`. `source.kind = "verified"` is what keeps the demo chip
-  ("Fictional opportunity · Demo data") and `DemoTag` on demo cards only. The LLM's `fit_score`, cited reasons
-  and concerns stay on the server (`GET /v1/grants`); the card's "Why it fits" box keeps the deterministic
-  `matchReasons`, and the deck keeps its own sort.
+- `toOpportunity` fills the existing fields plus the optional `fit` (`Opportunity.fit` / `FitPoint` in
+  `lib/hope/types.ts`, already added); H2 adds no other field. `source.kind = "verified"` is what keeps the demo
+  chip ("Fictional opportunity · Demo data") and `DemoTag` on demo cards only. The card's "Why it could fit" box
+  keeps the deterministic `matchReasons` and the eligibility chip, and the deck keeps its own sort: the AI
+  score never reorders, filters or qualifies a card.
 - `lib/hope/demo.ts` is not changed; it is the offline fallback.
 
 ### I. Run panel (`components/hope/discovery/**`) and the Discover page
 
 - `DiscoveryPanel.tsx` is mounted **once** in `app/hope/discover/page.tsx`, in the `<aside>` right after the
-  "Edit profile" link. That import and one JSX line are the only page change. No restyle and no new CSS:
-  the panel reuses the class strings in `components/hope/ui.tsx`.
+  "Edit profile" link (one import and one JSX line).
+- **AI fit block** (the only other page change): in `CardBody`, inside the existing "Why it could fit" box,
+  after the `matchReasons` list and before the eligibility chip, when `opp.fit` is set:
+  - the label `h.discovery.aiFit` "Hope's read of the funder page (AI suggestion, check the source)"
+  - "AI fit score {score}/100"
+  - the reasons, then "Concerns" and the concerns, with the same list classes as the `matchReasons` list
+  - " (unverified)" after each item with `unverified: true`
+
+  Demo cards have no `fit`, so nothing renders for them. No restyle and no new CSS: the panel and the block
+  reuse the class strings in `components/hope/ui.tsx` and the page.
 - `api.ts`: `startJob(body)`, `getJob(id, sinceSeq)`, `listJobs(limit)` over H0's `apiFetch`; they throw
   `ProblemError` and the panel maps `code` to copy. `types.ts`: `DiscoveryJobView`, `DiscoveryStep`,
   `JobCandidate`, `DiscoveryRunSummary`, mirroring `contracts/mocks/w3`. `fixture.ts`: `FixtureDiscoveryApi`,
@@ -467,13 +479,13 @@ services/pillar/src/hope_pillar/api/discovery.py
 services/pillar/tests/test_discovery_api.py
 services/pillar/tests/snapshots/openapi/discovery.json
 db/migrations/0700_discovery.sql
-apps/web/app/hope/discover/**                 (mount the panel only)
+apps/web/app/hope/discover/**                 (panel mount line + the opp.fit block in CardBody)
 apps/web/components/hope/discovery/**         (DiscoveryPanel, api, types, fixture, tests)
 apps/web/lib/hope/sync/opportunities.ts       (body of fetchOpportunities + pure helpers; + opportunities.test.ts)
 ```
 
-Shared, add keys only: `apps/web/lib/hope/i18n.ts` (`discovery`). Don't add fields to
-`apps/web/lib/hope/types.ts`. `lib/hope/opportunities.ts` (H0's wiring) and `lib/hope/demo.ts` stay as they
+Shared, add only: `apps/web/lib/hope/i18n.ts` (`discovery`, incl. `aiFit`). `apps/web/lib/hope/types.ts`
+already has `Opportunity.fit` and `FitPoint`; add nothing else. `lib/hope/opportunities.ts` (H0's wiring) and `lib/hope/demo.ts` stay as they
 are. Don't touch `app/globals.css`, `components/ui/**`, `features/onboarding/**`, other pages, or
 `lib/hope/store.ts` (H4).
 
@@ -495,9 +507,9 @@ are. Don't touch `app/globals.css`, `components/ui/**`, `features/onboarding/**`
 - [ ] AC14 The injection fixture page scores the same as the same page without the injected line.
 - [ ] AC15 `POST/GET /v1/discovery/jobs*` return the codes above, and every response has the keys and types of its W3 mock; the OpenAPI snapshot matches.
 - [ ] AC16 The demo seed produces the 3 listed candidates offline, is idempotent and is dated 2 days back.
-- [ ] AC17 `toOpportunity` follows the mapping table (minor units → whole units, `NeedsCheck` for no amount / no deadline / other currency, `funder_eligibility` always present, `source.kind = "verified"` with `url` and `verifiedAt`) and adds no field to `Opportunity`.
+- [ ] AC17 `toOpportunity` follows the mapping table (minor units → whole units, `NeedsCheck` for no amount / no deadline / other currency, `funder_eligibility` always present, `source.kind = "verified"` with `url` and `verifiedAt`) and fills `fit` from the card's score, reasons and concerns.
 - [ ] AC18 `fetchOpportunities()` keeps H0's signature, never rejects, makes no request with sync off, and resolves `null` when the list is empty or on any error (so `useOpportunities()` shows the demo deck); it reads all three statuses.
-- [ ] AC19 The panel is mounted once; the deck, filters, Save/Pass/Undo and keyboard shortcuts behave as before; SC24's acceptance criteria pass.
+- [ ] AC19 The panel is mounted once; the deck, filters, Save/Pass/Undo and keyboard shortcuts behave as before; found cards show the AI fit block (labelled, "(unverified)" marks) and demo cards don't; SC24's acceptance criteria pass.
 - [ ] AC20 The model key never reaches the browser; the web app only calls `/v1` endpoints.
 
 ## Test plan (offline: `MockProvider` + `mock.register`, `RecordedWebTools`, `HOPE_JOBS_INLINE=1`, Vitest + contract mocks)
@@ -522,7 +534,7 @@ are. Don't touch `app/globals.css`, `components/ui/**`, `features/onboarding/**`
 | AC16 | `services/discovery/tests/test_demo_seed.py::test_seed_offline_idempotent` | db |
 | AC17 | `apps/web/lib/hope/sync/opportunities.test.ts::maps grant cards`, `::needs check rules`, `::requirements never meet by default`, `::source verified` | web unit |
 | AC18 | `apps/web/lib/hope/sync/opportunities.test.ts::sync off makes no request`, `::empty or error resolves null`, `::reads new saved and passed` (mocked `apiFetch`) | web unit |
-| AC19 | `apps/web/app/hope/discover/page.test.tsx::panel mounted once and deck unchanged`, `::verified cards show source url and no demo chip`; SC24 tests | web |
+| AC19 | `apps/web/app/hope/discover/page.test.tsx::panel mounted once and deck unchanged`, `::verified cards show source url and no demo chip`, `::ai fit block on found cards only`; SC24 tests | web |
 | AC20 | `apps/web/components/hope/discovery/api.test.ts::parses every w3 mock` (no `OPENAI` / key in client bundle imports) | web unit |
 
 Commands: `uv run pytest -q services/discovery services/pillar`, the lint/mypy commands in `AGENTS.md`, and
@@ -538,11 +550,9 @@ Commands: `uv run pytest -q services/discovery services/pillar`, the lint/mypy c
    pages, one details page and one injection page) in `services/discovery/tests/fixtures/web/`.
 4. **H0:** `start_job` passes the user to `create_job` (`created_by`); an exception in `fn` marks the job
    `failed` without the traceback in `error`.
-5. **H0 (optional):** `GrantCandidate.amount_min: Money | None`, filled from `AmountParse.min`. Fallback:
-   `amountMin = amountMax` in the adapter.
-6. **H3 (optional):** `eligibility_summary` on `GrantCard` in `GET /v1/grants`. Fallback: the generic
-   `funder_eligibility` requirement label.
-7. **Shared parsing:** promote `parse_amount` / `parse_deadline` into `hope_core` only if another spec needs them.
+5. **Done:** `GrantCandidate.amount_min` (H0 contract, `hope_core.schemas`); `amount_min` and
+   `eligibility_summary` on H3's `GrantCard` (`mocks/w4/grants.list`); `Opportunity.fit` in `lib/hope/types.ts`.
+6. **Shared parsing:** promote `parse_amount` / `parse_deadline` into `hope_core` only if another spec needs them.
 
 ## Out of scope
 
@@ -558,8 +568,8 @@ grant page (`/grants/*`), and changing the deck's design.
 4. **Several deadlines (LOI vs full proposal):** show the earliest future date; `deadline_text` keeps the quote.
 5. **Re-reading passed grants:** not within 7 days (`known_url_days`); after that re-read, keeping `passed`.
 6. **Grants with no amount or deadline:** listed in the panel under "needs a check", not in the deck.
-   Showing them as cards (or showing the cited AI fit reasons on the card) needs new `Opportunity` fields,
-   which is a shared-type change to agree first; H2 doesn't add them.
+   Showing them as cards would make `amountMin` / `amountMax` / `deadline` optional, and Saved, Deadlines,
+   the workspace and H5's ask all read them as required. That is not an add-only change, so agree it first.
 
 ## References
 

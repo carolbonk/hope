@@ -1596,6 +1596,18 @@
           "default": null,
           "description": "parsed by code, integer minor units"
         },
+        "amount_min": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "parsed by code; lower end of a range, else None"
+        },
         "amount_text": {
           "anyOf": [
             {

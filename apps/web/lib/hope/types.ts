@@ -72,6 +72,9 @@ export type OrgProfile = {
 export type FundingType = "grant" | "contract" | "sponsorship" | "in_kind";
 export type Purpose = "general_operating" | "program" | "capacity" | "capital";
 
+/** One AI-written point about a found grant. `unverified` = no source quote backs it. */
+export type FitPoint = { text: string; unverified: boolean };
+
 export type Opportunity = {
   id: string;
   funder: string;
@@ -91,6 +94,8 @@ export type Opportunity = {
   federal?: boolean;
   source: { kind: "demo" | "verified"; url?: string; verifiedAt?: string };
   funderContext: { previousGrantees: string[]; awardHistory: string[]; sourceUrl?: string } | null;
+  /** Found grants only (H2): the discovery agent's fit score and cited reasons. AI suggestions, never eligibility. */
+  fit?: { score: number; reasons: FitPoint[]; concerns: FitPoint[] };
 };
 
 export type Eligibility = "meets" | "needs_review" | "not_qualified";

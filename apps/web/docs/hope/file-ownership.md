@@ -7,7 +7,7 @@ agents edit the same file.
 | --- | --- |
 | H0 | `app/layout.tsx`, `app/page.tsx`, `app/hope/layout.tsx` (session guard), `components/hope/ui.tsx`, `api/http.ts`, `api/session/**`, `lib/hope/sync/index.ts`, `lib/hope/opportunities.ts` (the `remote ?? demo` wiring), `package.json`. Also a one-time edit before H1-H5 start: it creates the no-op `lib/hope/sync/{profile,opportunities,decisions}.ts` stubs and wires them into `lib/hope/store.ts` / `lib/hope/opportunities.ts`. After that, each stub belongs to its spec. |
 | H1 | `app/login/**`, `app/onboarding/**`, `features/onboarding/**`, `api/profile/**`, `api/onboarding/**`, `lib/hope/fromOnboarding.ts` (+ test), the function bodies of `lib/hope/sync/profile.ts` (+ `sync/profile.test.ts`), `app/hope/profile/**` |
-| H2 | `components/hope/discovery/**`, `lib/hope/sync/opportunities.ts`, one mount line in `app/hope/discover/page.tsx`, new `discovery` keys in `lib/hope/i18n.ts` |
+| H2 | `components/hope/discovery/**`, `lib/hope/sync/opportunities.ts`, in `app/hope/discover/page.tsx` one mount line and the `opp.fit` block in `CardBody`, new `discovery` keys in `lib/hope/i18n.ts` |
 | H3 | `app/hope/saved/**`, `app/hope/deadlines/**`, `lib/hope/sync/decisions.ts` |
 | H4 | `app/hope/applications/[oppId]/page.tsx`, `lib/hope/store.ts` (eligibility, stage gates), `lib/hope/dossier.ts` |
 | H5 | `components/hope/draft/**`, `lib/hope/draft.ts`, `app/api/hope/draft/**` |

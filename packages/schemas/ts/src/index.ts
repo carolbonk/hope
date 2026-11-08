@@ -661,6 +661,10 @@ export interface GrantCandidate {
    */
   amount_max?: Money | null;
   /**
+   * parsed by code; lower end of a range, else None
+   */
+  amount_min?: Money | null;
+  /**
    * quoted, e.g. "up to $50,000"
    */
   amount_text?: string | null;

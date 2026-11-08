@@ -11,12 +11,14 @@
         "domain": "cascadehealth.example.org",
         "summary": "Two-year grants for nonprofits that bring preventive dental care to rural Washington communities.",
         "amount_text": "up to $75,000 per year",
+        "amount_min": null,
         "amount_max": {
           "amount_minor": 7500000,
           "currency": "USD"
         },
         "deadline_text": "Applications due March 3, 2027",
         "deadline": "2027-03-03",
+        "eligibility_summary": "Nonprofits with 501(c)(3) status serving rural Washington counties.",
         "days_left": 116,
         "urgency": "later",
         "fit_score": 88,
@@ -101,12 +103,17 @@
         "domain": "crcf.example.org",
         "summary": "One-year grants for community programs that expand youth mental health support in central Washington.",
         "amount_text": "$10,000 to $40,000",
+        "amount_min": {
+          "amount_minor": 1000000,
+          "currency": "USD"
+        },
         "amount_max": {
           "amount_minor": 4000000,
           "currency": "USD"
         },
         "deadline_text": "Rolling; reviewed quarterly",
         "deadline": null,
+        "eligibility_summary": "501(c)(3) organizations running youth mental health programs in Washington State.",
         "days_left": null,
         "urgency": "rolling",
         "fit_score": 74,

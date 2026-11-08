@@ -189,6 +189,7 @@ class GrantCandidate(Contract):
     url: str  # canonical grant page
     summary: str  # 1-3 plain-English sentences; may contain [cN] markers
     amount_text: str | None = None  # quoted, e.g. "up to $50,000"
+    amount_min: Money | None = None  # parsed by code: lower end of a range, else None
     amount_max: Money | None = None  # parsed by code from amount_text, integer minor units
     deadline_text: str | None = None
     deadline: date | None = None  # parsed by code; None for rolling or unknown

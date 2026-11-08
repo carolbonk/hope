@@ -9,6 +9,7 @@
     "domain": "cascadehealth.example.org",
     "summary": "Two-year grants for nonprofits that bring preventive dental care to rural Washington communities.",
     "amount_text": "up to $75,000 per year",
+    "amount_min": null,
     "amount_max": {
       "amount_minor": 7500000,
       "currency": "USD"
