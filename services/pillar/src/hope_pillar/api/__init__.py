@@ -57,6 +57,7 @@ def create_app(services: Services | None = None, *, legacy: bool = False) -> Fas
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Content-Type", "If-Match"],
+        expose_headers=["ETag"],
     )
     errors.install(app)
     if legacy:
