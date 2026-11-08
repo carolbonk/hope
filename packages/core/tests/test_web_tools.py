@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import io
 import json
+import zipfile
 from pathlib import Path
 
 import httpx
 import pytest
-from hope_core.web import FetchError, RecordedWebTools, fetch, page_key
+from hope_core.web import DOCX, FetchError, RecordedWebTools, fetch, page_key
 
 FIXTURES = Path(__file__).parent / "fixtures" / "web"
 PUBLIC = "93.184.216.34"
@@ -176,3 +178,85 @@ def test_recorded_fixtures_are_complete() -> None:
         assert page_key(page.url) == path.stem and page.content_type
     pdfs = [p for p in pages if '"application/pdf"' in p.read_text()]
     assert len(pdfs) == 1
+
+
+def _docx(body: str) -> bytes:
+    xml = (
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        f"<w:body>{body}</w:body></w:document>"
+    )
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as z:
+        z.writestr("word/document.xml", xml)
+    return out.getvalue()
+
+
+def test_fetch_extracts_docx_text() -> None:
+    data = _docx(
+        "<w:p><w:r><w:t>Sponsorship Application</w:t></w:r></w:p>"
+        "<w:p><w:r><w:t>Requests up to </w:t></w:r><w:r><w:t>$2,500.</w:t></w:r></w:p><w:p/>"
+    )
+    routes = {
+        "grants.example.org/a.docx": httpx.Response(
+            200, content=data, headers={"content-type": DOCX}
+        ),
+        "grants.example.org/b.docx": httpx.Response(
+            200, content=data, headers={"content-type": "application/octet-stream"}
+        ),
+    }
+    for name in ("a", "b"):
+        page = fetch(
+            f"https://grants.example.org/{name}.docx", resolver=resolver, transport=site(routes)
+        )
+        assert page.text == "Sponsorship Application\nRequests up to $2,500."
+        assert page.content_type == DOCX
+
+
+@pytest.mark.parametrize(
+    "data", [b"PK not a zip", _docx('<!DOCTYPE x [<!ENTITY a "aaaa">]><w:p/>')]
+)
+def test_fetch_rejects_bad_docx(data: bytes) -> None:
+    routes = {
+        "grants.example.org/a.docx": httpx.Response(
+            200, content=data, headers={"content-type": DOCX}
+        )
+    }
+    with pytest.raises(FetchError) as err:
+        fetch("https://grants.example.org/a.docx", resolver=resolver, transport=site(routes))
+    assert err.value.code == "unsupported_content_type"
+
+
+@pytest.mark.parametrize(
+    ("retry_after", "waits", "code"), [("2", [2.0], None), (None, [1.0], None), ("120", [], 429)]
+)
+def test_fetch_retries_a_short_429_once(
+    retry_after: str | None, waits: list[float], code: int | None
+) -> None:
+    calls: list[str] = []
+    slept: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            return httpx.Response(404)
+        calls.append(request.url.path)
+        if len(calls) == 1:
+            headers = {"retry-after": retry_after} if retry_after else {}
+            return httpx.Response(429, headers=headers)
+        return httpx.Response(200, html="<p>Awards up to $5,000.</p>")
+
+    def go() -> object:
+        return fetch(
+            "https://grants.example.org/g",
+            resolver=resolver,
+            transport=httpx.MockTransport(handler),
+            sleep=slept.append,
+        )
+
+    if code:
+        with pytest.raises(FetchError) as err:
+            go()
+        assert err.value.code == "http_429" and len(calls) == 1
+    else:
+        go()
+        assert len(calls) == 2
+    assert slept == waits

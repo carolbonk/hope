@@ -250,7 +250,8 @@ There are no brief or proposal contracts: H4/H5 live in the browser (`lib/hope/t
 ### 6. Web tools (`hope_core/web.py`)
 
 - `fetch(url) -> Page(url, final_url, title, text, links: list[Link(url, text)], content_type)`. It is all code:
-  - httpx, 15 s timeout, 5 MB cap, a Hope user agent; HTML text via `trafilatura`, PDF text via `pypdf`; respects `robots.txt`;
+  - httpx, 15 s timeout, 5 MB cap, a Hope user agent; HTML text via `trafilatura`, PDF text via `pypdf`, Word (`.docx`) paragraph text via `zipfile` + `ElementTree` (DTDs rejected, unzipped size capped); respects `robots.txt`;
+  - a `429` is retried once after its `Retry-After` (whole seconds, default 1) when that is at most 5 s, otherwise `FetchError("http_429")`;
   - SSRF guard: only `http`/`https` on ports 80 and 443. The host is resolved first, and any address that isn't
     public (`ipaddress.ip_address(a).is_global` is false: loopback, private, link-local including `169.254.169.254`,
     multicast, reserved) raises `FetchError("blocked_address")`. Redirects are followed by hand
