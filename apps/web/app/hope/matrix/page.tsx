@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { btnPrimary, btnSecondary, ClientOnly, focusRing, input, money, PageIntro, Panel } from "@/components/hope/ui";
-import { listBids, startBid } from "@/components/hope/bids/api";
+import { startBid } from "@/components/hope/bids/api";
 import { useBidsCopy } from "@/components/hope/bids/copy";
 import { scoreRow, type Rec, type Row } from "@/components/hope/bids/score";
 import { GRANT_ID } from "@/components/hope/bids/shared";
+import { useBidIds } from "@/components/hope/bids/useBidIds";
 import { useToday } from "@/components/useToday";
 import { AutoDismiss } from "@/components/ui/AutoDismiss";
 import { online } from "@/lib/api/http";
@@ -34,18 +35,13 @@ function Matrix() {
   const opps = useOpportunities();
   const { state } = useHope();
   const router = useRouter();
-  const [bidIds, setBidIds] = useState<Set<string>>(new Set());
+  const bidIds = useBidIds();
   const [sort, setSort] = useState<"score" | "deadline">("score");
   const [rec, setRec] = useState<Rec | "all">("all");
   const [elig, setElig] = useState<Eligibility | "all">("all");
   const [win, setWin] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    if (!online) return;
-    listBids().then((bids) => setBidIds(new Set(bids.map((b) => b.grant_id))), () => undefined);
-  }, []);
 
   const rows = opps
     .map((o) => scoreRow(o, state.profile, today, eligibility(o, state.profile, state.applications[applicationId(state.profile.id, o.id)])))

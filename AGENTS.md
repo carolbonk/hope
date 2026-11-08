@@ -37,6 +37,7 @@ orchestrator.
 
 Hackathon migration ranges: H0 `0002`, H1 profile `0310-0319`, discovery `0700-0709`, grants `0710-0719`.
 `0720-0729` and `0800-0809` stay reserved (H4/H5 use none).
+bids 0730-0739.
 | `apps/web/` | web | 4.4, 5.3 |
 
 ## Rules

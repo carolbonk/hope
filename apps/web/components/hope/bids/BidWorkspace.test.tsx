@@ -127,3 +127,33 @@ it("says so when the bid doesn't exist", async () => {
   render(<BidWorkspace grantId={GRANT} />);
   expect(await screen.findByText("This bid wasn't found.")).toBeInTheDocument();
 });
+
+it("brings a stale-save notice into view and focuses it", async () => {
+  const { ProblemError } = await import("@/lib/api/http");
+  await open(bid());
+  fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+  api.updateItem.mockRejectedValue(new ProblemError(412, "version_mismatch", "This bid changed; reload it"));
+  api.getBid.mockResolvedValue(bid({ version: 5 }));
+  fireEvent.change(screen.getByLabelText("Note"), { target: { value: "Draft in Drive" } });
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Save" })));
+  const alert = await screen.findByText(/changed/i, { selector: "p[role=alert]" });
+  expect(alert).toHaveFocus();
+  expect(api.getBid).toHaveBeenCalledTimes(2);
+});
+
+it("keeps each requirement's note and evidence readable once submitted", async () => {
+  const reviewed = { by: ME, at: "2026-11-20T10:00:00Z", decision: "approved" as const, comment: "", stale: false };
+  await open(
+    bid({
+      phase: "submitted",
+      blocker_list: [],
+      blockers: 0,
+      items: [item({ owner: ME, status: "ready", review: reviewed, note: "Uses the 2025 survey.", evidence_ref: "Drive: Need.docx" })],
+      submission: { receipt: "CCF-42", portal: "CCF portal", submitted_at: "2026-11-21T12:00:00Z", recorded_by: ME, recorded_at: "2026-11-21T12:00:00Z", sent_by_hope: false },
+    }),
+  );
+  const record = screen.getByTestId("item-record");
+  expect(record).toHaveTextContent("Drive: Need.docx");
+  expect(record).toHaveTextContent("Uses the 2025 survey.");
+  expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+});

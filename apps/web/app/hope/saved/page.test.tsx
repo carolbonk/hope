@@ -13,6 +13,9 @@ vi.mock("@/lib/hope/opportunities", async () => {
   return { useOpportunities: () => catalog.override ?? demoOpportunities(new Date()) };
 });
 
+const bids = vi.hoisted(() => ({ ids: new Set<string>() }));
+vi.mock("@/components/hope/bids/useBidIds", () => ({ useBidIds: () => bids.ids }));
+
 const TODAY = new Date("2026-11-07T12:00:00");
 const demo = () => demoOpportunities(TODAY);
 const byId = (id: string) => demo().find((o) => o.id === id)!;
@@ -45,6 +48,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(TODAY);
   catalog.override = null;
+  bids.ids = new Set();
   window.localStorage.clear();
 });
 afterEach(() => {
@@ -86,6 +90,14 @@ it("demo badge only for demo data", () => {
   expect(screen.getByRole("link", { name: /Verified Overdue Grant/ })).not.toHaveTextContent("Demo data");
   expect(screen.getByRole("link", { name: /Back-to-School/ })).toHaveTextContent("Demo data");
   expect(screen.getAllByText("Demo data")).toHaveLength(1);
+});
+
+it("links a card to its bid when it has one", () => {
+  seedFixture();
+  bids.ids = new Set(["opp-sunrise-ops"]);
+  render(<SavedPage />);
+  expect(screen.getByRole("link", { name: /Open bid/ })).toHaveAttribute("href", "/hope/bids/opp-sunrise-ops");
+  expect(screen.getAllByRole("link", { name: /Open bid/ })).toHaveLength(1);
 });
 
 it("empty state", () => {

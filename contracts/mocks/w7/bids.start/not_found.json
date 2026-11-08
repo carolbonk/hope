@@ -1,0 +1,12 @@
+{
+  "status": 404,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Grant not found",
+    "status": 404,
+    "code": "grant_not_found"
+  }
+}

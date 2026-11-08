@@ -629,6 +629,188 @@
           "notes": "Next.js route in apps/web (not served by pnpm mock); mode=template is the offline stand-in. ask is whole currency units today (known gap vs integer minor units)."
         }
       ]
+    },
+    {
+      "id": "W7",
+      "name": "Bids",
+      "spec": "H7",
+      "issue": null,
+      "screens": [
+        {
+          "id": "SC30",
+          "route": "/hope/matrix",
+          "issue": null,
+          "built_by": "H7"
+        },
+        {
+          "id": "SC31",
+          "route": "/hope/bids",
+          "issue": null,
+          "built_by": "H7"
+        },
+        {
+          "id": "SC32",
+          "route": "/hope/bids/[oppId]",
+          "issue": null,
+          "built_by": "H7"
+        }
+      ],
+      "goal": "Pick what to prepare from a ranked matrix, give every requirement an owner, date, status, evidence and review, pass a final review, then record the funder's receipt. Hope never submits.",
+      "steps": [
+        {
+          "name": "Sample matrix score (browser, fixed weights)",
+          "kind": "code",
+          "detail": "Focus 35%, geography 20%, size 20%, effort 15%, time 10%; unknown counts as 50. No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Requirements from the H6 checklist",
+          "kind": "code",
+          "detail": "One bid item per checklist item except deadline and submission. No model.",
+          "calls_per_run": null,
+          "model": null
+        },
+        {
+          "name": "Blockers, plan and stale reviews",
+          "kind": "code",
+          "detail": "Blockers decide the final review; plan is D-14/7/3/1; a review is stale when the funder's wording hash changes. No model.",
+          "calls_per_run": null,
+          "model": null
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "bids.list",
+          "method": "GET",
+          "path": "/v1/bids",
+          "purpose": "My bids, submitted last, then by deadline.",
+          "screens": [
+            "SC30",
+            "SC31"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w7/bids.list/ok.json",
+            "empty": "mocks/w7/bids.list/empty.json"
+          }
+        },
+        {
+          "id": "bids.start",
+          "method": "POST",
+          "path": "/v1/bids",
+          "purpose": "Save the grant and open its bid (201), or return the existing bid (200).",
+          "screens": [
+            "SC30"
+          ],
+          "notes": null,
+          "default": "created",
+          "scenarios": {
+            "created": "mocks/w7/bids.start/created.json",
+            "existing": "mocks/w7/bids.start/existing.json",
+            "not_found": "mocks/w7/bids.start/not_found.json"
+          },
+          "request_example": "mocks/w7/bids.start/request.json"
+        },
+        {
+          "id": "bids.get",
+          "method": "GET",
+          "path": "/v1/bids/{grant_id}",
+          "purpose": "One bid: items, blockers, plan, final review, receipt. ETag is the version.",
+          "screens": [
+            "SC31",
+            "SC32"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w7/bids.get/ok.json",
+            "not_found": "mocks/w7/bids.get/not_found.json"
+          }
+        },
+        {
+          "id": "bids.item",
+          "method": "PUT",
+          "path": "/v1/bids/{grant_id}/items/{key}",
+          "purpose": "Set a requirement's owner, due date, status, note or evidence. Changing status, note or evidence clears its review.",
+          "screens": [
+            "SC32"
+          ],
+          "notes": "Writes need `If-Match: \"<version>\"` (the bid's `version`); a stale copy is 412 `version_mismatch`. After the receipt every write is 409 `bid_submitted`.",
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w7/bids.item/ok.json",
+            "version_mismatch": "mocks/w7/bids.item/version_mismatch.json",
+            "unknown_member": "mocks/w7/bids.item/unknown_member.json",
+            "submitted": "mocks/w7/bids.item/submitted.json"
+          },
+          "request_example": "mocks/w7/bids.item/request.json"
+        },
+        {
+          "id": "bids.review",
+          "method": "POST",
+          "path": "/v1/bids/{grant_id}/items/{key}/review",
+          "purpose": "Approve a ready requirement, or request changes (comment required; moves it back to working).",
+          "screens": [
+            "SC32"
+          ],
+          "notes": "Writes need `If-Match: \"<version>\"` (the bid's `version`); a stale copy is 412 `version_mismatch`. After the receipt every write is 409 `bid_submitted`.",
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w7/bids.review/ok.json",
+            "comment_required": "mocks/w7/bids.review/comment_required.json",
+            "not_ready": "mocks/w7/bids.review/not_ready.json"
+          },
+          "request_example": "mocks/w7/bids.review/request.json"
+        },
+        {
+          "id": "bids.final_review",
+          "method": "POST",
+          "path": "/v1/bids/{grant_id}/final-review",
+          "purpose": "Final internal sign-off; 409 bid_blocked lists the blockers in errors[].",
+          "screens": [
+            "SC32"
+          ],
+          "notes": "Writes need `If-Match: \"<version>\"` (the bid's `version`); a stale copy is 412 `version_mismatch`. After the receipt every write is 409 `bid_submitted`.",
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w7/bids.final_review/ok.json",
+            "blocked": "mocks/w7/bids.final_review/blocked.json"
+          },
+          "request_example": "mocks/w7/bids.final_review/request.json"
+        },
+        {
+          "id": "bids.submission",
+          "method": "POST",
+          "path": "/v1/bids/{grant_id}/submission",
+          "purpose": "Record the receipt from the funder's portal after staff submitted there. The bid becomes read-only.",
+          "screens": [
+            "SC32"
+          ],
+          "notes": "Writes need `If-Match: \"<version>\"` (the bid's `version`); a stale copy is 412 `version_mismatch`. After the receipt every write is 409 `bid_submitted`.",
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w7/bids.submission/ok.json",
+            "not_final_reviewed": "mocks/w7/bids.submission/not_final_reviewed.json"
+          },
+          "request_example": "mocks/w7/bids.submission/request.json"
+        },
+        {
+          "id": "members.list",
+          "method": "GET",
+          "path": "/v1/members",
+          "purpose": "The team for the owner picker: user_id and display_name only, never emails.",
+          "screens": [
+            "SC32"
+          ],
+          "notes": null,
+          "default": "ok",
+          "scenarios": {
+            "ok": "mocks/w7/members.list/ok.json"
+          }
+        }
+      ]
     }
   ]
 }

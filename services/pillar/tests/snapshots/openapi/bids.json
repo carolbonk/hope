@@ -557,13 +557,10 @@
         "type": "object"
       },
       "Member": {
+        "description": "Display names only: anyone signed in can list the team, so emails stay private.",
         "properties": {
           "display_name": {
             "title": "Display Name",
-            "type": "string"
-          },
-          "email": {
-            "title": "Email",
             "type": "string"
           },
           "user_id": {
@@ -574,8 +571,7 @@
         },
         "required": [
           "user_id",
-          "display_name",
-          "email"
+          "display_name"
         ],
         "title": "Member",
         "type": "object"

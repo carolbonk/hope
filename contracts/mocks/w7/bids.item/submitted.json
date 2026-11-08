@@ -1,0 +1,12 @@
+{
+  "status": 409,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "This bid was submitted; it can't change.",
+    "status": 409,
+    "code": "bid_submitted"
+  }
+}

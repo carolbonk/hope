@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useBidsCopy } from "@/components/hope/bids/copy";
+import { useBidIds } from "@/components/hope/bids/useBidIds";
 import { byDeadline, useGrantFacts } from "@/components/hope/discovery/facts";
-import { btnPrimary, ClientOnly, focusRing, PageIntro, Panel, StageBar } from "@/components/hope/ui";
+import { btnPrimary, btnSecondary, ClientOnly, focusRing, PageIntro, Panel, StageBar } from "@/components/hope/ui";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
 import { useHope } from "@/lib/hope/store";
@@ -20,6 +22,8 @@ function SavedList() {
   const opps = useOpportunities();
   const facts = useGrantFacts();
   const { state } = useHope();
+  const bidIds = useBidIds();
+  const openBid = useBidsCopy().matrix.open;
   const apps = Object.values(state.applications)
     .map((a) => ({ a, o: opps.find((o) => o.id === a.opportunityId) }))
     .filter((x) => x.o && state.decisions[x.a.opportunityId]?.decision !== "passed")
@@ -39,7 +43,7 @@ function SavedList() {
       ) : (
         <ul className="grid gap-5 sm:grid-cols-2">
           {apps.map(({ a, o }) => (
-            <li key={a.id}>
+            <li key={a.id} className="space-y-2">
               <Link href={`/hope/applications/${o!.id}`} className={`block h-full rounded-[0.9rem] glass-panel p-6 hover:border-teal-ink ${focusRing}`}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
@@ -54,6 +58,11 @@ function SavedList() {
                 <StageBar stage={a.stage} />
                 <span className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg glass-nav px-5 py-2.5 font-semibold text-teal-ink">{h.look.openWorkspace} ↗</span>
               </Link>
+              {bidIds.has(o!.id) && (
+                <Link href={`/hope/bids/${o!.id}`} className={btnSecondary}>
+                  {openBid} ↗
+                </Link>
+              )}
             </li>
           ))}
         </ul>

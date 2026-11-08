@@ -72,6 +72,14 @@ Request and response shapes are defined in the owning spec. Status: `Built` is o
 | GET | `/v1/awards` and `/v1/awards/{award_id}` | Awards and their milestones and reports | S23 | New | SC23 |
 | POST | `/v1/awards` | Record an award outcome | S23 | New | SC23 |
 | PUT | `/v1/awards/{award_id}/reports/{report_id}` | Update a funder report | S23 | New | SC23 |
+| GET | `/v1/bids` | My bids | H7 | Built | SC30, SC31 |
+| POST | `/v1/bids` | Save a grant and open its bid | H7 | Built | SC30 |
+| GET | `/v1/bids/{grant_id}` | One bid: items, blockers, plan, final review, receipt | H7 | Built | SC32 |
+| PUT | `/v1/bids/{grant_id}/items/{key}` | Owner, due date, status, note, evidence (If-Match) | H7 | Built | SC32 |
+| POST | `/v1/bids/{grant_id}/items/{key}/review` | Approve or request changes (If-Match) | H7 | Built | SC32 |
+| POST | `/v1/bids/{grant_id}/final-review` | Final internal review; 409 lists blockers (If-Match) | H7 | Built | SC32 |
+| POST | `/v1/bids/{grant_id}/submission` | Record the funder's receipt; bid becomes read-only (If-Match) | H7 | Built | SC32 |
+| GET | `/v1/members` | Team for the owner picker (names, no emails) | H7 | Built | SC32 |
 
 S00 removes the pillar's duplicate `GET/PATCH /v1/agencies/{agency_id}/profile` and mounts
 the profile service's router as the one owner of `/v1/agencies/**`.

@@ -31,6 +31,9 @@ request/response per call. The endpoints are defined in [`API.md`](API.md).
 | SC21 Executive approval (HITL-4) | `/frameworks/[frameworkId]/approve` | `proposal` | S20 | `GET /v1/frameworks/{id}`, `GET .../verification`, `POST /v1/workflows/{id}/signals/HITL-4` | Draft |
 | SC22 Package and submission (HITL-5) | `/packages/[packageId]` | `packages` | S21, S22 | `GET /v1/packages/{id}`, `POST .../authorize`, `GET .../submission`, `GET /v1/artifacts/{sha}/download` | Draft |
 | SC23 Awards and reporting | `/awards`, `/awards/[awardId]` | `awards` | S23 | `GET /v1/awards`, `GET .../{id}`, `POST /v1/awards`, `PUT .../reports/{id}` | Draft |
+| SC30 Opportunity matrix (hackathon) | `/hope/matrix` | `components/hope/bids` | H7 | `GET /v1/bids`, `POST /v1/bids` | Built |
+| SC31 My bids | `/hope/bids` | `components/hope/bids` | H7 | `GET /v1/bids` | Built |
+| SC32 Bid workspace | `/hope/bids/[oppId]` | `components/hope/bids` | H7 | `GET /v1/bids/{grant_id}`, `PUT .../items/{key}`, `POST .../items/{key}/review`, `POST .../final-review`, `POST .../submission`, `GET /v1/members` | Built |
 
 The app shell (nav, user menu, notification bell) calls `GET /v1/me` and
 `GET /v1/notifications?unread=true`. S00 pre-fills `apps/web/nav.ts` with every

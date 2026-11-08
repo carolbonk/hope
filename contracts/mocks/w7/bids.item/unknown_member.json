@@ -1,0 +1,19 @@
+{
+  "status": 422,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "Unknown team member",
+    "status": 422,
+    "code": "unknown_member",
+    "errors": [
+      {
+        "field": "owner",
+        "code": "unknown",
+        "message": "Not on this team."
+      }
+    ]
+  }
+}

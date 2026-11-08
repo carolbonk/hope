@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "items": [
+      {
+        "application_id": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+        "grant_id": "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+        "title": "Community Health Access Grant",
+        "funder": "Chelan County Community Foundation",
+        "deadline": "2026-12-08",
+        "phase": "submitted",
+        "ready": 2,
+        "total": 2,
+        "blockers": 0,
+        "updated_at": "2026-11-08T21:21:50.548416Z"
+      }
+    ],
+    "total": 1
+  }
+}

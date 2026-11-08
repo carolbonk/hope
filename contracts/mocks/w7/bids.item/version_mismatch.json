@@ -1,0 +1,12 @@
+{
+  "status": 412,
+  "headers": {
+    "content-type": "application/problem+json"
+  },
+  "body": {
+    "type": "about:blank",
+    "title": "This bid changed; reload it",
+    "status": 412,
+    "code": "version_mismatch"
+  }
+}

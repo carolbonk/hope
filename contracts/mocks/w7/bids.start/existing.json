@@ -1,0 +1,97 @@
+{
+  "status": 200,
+  "headers": {},
+  "body": {
+    "application_id": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+    "grant_id": "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10",
+    "title": "Community Health Access Grant",
+    "funder": "Chelan County Community Foundation",
+    "deadline": "2026-12-08",
+    "phase": "preparing",
+    "ready": 0,
+    "total": 2,
+    "blockers": 4,
+    "updated_at": "2026-11-08T21:21:50.040462Z",
+    "url": "https://ccf.example.org/grants/community-health",
+    "version": 1,
+    "items": [
+      {
+        "key": "need",
+        "kind": "question",
+        "label": "Describe the need.",
+        "checklist_status": "drafted",
+        "quote": null,
+        "url": "https://ccf.example.org/apply",
+        "limit": null,
+        "owner": null,
+        "due": null,
+        "status": "missing",
+        "note": "",
+        "evidence_ref": "",
+        "review": null
+      },
+      {
+        "key": "irs_501c3",
+        "kind": "attachment",
+        "label": "IRS determination letter",
+        "checklist_status": "in_dossier",
+        "quote": "Attach it.",
+        "url": "https://ccf.example.org/apply",
+        "limit": null,
+        "owner": null,
+        "due": null,
+        "status": "missing",
+        "note": "",
+        "evidence_ref": "",
+        "review": null
+      }
+    ],
+    "blocker_list": [
+      {
+        "code": "no_owner",
+        "key": "need",
+        "detail": null
+      },
+      {
+        "code": "not_ready",
+        "key": "need",
+        "detail": null
+      },
+      {
+        "code": "no_owner",
+        "key": "irs_501c3",
+        "detail": null
+      },
+      {
+        "code": "not_ready",
+        "key": "irs_501c3",
+        "detail": null
+      }
+    ],
+    "plan": [
+      {
+        "key": "owners",
+        "due": "2026-11-24",
+        "done": false
+      },
+      {
+        "key": "drafts",
+        "due": "2026-12-01",
+        "done": false
+      },
+      {
+        "key": "reviews",
+        "due": "2026-12-05",
+        "done": false
+      },
+      {
+        "key": "final_review",
+        "due": "2026-12-07",
+        "done": false
+      }
+    ],
+    "final_review": null,
+    "submission": null,
+    "created_at": "2026-11-08T21:21:50.040462Z"
+  }
+}

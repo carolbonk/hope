@@ -57,9 +57,8 @@ const write = (path: string, method: "POST" | "PUT", body: unknown, version: num
 export const listBids = () => apiFetch<{ items: BidSummary[]; total: number }>("/v1/bids").then((r) => r.items);
 export const startBid = (grantId: string) => apiFetch<BidView>("/v1/bids", { method: "POST", body: JSON.stringify({ grant_id: grantId }) });
 export const getBid = (grantId: string) => apiFetch<BidView>(one(grantId));
-/** Display names only: the email the API also returns is never kept. */
-export const listMembers = () =>
-  apiFetch<{ items: Member[] }>("/v1/members").then((r) => r.items.map(({ user_id, display_name }) => ({ user_id, display_name })));
+/** Display names only: the API never sends emails. */
+export const listMembers = () => apiFetch<{ items: Member[] }>("/v1/members").then((r) => r.items);
 export const updateItem = (grantId: string, key: string, changes: ItemChanges, version: number) =>
   write(`${one(grantId)}/items/${encodeURIComponent(key)}`, "PUT", changes, version);
 export const reviewItem = (grantId: string, key: string, decision: Decision, comment: string, version: number) =>
