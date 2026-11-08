@@ -15,6 +15,8 @@ vi.mock("@/lib/hope/opportunities", async () => {
 
 const bids = vi.hoisted(() => ({ ids: new Set<string>() }));
 vi.mock("@/components/hope/bids/useBidIds", () => ({ useBidIds: () => bids.ids }));
+const server = vi.hoisted(() => ({ stages: new Map<string, string>() }));
+vi.mock("./useServerStages", () => ({ useServerStages: () => server.stages }));
 
 const TODAY = new Date("2026-11-07T12:00:00");
 const demo = () => demoOpportunities(TODAY);
@@ -49,6 +51,7 @@ beforeEach(() => {
   vi.setSystemTime(TODAY);
   catalog.override = null;
   bids.ids = new Set();
+  server.stages = new Map();
   window.localStorage.clear();
 });
 afterEach(() => {
@@ -98,6 +101,13 @@ it("links a card to its bid when it has one", () => {
   render(<SavedPage />);
   expect(screen.getByRole("link", { name: /Open bid/ })).toHaveAttribute("href", "/hope/bids/opp-sunrise-ops");
   expect(screen.getAllByRole("link", { name: /Open bid/ })).toHaveLength(1);
+});
+
+it("shows the server's stage over the browser copy", () => {
+  seedFixture();
+  server.stages = new Map([["opp-tidal-sponsor", "drafting"]]);
+  render(<SavedPage />);
+  expect(screen.getByRole("link", { name: /Back-to-School/ })).toContainElement(screen.getAllByRole("list", { name: "Drafting" })[0]!);
 });
 
 it("empty state", () => {
