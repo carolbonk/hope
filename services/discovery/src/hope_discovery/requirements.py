@@ -263,7 +263,8 @@ def is_question(prompt: str) -> bool:
 
     Portal fields often lead with a label ("Project Design* ...") or a limit
     ("In 100 words or fewer, ..."); the ask comes after."""
-    text = _LIMIT_LEAD.sub("", _FIELD_LABEL.sub("", prompt.strip(), count=1), count=1)
+    text = _LIMIT_PAREN.sub("", prompt).strip()
+    text = _LIMIT_LEAD.sub("", _FIELD_LABEL.sub("", text, count=1), count=1)
     if _READER_NOTE.match(text) or _NOT_A_FIELD.match(text):
         return False
     text = _LIMIT_PAREN.sub("", text).strip()

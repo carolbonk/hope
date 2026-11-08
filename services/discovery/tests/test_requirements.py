@@ -283,4 +283,5 @@ def test_label_only_quotes_take_the_rest_of_the_question() -> None:
     assert parse_limit(need) == Limit(unit="words", max=500)
     assert full_prompt("Project Description", form).endswith("trying to address?")
     assert full_prompt("Why now?", form) == "Why now?"
+    assert is_question(need)
     assert asks_for_document("Attachments: Logic model; budget justification.")

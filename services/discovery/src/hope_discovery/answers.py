@@ -184,7 +184,20 @@ _SAME = {
     "measuring": "measure",
     "evaluate": "evaluation",
 }
-_FILLER = {"specific", "details", "about", "their", "this", "that", "with", "from", "showing"}
+_FILLER = {
+    "specific",
+    "details",
+    "detailed",
+    "provide",
+    "specify",
+    "about",
+    "their",
+    "this",
+    "that",
+    "with",
+    "from",
+    "showing",
+}
 
 
 def _need_words(text: str) -> set[str]:
@@ -199,7 +212,7 @@ def same_need(a: str, b: str) -> bool:
         return False
     shared = len(wa & wb)
     small = min(len(wa), len(wb))
-    return shared == small or (shared >= 2 and shared * 2 >= small)
+    return shared == small or (shared >= min(2, small - 1) and shared * 2 >= small)
 
 
 def missing_elements(prompt: str, digest: ProfileDigest) -> list[str]:

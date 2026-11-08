@@ -328,6 +328,9 @@ def test_near_duplicate_needs_are_listed_once() -> None:
         assert same_need(item, gap)
     assert not same_need("partner organizations and their roles", "partner letters of support")
     assert not same_need("timeline and milestones", "local data showing the need")
+    assert same_need(
+        "provide a detailed timeline for the program activities", "timeline and milestones"
+    )
 
 
 def test_certification_label_alone_goes_to_staff() -> None:
