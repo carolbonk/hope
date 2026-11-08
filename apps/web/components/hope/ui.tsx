@@ -6,6 +6,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { online } from "@/lib/api/http";
 import { signOut as endSession, useSession } from "@/lib/api/session";
 import { useToday } from "@/components/useToday";
+import { useBidsCopy } from "@/components/hope/bids/copy";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
 import { STAGES, useHope } from "@/lib/hope/store";
@@ -24,6 +25,8 @@ const NAV = [
   { key: "discover", href: "/hope/discover" },
   { key: "saved", href: "/hope/saved" },
   { key: "deadlines", href: "/hope/deadlines" },
+  { key: "matrix", href: "/hope/matrix" },
+  { key: "bids", href: "/hope/bids" },
 ] as const;
 
 export function Logo() {
@@ -53,6 +56,7 @@ export function HopeNav() {
 
 function NavLinks() {
   const { h } = useHopeT();
+  const bidsNav = useBidsCopy().nav;
   const path = usePathname();
   const { state } = useHope();
   const savedCount = Object.values(state.decisions).filter((d) => d.decision === "saved").length;
@@ -87,7 +91,7 @@ function NavLinks() {
             aria-current={active ? "page" : undefined}
             className={`relative whitespace-nowrap rounded-full px-3 py-2.5 text-sm transition-colors duration-300 sm:px-4 ${focusRing} ${active ? "bg-navy text-white group-data-ready:bg-transparent" : "text-muted hover:text-navy"}`}
           >
-            {h.nav[n.key]}
+            {n.key === "matrix" || n.key === "bids" ? bidsNav[n.key] : h.nav[n.key]}
             {n.key === "saved" && savedCount > 0 && <span className="ml-1 tabular-nums">({savedCount})</span>}
           </Link>
         );

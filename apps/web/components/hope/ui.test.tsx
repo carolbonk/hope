@@ -74,7 +74,7 @@ it("orders links by the grant journey and keeps the profile in the account menu"
   vi.stubGlobal("fetch", vi.fn());
   await renderNav(false);
   const nav = screen.getByRole("navigation", { name: /hope/i });
-  expect([...nav.querySelectorAll("a")].map((a) => a.textContent)).toEqual(["Discover", "Saved", "Deadlines"]);
+  expect([...nav.querySelectorAll("a")].map((a) => a.textContent)).toEqual(["Discover", "Saved", "Deadlines", "Matrix", "My bids"]);
   const account = screen.getByRole("button", { name: "Account" });
   expect(screen.queryByRole("link", { name: "Our profile" })).not.toBeInTheDocument();
   await userEvent.click(account);
