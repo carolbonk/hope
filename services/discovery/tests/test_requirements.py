@@ -267,3 +267,20 @@ def test_funder_terms_are_verified_and_labelled() -> None:
     assert by["UEI"].key == "uei" and by["UEI"].source == "glossary"
     assert by["Neighborhood Anchor"].source == "funder"
     assert by["Thrive"].source == "ai" and "Ghost" not in by
+
+
+def test_label_only_quotes_take_the_rest_of_the_question() -> None:
+    from hope_discovery.requirements import asks_for_document, full_prompt
+
+    form = (
+        "Narrative questions:\n"
+        "1. Statement of Need (500 words): Describe the health access gap in your service area.\n"
+        "Project Description*\n"
+        "What is the challenge or opportunity you are trying to address?\n"
+    )
+    need = full_prompt("Statement of Need", form)
+    assert need.startswith("Statement of Need (500 words): Describe the health access gap")
+    assert parse_limit(need) == Limit(unit="words", max=500)
+    assert full_prompt("Project Description", form).endswith("trying to address?")
+    assert full_prompt("Why now?", form) == "Why now?"
+    assert asks_for_document("Attachments: Logic model; budget justification.")

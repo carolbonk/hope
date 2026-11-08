@@ -233,7 +233,9 @@ _READER_NOTE = re.compile(
     r"^(?:please\s+)?(?:read|see|review|contact|call|email|visit|note)\b", re.I
 )
 _ASKS_FOR_DOC = re.compile(
-    r"\b(?:attach|upload|submit|include|provide|send|copy of|copies of|required documents?)\b", re.I
+    r"\b(?:attach(?:ments?|ed)?|upload|submit|include|provide|send|copy of|copies of"
+    r"|required (?:documents?|forms?))\b",
+    re.I,
 )
 
 
@@ -270,6 +272,27 @@ def is_question(prompt: str) -> bool:
     # Forms often label a field instead of asking: "Project description:", "Organizational
     # Capability", "Planned project evaluation (500 characters)".
     return bool(text) and (text.endswith(":") or not text.endswith((".", "!")))
+
+
+def full_prompt(prompt: str, text: str) -> str:
+    """Models often quote only a field's label ("Statement of Need"); the question is what
+    follows it ("(500 words): Describe the gap...") or, on Foundant-style forms, the next line
+    ("Project Description* What is the challenge...?")."""
+    if prompt.endswith("?") or len(prompt) > 120:
+        return prompt
+    at = text.find(prompt)
+    if at < 0:
+        return prompt
+    rest = text[at + len(prompt) : at + len(prompt) + 400]
+    tail = re.match(
+        r"[ \t]*(?:\([^)\n]{1,60}\))?[ \t]*[:*]?[ \t]*\n?[ \t]*([^\n]*?[.?])(?=\s|$)", rest
+    )
+    if not tail or not tail.group(1).strip():
+        return prompt
+    ask = tail.group(1).strip()
+    if not (ask.endswith("?") or _ASK_START.match(ask) or _ASK_INSIDE.search(ask)):
+        return prompt
+    return " ".join((prompt + rest[: tail.end()]).split())
 
 
 def asks_for_document(quote: str) -> bool:
@@ -435,6 +458,8 @@ class RequirementsReader:
         by_key = {q.key: q for q in out.questions}
         for item in ext.questions:
             prompt = ok(item.prompt)
+            if prompt:
+                prompt = full_prompt(prompt, text)
             if not prompt or not is_question(prompt):
                 continue
             found = True

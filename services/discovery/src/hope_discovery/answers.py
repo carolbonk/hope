@@ -175,11 +175,31 @@ ELEMENTS: tuple[tuple[str, str, str], ...] = (
 )
 
 
+_SAME = {
+    "statistics": "data",
+    "figures": "data",
+    "numbers": "data",
+    "stats": "data",
+    "measured": "measure",
+    "measuring": "measure",
+    "evaluate": "evaluation",
+}
+_FILLER = {"specific", "details", "about", "their", "this", "that", "with", "from", "showing"}
+
+
+def _need_words(text: str) -> set[str]:
+    return {_SAME.get(w, w) for w in re.findall(r"[a-z]{4,}", text.lower())} - _FILLER
+
+
 def same_need(a: str, b: str) -> bool:
-    """'specific funding sources after this grant' and 'funding sources after this grant'
-    ask staff for the same thing; list it once."""
-    words = [set(re.findall(r"[a-z]{4,}", x.lower())) - {"specific", "details"} for x in (a, b)]
-    return bool(words[0] and words[1]) and (words[0] <= words[1] or words[1] <= words[0])
+    """'specific local statistics on youth in Ohio' and 'local data showing the need' ask staff
+    for the same thing; list it once."""
+    wa, wb = _need_words(a), _need_words(b)
+    if not (wa and wb):
+        return False
+    shared = len(wa & wb)
+    small = min(len(wa), len(wb))
+    return shared == small or (shared >= 2 and shared * 2 >= small)
 
 
 def missing_elements(prompt: str, digest: ProfileDigest) -> list[str]:
@@ -331,13 +351,13 @@ def guard_specifics(text: str, sources: str) -> tuple[str, list[str]]:
 # Certifications, attestations and AI-use questions are the nonprofit's to answer, never Hope's.
 _STAFF_ONLY = re.compile(
     r"\b(?:certif(?:y|ies|ication)|attest|affirm|under penalty|signature|sign(?:ed)? by"
-    r"|lobbying|conflicts? of interest|debar|artificial intelligence|generative|chatgpt)\b"
-    r"|\bAI\b"
+    r"|lobbying|conflicts? of interest|debar|artificial intelligence|generative|chatgpt)\b",
+    re.I,
 )
 
 
 def staff_only(prompt: str) -> bool:
-    return bool(_STAFF_ONLY.search(prompt))
+    return bool(_STAFF_ONLY.search(prompt) or re.search(r"\bAI\b", prompt))
 
 
 # --- the model call ------------------------------------------------------------------------------

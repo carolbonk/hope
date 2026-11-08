@@ -22,6 +22,7 @@ from hope_discovery.answers import (
     measure,
     mock_answer,
     owner_for,
+    same_need,
     standard_questions,
     strip_refs,
     unsupported_figures,
@@ -316,3 +317,21 @@ def test_certification_and_ai_questions_go_to_staff() -> None:
         .draft(agency_profile(), GRANT, Requirements(), q("Aid to families?"))
         .text.startswith("[TO CONFIRM: staff")
     )
+
+
+def test_near_duplicate_needs_are_listed_once() -> None:
+    gap = "local data showing the need"
+    for item in (
+        "specific local statistics on underserved youth in Ohio",
+        "local data on the need for STEM education among underserved youth in Ohio",
+    ):
+        assert same_need(item, gap)
+    assert not same_need("partner organizations and their roles", "partner letters of support")
+    assert not same_need("timeline and milestones", "local data showing the need")
+
+
+def test_certification_label_alone_goes_to_staff() -> None:
+    from hope_discovery.answers import staff_only
+
+    assert staff_only("Certification")
+    assert not staff_only("Aid to families")
