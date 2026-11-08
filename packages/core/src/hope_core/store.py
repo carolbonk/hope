@@ -123,8 +123,25 @@ def update_job_progress(
 ) -> None:
     data = progress.model_dump(mode="json") if isinstance(progress, BaseModel) else progress
     tx.execute(
-        "UPDATE jobs SET progress = %s, status = %s WHERE job_id = %s",
+        "UPDATE jobs SET progress = %s, status = %s, heartbeat_at = now() WHERE job_id = %s",
         (Jsonb(data), status, str(job_id)),
+    )
+
+
+def claim_job(tx: Tx, job_id: UUID | str, kind: str) -> bool:
+    """Atomically move a `queued` job of `kind` to `running`; False if someone else claimed it."""
+    tx.execute(
+        "UPDATE jobs SET status = 'running', heartbeat_at = now()"
+        " WHERE job_id = %s AND kind = %s AND status = 'queued' RETURNING job_id",
+        (str(job_id), kind),
+    )
+    return tx.fetchone() is not None
+
+
+def heartbeat_job(tx: Tx, job_id: UUID | str) -> None:
+    tx.execute(
+        "UPDATE jobs SET heartbeat_at = now() WHERE job_id = %s AND status = 'running'",
+        (str(job_id),),
     )
 
 
@@ -171,11 +188,15 @@ def list_jobs(tx: Tx, kind: str, limit: int = 20) -> list[JobRecord]:
     return [JobRecord.model_validate(r) for r in tx.fetchall()]
 
 
-def fail_interrupted_jobs(tx: Tx, message: str = "Interrupted by restart") -> int:
+def fail_interrupted_jobs(
+    tx: Tx, message: str = "Interrupted by restart", stale_after_seconds: int = 120
+) -> int:
+    """Fail `running` jobs whose heartbeat is stale; jobs live in another process are kept."""
     tx.execute(
         "UPDATE jobs SET status = 'failed', error = %s, finished_at = now()"
-        " WHERE status = 'running'",
-        (message,),
+        " WHERE status = 'running'"
+        " AND (heartbeat_at IS NULL OR heartbeat_at < now() - make_interval(secs => %s))",
+        (message, stale_after_seconds),
     )
     return tx.rowcount
 

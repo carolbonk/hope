@@ -85,6 +85,7 @@ def hope_api(migrated_db: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[Test
     from hope_pillar.api import create_app
 
     monkeypatch.setenv("HOPE_INVITE_CODE", INVITE)
+    monkeypatch.setenv("HOPE_SESSION_SECRET", "test-session-secret-0123456789")
     get_settings.cache_clear()
     settings = get_settings()
     store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)

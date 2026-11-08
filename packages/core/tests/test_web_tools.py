@@ -114,6 +114,21 @@ def test_fetch_blocks_internal_addresses(url: str) -> None:
     assert err.value.code == "blocked_address"
 
 
+def test_robots_timeout_is_a_fetch_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            raise httpx.ReadTimeout("timed out", request=request)
+        return httpx.Response(200, html="<p>grant</p>")
+
+    with pytest.raises(FetchError) as err:
+        fetch(
+            "https://grants.example.org/g",
+            resolver=resolver,
+            transport=httpx.MockTransport(handler),
+        )
+    assert err.value.code == "network"
+
+
 def test_fetch_respects_robots_txt() -> None:
     transport = site(
         {

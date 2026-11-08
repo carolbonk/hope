@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import ContextVar
@@ -17,6 +18,7 @@ from hope_core.settings import get_settings
 
 log = logging.getLogger(__name__)
 _pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="hope-job")
+HEARTBEAT_SECONDS = 15.0
 _current_job: ContextVar[UUID | None] = ContextVar("hope_current_job", default=None)
 
 JobResult = BaseModel | dict[str, Any] | None
@@ -49,32 +51,56 @@ def start_job(
     """Run `fn(*args)` as job `kind`; its return value is the job result."""
 
     def _claim(tx: store.Tx) -> UUID:
-        if job_id is None:
-            return store.create_job(tx, kind, created_by=created_by).job_id
-        job = store.get_job(tx, job_id)
-        if job is None or job.kind != kind or job.status != "queued":
+        target = job_id or store.create_job(tx, kind, created_by=created_by).job_id
+        if not store.claim_job(tx, target, kind):
             raise ValueError(f"job {job_id} is not a queued {kind!r} job")
-        return job.job_id
+        return target
 
     claimed = _with_tx(_claim)
-    _with_tx(lambda tx: _mark_running(tx, claimed))
+    # Heartbeat from the claim on, so a job queued behind busy workers isn't swept as stale.
+    stop = threading.Event()
+    threading.Thread(target=_heartbeat, args=(claimed, stop), daemon=True).start()
     if get_settings().jobs_inline:
-        _run(claimed, fn, args)
+        _run(claimed, fn, args, stop)
     else:
-        _pool.submit(_run, claimed, fn, args)
+        _pool.submit(_run, claimed, fn, args, stop)
     return claimed
 
 
 def fail_interrupted_jobs() -> int:
-    """Startup hook: jobs left `running` by a previous process are marked failed."""
+    """Jobs whose worker stopped heartbeating (crash, restart) are marked failed."""
     return _with_tx(store.fail_interrupted_jobs)
 
 
-def _mark_running(tx: store.Tx, job_id: UUID) -> None:
-    tx.execute("UPDATE jobs SET status = 'running' WHERE job_id = %s", (str(job_id),))
+def start_stale_sweeper(interval: float = 60.0) -> threading.Event:
+    """Keep failing stale jobs while the API runs, so a crash just before a restart still ends.
+
+    Set the returned event to stop the sweeper."""
+    stop = threading.Event()
+
+    def _sweep() -> None:
+        while not stop.wait(interval):
+            try:
+                if failed := fail_interrupted_jobs():
+                    log.info("marked %d interrupted jobs failed", failed)
+            except Exception:
+                log.warning("stale job sweep failed", exc_info=True)
+
+    threading.Thread(target=_sweep, daemon=True, name="hope-job-sweeper").start()
+    return stop
 
 
-def _run(job_id: UUID, fn: Callable[..., JobResult], args: tuple[Any, ...]) -> None:
+def _heartbeat(job_id: UUID, stop: threading.Event) -> None:
+    while not stop.wait(HEARTBEAT_SECONDS):
+        try:
+            _with_tx(lambda tx: store.heartbeat_job(tx, job_id))
+        except Exception:
+            log.warning("heartbeat for job %s failed", job_id, exc_info=True)
+
+
+def _run(
+    job_id: UUID, fn: Callable[..., JobResult], args: tuple[Any, ...], stop: threading.Event
+) -> None:
     token = _current_job.set(job_id)
     try:
         result = fn(*args)
@@ -85,6 +111,7 @@ def _run(job_id: UUID, fn: Callable[..., JobResult], args: tuple[Any, ...]) -> N
     else:
         finish(job_id, result=result)
     finally:
+        stop.set()
         _current_job.reset(token)
 
 

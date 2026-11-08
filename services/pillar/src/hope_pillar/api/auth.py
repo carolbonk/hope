@@ -13,6 +13,7 @@ from hope_core.auth import (
     ProblemException,
     hash_password,
     make_session_token,
+    require_session_secret,
     verify_password,
 )
 from hope_core.db import connect, tenant_tx
@@ -68,6 +69,7 @@ def _invite_ok(given: str, settings: HopeSettings) -> bool:
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup(body: SignupBody, response: Response) -> UserOut:
     settings = get_settings()
+    require_session_secret(settings)
     if not _invite_ok(body.invite_code, settings):
         raise ProblemException(403, "signup_closed", "Sign-up is invite-only")
     if len(body.password) < MIN_PASSWORD:

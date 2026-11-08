@@ -10,7 +10,7 @@ from typing import Any
 
 import httpx
 
-from hope_core.model_gateway import Message, ModelTier
+from hope_core.model_gateway import InvalidOutputError, Message, ModelTier
 from hope_core.settings import HopeSettings
 
 log = logging.getLogger("hope_core.model_calls")
@@ -125,9 +125,12 @@ class OpenAIProvider:
             "model_call schema=%s model=%s tokens=%d cost_usd=%.6f", title, model, tokens, cost
         )
         content = raw["choices"][0]["message"].get("content") or ""
-        data = json.loads(content)
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError as exc:
+            raise InvalidOutputError(tokens) from exc
         if not isinstance(data, dict):
-            raise json.JSONDecodeError("expected a JSON object", content, 0)
+            raise InvalidOutputError(tokens)
         return data, tokens
 
     def embed(self, texts: list[str]) -> list[list[float]]:

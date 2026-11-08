@@ -134,3 +134,17 @@ def test_cors_allows_only_web_origin(hope_api: TestClient) -> None:
         "/v1/me", headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "GET"}
     )
     assert "access-control-allow-origin" not in denied.headers
+
+
+def test_missing_session_secret_is_a_clear_503(
+    hope_api: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("HOPE_SESSION_SECRET", "")  # empty overrides a local .env
+    get_settings.cache_clear()
+    response = signup(hope_api)
+    problem(response, 503, "server_misconfigured")
+    assert "HOPE_SESSION_SECRET" in response.json()["title"]
+
+    monkeypatch.setenv("HOPE_SESSION_SECRET", "test-session-secret-0123456789")
+    get_settings.cache_clear()
+    assert signup(hope_api).status_code == 201, "the failed attempt created no account"

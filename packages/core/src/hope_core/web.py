@@ -233,6 +233,8 @@ def _robots_allows(client: httpx.Client, url: str, resolver: Resolver) -> bool:
         if exc.code == "blocked_address":
             raise
         return True
+    except httpx.HTTPError as exc:
+        raise FetchError("network", f"robots.txt: {type(exc).__name__}") from exc
     if response.status_code >= 400:
         return True
     parser = RobotFileParser()
