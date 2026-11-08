@@ -7,10 +7,30 @@ import { DiscoveryPanel } from "@/components/hope/discovery/DiscoveryPanel";
 import { useToday } from "@/components/useToday";
 import { useHopeT } from "@/lib/hope/i18n";
 import { useOpportunities } from "@/lib/hope/opportunities";
+import { fetchCheckCards, type CheckCard } from "@/lib/hope/sync/opportunities";
+import { mirrorDecision } from "@/lib/hope/sync/decisions";
 import { pendingItems } from "@/lib/hope/dossier";
 import { eligibility, matchReasons, PROFILE_STEPS, requirementStatus, useHope } from "@/lib/hope/store";
 import type { Opportunity } from "@/lib/hope/types";
 import { NOTICE_MS } from "@/components/ui/AutoDismiss";
+import { useCheckCopy } from "./copy";
+
+type Item = { kind: "opp"; opp: Opportunity } | { kind: "check"; card: CheckCard };
+
+/** Found grants still missing an amount or deadline; they go to the back of the deck, clearly marked. */
+function useCheckCards(): CheckCard[] {
+  const [cards, setCards] = useState<CheckCard[]>([]);
+  useEffect(() => {
+    let live = true;
+    fetchCheckCards().then((c) => {
+      if (live) setCards(c);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  return cards;
+}
 
 type Filters = { geo: string; amount: string; type: string; focus: string; deadline: string; purpose: string };
 const NO_FILTERS: Filters = { geo: "", amount: "", type: "", focus: "", deadline: "", purpose: "" };
@@ -27,7 +47,12 @@ function Deck() {
   const { h } = useHopeT();
   const d = h.discover;
   const today = useToday()!;
-  const all = useOpportunities();
+  const c = useCheckCopy();
+  const catalog = useOpportunities();
+  const checks = useCheckCards();
+  const [passedChecks, setPassedChecks] = useState<string[]>([]);
+  // Live finds that need a check replace the fictional demo cards instead of hiding behind them.
+  const all = useMemo(() => (checks.length ? catalog.filter((o) => o.source.kind !== "demo") : catalog), [catalog, checks.length]);
   const { state, decide, undo } = useHope();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [toast, setToast] = useState<{ text: string } | null>(null);
@@ -52,12 +77,23 @@ function Deck() {
         .sort((a, b) => matchReasons(b, profile).score - matchReasons(a, profile).score || a.deadline.localeCompare(b.deadline)),
     [all, filters, profile, today],
   );
-  const deck = matching.filter((o) => !state.decisions[o.id]);
+  const active = Object.values(filters).some(Boolean);
+  // Filters compare amounts, dates and tags these cards don't have, so they show only unfiltered.
+  const checkDeck = active ? [] : checks.filter((x) => !passedChecks.includes(x.id) && !state.decisions[x.id]);
+  const deck: Item[] = [
+    ...matching.filter((o) => !state.decisions[o.id]).map((opp) => ({ kind: "opp" as const, opp })),
+    ...checkDeck.map((card) => ({ kind: "check" as const, card })),
+  ];
   const top = deck[0];
+  const topOpp = top?.kind === "opp" ? top.opp : undefined;
 
   const act = (kind: "saved" | "passed") => {
     if (!top) return;
-    decide(top, kind);
+    if (top.kind === "check") {
+      if (kind !== "passed") return;
+      setPassedChecks((ids) => [...ids, top.card.id]);
+      mirrorDecision(top.card.id, "passed");
+    } else decide(top.opp, kind);
     setToast({ text: kind === "saved" ? d.savedToast : d.passedToast });
   };
   const doUndo = () => {
@@ -77,9 +113,9 @@ function Deck() {
       if (details || (e.target as HTMLElement).closest("input,select,textarea")) return;
       if (e.key === "ArrowLeft") act("passed");
       else if (e.key === "ArrowRight") act("saved");
-      else if (e.key === "ArrowUp" && top) {
+      else if (e.key === "ArrowUp" && topOpp) {
         e.preventDefault();
-        setDetails(top);
+        setDetails(topOpp);
       } else if (e.key.toLowerCase() === "u") doUndo();
     };
     window.addEventListener("keydown", onKey);
@@ -88,7 +124,6 @@ function Deck() {
 
   const geos = [...new Set(all.flatMap((o) => o.geography))];
   const focuses = [...new Set(all.flatMap((o) => o.focusAreas))];
-  const active = Object.values(filters).some(Boolean);
   const L = h.look;
   const filterFields = (prefix: string) => (
     <>
@@ -153,7 +188,7 @@ function Deck() {
           {toast?.text}
         </p>
 
-        {matching.length === 0 ? (
+        {matching.length === 0 && checkDeck.length === 0 ? (
           <EmptyState title={d.empty} action={<button className={btnSecondary} onClick={() => setFilters(NO_FILTERS)}>{d.clear}</button>} />
         ) : !top ? (
           <EmptyState
@@ -173,25 +208,48 @@ function Deck() {
         ) : (
           <div className="xl:grid xl:grid-cols-[minmax(0,34rem)_15rem] xl:items-center xl:justify-center xl:gap-9">
             <div className="mx-auto w-full max-w-[34rem]">
-              <SwipeCard key={top.id} opp={top} onSwipe={act}>
-                <CardBody opp={top} onDetails={() => setDetails(top)} />
-              </SwipeCard>
-              <div className="mt-6 flex items-end justify-center gap-5 sm:gap-6" role="group" aria-label={d.keys}>
-                <RoundButton label={d.undo} onClick={doUndo} disabled={!state.history.length} size="sm">
-                  ↶
-                </RoundButton>
-                <RoundButton label={d.pass} onClick={() => act("passed")}>
-                  ✕
-                </RoundButton>
-                <RoundButton label={d.details} onClick={() => setDetails(top)}>
-                  i
-                </RoundButton>
-                <RoundButton label={d.save} onClick={() => act("saved")} size="lg">
-                  ♥
-                </RoundButton>
-              </div>
-              <p className="mt-5 text-center text-xs text-muted">{L.left(deck.length)}</p>
-              <p className="mt-1 hidden text-center text-xs text-muted sm:block">{d.keys}</p>
+              {top.kind === "check" ? (
+                <>
+                  <SwipeCard key={top.card.id} onSwipe={act}>
+                    <CheckCardBody card={top.card} />
+                  </SwipeCard>
+                  <div className="mt-6 flex items-end justify-center gap-5 sm:gap-6" role="group" aria-label={c.keys}>
+                    <RoundButton label={d.undo} onClick={doUndo} disabled={!state.history.length} size="sm">
+                      ↶
+                    </RoundButton>
+                    <RoundButton label={c.pass} onClick={() => act("passed")}>
+                      ✕
+                    </RoundButton>
+                    <a href={top.card.url} target="_blank" rel="noreferrer" className={`${btnPrimary} mb-6`}>
+                      {c.openPage} <span aria-hidden>↗</span>
+                    </a>
+                  </div>
+                  <p className="mt-5 text-center text-xs text-muted">{L.left(deck.length)}</p>
+                  <p className="mt-1 hidden text-center text-xs text-muted sm:block">{c.keys}</p>
+                </>
+              ) : (
+                <>
+                <SwipeCard key={top.opp.id} onSwipe={act}>
+                  <CardBody opp={top.opp} onDetails={() => setDetails(top.opp)} />
+                </SwipeCard>
+                <div className="mt-6 flex items-end justify-center gap-5 sm:gap-6" role="group" aria-label={d.keys}>
+                  <RoundButton label={d.undo} onClick={doUndo} disabled={!state.history.length} size="sm">
+                    ↶
+                  </RoundButton>
+                  <RoundButton label={d.pass} onClick={() => act("passed")}>
+                    ✕
+                  </RoundButton>
+                  <RoundButton label={d.details} onClick={() => setDetails(top.opp)}>
+                    i
+                  </RoundButton>
+                  <RoundButton label={d.save} onClick={() => act("saved")} size="lg">
+                    ♥
+                  </RoundButton>
+                </div>
+                <p className="mt-5 text-center text-xs text-muted">{L.left(deck.length)}</p>
+                <p className="mt-1 hidden text-center text-xs text-muted sm:block">{d.keys}</p>
+                </>
+              )}
             </div>
             <section className="mt-10 hidden border-l border-line pl-6 xl:mt-0 xl:block">
               <p className={eyebrow}>{L.matchEyebrow}</p>
@@ -302,6 +360,59 @@ function CardBody({ opp, onDetails }: { opp: Opportunity; onDetails: () => void 
   );
 }
 
+function CheckCardBody({ card }: { card: CheckCard }) {
+  const { h, locale } = useHopeT();
+  const c = useCheckCopy();
+  const today = useToday()!;
+  const days = card.deadline ? daysUntil(card.deadline, today) : null;
+  const rolling = !card.deadline && /rolling|ongoing|open until/i.test(card.deadlineText ?? "");
+  const cur = card.amount?.currency ?? "USD";
+  const quote = (t: string | null) => t && t.toLowerCase() !== "rolling" && <p className="mt-1 text-[11px] text-muted">{c.pageSays(t)}</p>;
+  const unknown = "font-medium text-[#6b5520]";
+  return (
+    <div className="space-y-4 p-6 sm:p-7" data-testid="check-card">
+      <p className="inline-block rounded-full border border-[#d6c590] bg-[#f1ead8] px-3 py-1 text-xs font-semibold text-[#6b5520]">⚠ {c.badge(!card.amount, !card.deadline)}</p>
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.16em] text-muted">{card.funder}</p>
+        <h2 className={`${display} mt-2 text-3xl leading-[1.12] sm:text-[2.1rem]`}>{card.title}</h2>
+      </div>
+      <p className="text-sm text-muted">{c.why}</p>
+      <dl className="grid grid-cols-2 gap-4 border-y border-line py-4">
+        <div>
+          <dt className="text-[11px] text-muted">{c.amount}</dt>
+          {card.amount ? (
+            <dd className="text-lg font-medium">
+              {card.amount.min === card.amount.max ? money(card.amount.max, cur, locale) : `${money(card.amount.min, cur, locale)}–${money(card.amount.max, cur, locale)}`}
+            </dd>
+          ) : (
+            <dd className={unknown}>{card.otherCurrency ? c.currency(card.otherCurrency) : c.amountUnknown}</dd>
+          )}
+          {quote(card.amountText)}
+        </div>
+        <div className="text-right">
+          <dt className="text-[11px] text-muted">{c.deadline}</dt>
+          {card.deadline && days !== null ? (
+            <dd className={`text-lg font-medium ${days <= 14 ? "text-[#8a5a00]" : ""}`}>
+              {h.look.days(days)} <span className="block text-[11px] font-normal text-muted">{c.dueOn(card.deadline)}</span>
+            </dd>
+          ) : (
+            <dd className={unknown}>{rolling ? c.rolling : c.deadlineUnknown}</dd>
+          )}
+          {quote(card.deadlineText)}
+        </div>
+      </dl>
+      {card.summary && <p className="text-sm leading-relaxed">{card.summary}</p>}
+      <p className="text-xs text-muted">
+        {h.discover.source}:{" "}
+        <a className="underline" href={card.url}>
+          {card.url}
+        </a>
+        {` · ${h.discover.verified(card.verifiedAt)}`}
+      </p>
+    </div>
+  );
+}
+
 function RoundButton({ label, onClick, disabled, size = "md", children }: { label: string; onClick: () => void; disabled?: boolean; size?: "sm" | "md" | "lg"; children: React.ReactNode }) {
   const dims = size === "lg" ? "h-[4.25rem] w-[4.25rem] text-2xl bg-teal-ink text-white border-teal-ink shadow-[0_7px_16px_#087e7d40]" : size === "sm" ? "h-11 w-11 text-lg glass-control text-muted border-line" : "h-14 w-14 text-xl glass-control text-muted border-line";
   return (
@@ -372,7 +483,7 @@ function Details({ opp, onClose }: { opp: Opportunity; onClose: () => void }) {
   );
 }
 
-function SwipeCard({ onSwipe, children }: { opp: Opportunity; onSwipe: (k: "saved" | "passed") => void; children: React.ReactNode }) {
+function SwipeCard({ onSwipe, children }: { onSwipe: (k: "saved" | "passed") => void; children: React.ReactNode }) {
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const start = useRef<number | null>(null);

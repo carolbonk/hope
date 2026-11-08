@@ -3,7 +3,14 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from hope_discovery.parse import parse_amount, parse_deadline
+from hope_discovery.parse import (
+    context_of,
+    find_amount,
+    find_deadline,
+    parse_amount,
+    parse_deadline,
+    pick_award,
+)
 
 TODAY = date(2026, 11, 8)
 
@@ -18,6 +25,8 @@ TODAY = date(2026, 11, 8)
         ("between $5,000 and $15,000", 500_000, 1_500_000),
         ("$10,000 - $40,000 per organization", 1_000_000, 4_000_000),
         ("$2,500.50", None, 250_050),
+        ("Grants of 50,000 dollars", None, 5_000_000),
+        ("USD 7,500", None, 750_000),
         ("No amount listed", "none", "none"),
     ],
 )
@@ -40,6 +49,7 @@ def test_amount_formats(quote: str, low: int | str | None, high: int | str) -> N
         ("Deadline: 3 March 2027", date(2027, 3, 3), False, False),
         ("Submit by 03/03/2027", date(2027, 3, 3), False, False),
         ("Closes 2027-03-03", date(2027, 3, 3), False, False),
+        ("Submit by 3/3/27", date(2027, 3, 3), False, False),
         (
             "LOI due January 15, 2027; full proposal due March 1, 2027",
             date(2027, 1, 15),
@@ -60,3 +70,77 @@ def test_deadline_formats_yearless_and_rolling(
     assert parsed.yearless is yearless
     if "2025" in quote:
         assert parsed.all_dates == [date(2025, 3, 1)]
+
+
+@pytest.mark.parametrize(
+    ("quote", "context", "part", "high", "total"),
+    [
+        (
+            "up to $1 million in grants, ranging from $5,000 to $50,000 per organization",
+            "",
+            "ranging from $5,000 to $50,000 per organization",
+            5_000_000,
+            False,
+        ),
+        (
+            "$16.3 million",
+            "The foundation awards $16.3 million in grants this year.",
+            None,
+            0,
+            True,
+        ),
+        ("over $11 million", "", None, 0, True),
+        ("Total funding available: $2,000,000", "", None, 0, True),
+        ("up to $75,000 per year.", "", "up to $75,000 per year.", 7_500_000, False),
+        ("$10,000 - $40,000 per organization.", "", None, 4_000_000, False),
+    ],
+)
+def test_pick_award_prefers_one_award_over_totals(
+    quote: str, context: str, part: str | None, high: int, total: bool
+) -> None:
+    pick = pick_award(quote, context)
+    assert pick is not None and pick.amount.max is not None
+    assert pick.total is total
+    assert pick.text == (part or quote)
+    if not total:
+        assert pick.amount.max.amount_minor == high
+
+
+PAGE = (
+    "Cascade Fund 2027 Cycle\n"
+    "Since 1990 the fund has awarded over $12 million to Washington nonprofits. "
+    "This year $400,000 is available in total. "
+    "Grants range from $5,000 to $25,000 per organization. "
+    "Last year's deadline was March 1, 2026. "
+    "Letters of intent are due January 15, 2027, and full proposals must be submitted by "
+    "March 1, 2027.\n"
+    "Questions? Call us before December 1, 2026."
+)
+
+
+def test_find_amount_and_deadline_on_page() -> None:
+    found = find_amount(["Welcome.", PAGE])
+    assert found is not None
+    quote, amount = found
+    assert quote.text == "Grants range from $5,000 to $25,000 per organization." and quote.page == 2
+    assert amount.min is not None and amount.min.amount_minor == 500_000
+    assert amount.max is not None and amount.max.amount_minor == 2_500_000
+
+    dl = find_deadline([PAGE], TODAY)
+    assert dl is not None
+    assert dl[0].text.startswith("Letters of intent are due January 15, 2027")
+    assert dl[1].date == date(2027, 1, 15)
+
+
+def test_find_deadline_rolling_none_and_past_only() -> None:
+    rolling = find_deadline(["We review applications on a rolling basis."], TODAY)
+    assert rolling is not None and rolling[1].rolling and rolling[1].date is None
+    assert find_deadline(["Applications were due March 1, 2025."], TODAY) is None
+    assert find_deadline(["Our office opened March 1, 2027."], TODAY) is None
+    assert find_amount(["We have invested $3 million since 2001."]) is None
+    assert find_amount(["A $50 fee applies."]) is None
+
+
+def test_context_of_finds_the_clause() -> None:
+    assert context_of("$400,000", [PAGE]) == "This year $400,000 is available in total."
+    assert context_of("not on the page", [PAGE]) == ""

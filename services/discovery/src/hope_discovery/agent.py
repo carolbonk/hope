@@ -31,7 +31,15 @@ from hope_discovery.digest import ProfileDigest, build_digest
 from hope_discovery.extract import VerifiedExtraction, VerifiedQuote, clean_text, verify_extraction
 from hope_discovery.fit import FitResult, WebSource, postprocess_fit
 from hope_discovery.models import FitAssessment, PageExtraction, QueryPlan
-from hope_discovery.parse import parse_amount, parse_deadline
+from hope_discovery.parse import (
+    AmountParse,
+    DeadlineParse,
+    context_of,
+    find_amount,
+    find_deadline,
+    parse_deadline,
+    pick_award,
+)
 from hope_discovery.planner import postprocess_plan
 from hope_discovery.repo import DiscoveryRepo
 from hope_discovery.settings import DiscoverySettings, get_discovery_settings
@@ -335,7 +343,8 @@ class DiscoveryAgent:
             o.failed = True
             return
         final_url = canonicalize(page.final_url or url) or url
-        texts = [clean_text(page.text)[: self.s.page_chars_to_llm]]
+        full = [clean_text(page.text)]
+        texts = [full[0][: self.s.page_chars_to_llm]]
         links = page.links[:40]
         ext = self._extract(final_url, page.title, texts, links, today)
         if ext is None:
@@ -351,13 +360,15 @@ class DiscoveryAgent:
                         "page", f"Checking details on {domain(v.detail_url)}", {"url": v.detail_url}
                     )
                 )
-                texts2 = [*texts, clean_text(detail.text)[: self.s.page_chars_to_llm]]
+                detail_text = clean_text(detail.text)
+                texts2 = [*texts, detail_text[: self.s.page_chars_to_llm]]
                 ext2 = self._extract(final_url, page.title, texts2, links, today)
                 if ext2 is not None:
                     v2 = verify_extraction(ext2, texts2, final_url, page.title, links, self.s)
                     if v2.keep:
                         v2.detail_url = v.detail_url
                         v = v2
+                        full.append(detail_text)
         if not v.keep:
             if v.kind == "closed_or_past":
                 o.skipped_expired = True
@@ -370,19 +381,16 @@ class DiscoveryAgent:
                 o.events.append(_Event("skip", f"Skipping {v.title}: {reason}", {"url": url}))
             return
 
-        amount = parse_amount(v.amount.text) if v.amount else None
-        deadline = parse_deadline(v.deadline.text, today) if v.deadline else None
         concerns = list(v.concerns)
-        if amount and amount.max and self._is_program_total(amount.max.amount_minor):
-            amount = None
-            concerns.append(PROGRAM_TOTAL_CONCERN)
+        amount = self._settle_amount(v, full, concerns)
+        deadline = self._settle_deadline(v, full, today)
         if deadline is not None and deadline.all_dates and deadline.date is None:
             o.skipped_expired = True
             o.events.append(
                 _Event("skip", f"Skipping {v.title}: deadline has passed", {"url": url})
             )
             return
-        if deadline is not None and deadline.yearless:
+        if deadline is not None and deadline.yearless and deadline.date is None:
             concerns.append(YEARLESS_CONCERN)
         rolling = (v.rolling or bool(deadline and deadline.rolling)) and (
             deadline is None or deadline.date is None
@@ -422,6 +430,39 @@ class DiscoveryAgent:
         o.events.append(
             _Event("candidate", f"Saved: {v.title} (fit {result.score})", {"url": final_url})
         )
+
+    def _settle_amount(
+        self, v: VerifiedExtraction, pages: list[str], concerns: list[str]
+    ) -> AmountParse | None:
+        """Code decides the amount: the model's verified quote if it parses to one award, else the
+        best award clause code finds on the pages. Swaps `v.amount` to the quote actually used."""
+        pick = pick_award(v.amount.text, context_of(v.amount.text, pages)) if v.amount else None
+        top = pick.amount.max if pick else None
+        if pick and top and not pick.total and not self._is_program_total(top.amount_minor):
+            return pick.amount
+        total = pick is not None
+        found = find_amount(pages)
+        if found and found[1].max and not self._is_program_total(found[1].max.amount_minor):
+            v.amount = VerifiedQuote(found[0].text, found[0].page)
+            return found[1]
+        if total:
+            concerns.append(PROGRAM_TOTAL_CONCERN)
+        return None
+
+    def _settle_deadline(
+        self, v: VerifiedExtraction, pages: list[str], today: date
+    ) -> DeadlineParse | None:
+        """Code decides the deadline: the model's verified quote if it gives a future date, else the
+        earliest future deadline clause code finds on the pages, else whatever the quote said
+        (rolling, year-less, or only past dates, which skips the grant)."""
+        deadline = parse_deadline(v.deadline.text, today) if v.deadline else None
+        if deadline is not None and deadline.date is not None:
+            return deadline
+        found = find_deadline(pages, today)
+        if found and (found[1].date is not None or deadline is None):
+            v.deadline = VerifiedQuote(found[0].text, found[0].page)
+            return found[1]
+        return deadline
 
     def _is_program_total(self, amount_minor: int) -> bool:
         budget = getattr(self, "annual_budget_minor", 0)

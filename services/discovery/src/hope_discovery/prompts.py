@@ -29,7 +29,9 @@ EXTRACT_SYSTEM = (
     " consultant articles about funding, and calls for for-profit contractors or consultants are"
     " `not_relevant` or `news_or_blog`. `funder` must quote the funding organization's name, not a"
     " job title. `amount` must quote the award one applicant can receive, never the total program"
-    " budget."
+    " budget: quote the whole sentence that holds the dollar figure (for example `Awards range from"
+    " $10,000 to $50,000.`). `deadline` must quote the sentence that holds the closing date with"
+    " its year when the page gives one, or the sentence that says applications are rolling."
 )
 
 FIT_SYSTEM = (
