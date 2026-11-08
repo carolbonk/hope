@@ -1,6 +1,7 @@
 import { Agent, run } from "@openai/agents";
 import { z } from "zod";
 import { hopeTemplate, type HopeDraftRequest, type HopeDraftResult } from "@/lib/hope/draft";
+import { agentInput } from "./input";
 
 export const maxDuration = 60;
 
@@ -9,9 +10,9 @@ const SECTIONS = ["program", "alignment", "logicModel", "objectives", "budget", 
 const Body = z.object({
   locale: z.enum(["en", "es"]),
   mode: z.enum(["agent", "template"]).default("agent"),
-  ask: z.number().positive().max(1e9),
+  ask: z.number().positive().max(1e9).nullable(),
   profile: z.object({}).passthrough(),
-  opportunity: z.object({ id: z.string(), funder: z.string(), name: z.string(), currency: z.string(), amountMin: z.number(), amountMax: z.number() }).passthrough(),
+  opportunity: z.object({ id: z.string(), funder: z.string(), name: z.string(), currency: z.string(), amountMin: z.number().nullable(), amountMax: z.number().nullable() }).passthrough(),
 });
 
 const Output = z.object({
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       "Use ONLY facts in the input. Never invent statistics, partners or outcomes; write [TO CONFIRM: ...] for anything missing.",
       "Sections: program (program description), alignment (alignment with mission and intended outcomes), logicModel (inputs, activities, outputs, outcomes, impact),",
       "objectives (3-5 measurable objectives with target, date and measure), budget (line items summing exactly to the ask), budgetNarrative.",
+      'When the ask or an amount is "amount not stated", the funder page gave no amount: write [TO CONFIRM: amount] instead of any figure.',
       "This is a DRAFT a person reviews and submits. List what they must verify in reviewerNotes.",
       `Write in ${req.locale === "es" ? "Spanish (Latin American, US Hispanic audience)" : "English"}.`,
     ].join("\n"),
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
   });
 
   try {
-    const result = await run(agent, JSON.stringify({ profile: req.profile, opportunity: req.opportunity, ask: req.ask }), { maxTurns: 4 });
+    const result = await run(agent, JSON.stringify(agentInput(req)), { maxTurns: 4 });
     if (!result.finalOutput) throw new Error("empty agent output");
     return Response.json({ source: "agent", model: process.env.OPENAI_MODEL ?? "OpenAI default", ...result.finalOutput } satisfies HopeDraftResult);
   } catch (err) {
