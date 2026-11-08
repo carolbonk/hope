@@ -69,7 +69,9 @@ SYSTEM = (
 
 
 def _quote(value: Any) -> Any:
-    """Accept "text" or {"text": "..."}; blank becomes None; clip to 400 characters."""
+    """Accept "text", {"text": "..."} or a list (first item); blank becomes None; clip to 400."""
+    if isinstance(value, list):
+        value = value[0] if value else None
     if isinstance(value, dict):
         value = value.get("text")
     if isinstance(value, str):
@@ -190,6 +192,31 @@ class Requirements(BaseModel):
 
 
 # --- code rules -------------------------------------------------------------------------------
+
+_ASK_START = re.compile(
+    r"^(?:\d+[.)]\s*)?(?:please\s+)?(?:describe|explain|list|provide|tell|share|summari[sz]e|identify"
+    r"|outline|discuss|detail|state|include|what|how|why|who|which|when|where|is|are|does|do"
+    r"|will|has|have)\b",
+    re.I,
+)
+_READER_NOTE = re.compile(
+    r"^(?:please\s+)?(?:read|see|review|contact|call|email|visit|note)\b", re.I
+)
+_ASKS_FOR_DOC = re.compile(
+    r"\b(?:attach|upload|submit|include|provide|send|copy of|copies of|required documents?)\b", re.I
+)
+
+
+def is_question(prompt: str) -> bool:
+    """An application question asks the applicant something; a note to the reader doesn't."""
+    text = prompt.strip()
+    if _READER_NOTE.match(text):
+        return False
+    return text.endswith("?") or bool(_ASK_START.match(text))
+
+
+def asks_for_document(quote: str) -> bool:
+    return bool(_ASKS_FOR_DOC.search(quote))
 
 
 def _norm(text: str) -> str:
@@ -323,7 +350,7 @@ class RequirementsReader:
         by_key = {q.key: q for q in out.questions}
         for item in ext.questions:
             prompt = ok(item.prompt)
-            if not prompt:
+            if not prompt or not is_question(prompt):
                 continue
             found = True
             limit_text = ok(item.limit)
@@ -349,7 +376,8 @@ class RequirementsReader:
             out.questions.append(question)
         names = {_norm(a.name) for a in out.attachments}
         for att in ext.attachments:
-            if (quote := ok(att.quote)) and _norm(att.name) not in names:
+            quote = ok(att.quote)
+            if quote and asks_for_document(quote) and _norm(att.name) not in names:
                 names.add(_norm(att.name))
                 out.attachments.append(Attachment(name=att.name.strip(), quote=quote, url=url))
                 found = True

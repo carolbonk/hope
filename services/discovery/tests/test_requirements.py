@@ -145,9 +145,25 @@ def test_plain_string_quotes_and_bad_items_are_tolerated() -> None:
                 {"name": "Audit", "quote": {"text": "Attach your latest audit."}},
             ],
             "deadline": "",
+            "submission_method": [],
+            "max_request": ["Request up to $25,000."],
             "eligibility": None,
         }
     )
+    assert ext.submission_method is None and ext.max_request == "Request up to $25,000."
     assert [q.prompt for q in ext.questions] == ["How will you measure success?"]
     assert [a.name for a in ext.attachments] == ["Audit"]
     assert ext.deadline is None and ext.eligibility == []
+
+
+def test_notes_to_the_reader_are_not_questions() -> None:
+    from hope_discovery.requirements import asks_for_document, is_question
+
+    assert is_question("Describe the community need your program addresses.")
+    assert is_question("1. What outcomes will you track")
+    assert is_question("Who does the program serve?")
+    assert not is_question("Please carefully read the eligibility criteria before applying.")
+    assert not is_question("Please contact the Foundation before proceeding with an application.")
+    assert not is_question("Organizations are limited to one grant proposal per cycle.")
+    assert asks_for_document("Upload your IRS determination letter.")
+    assert not asks_for_document("A nonprofit must have current tax-exempt status under 501(c)(3).")
