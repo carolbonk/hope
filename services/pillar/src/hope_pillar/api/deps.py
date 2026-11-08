@@ -10,7 +10,7 @@ from hope_core.envelope import PillarEnvelope
 from hope_core.pillar import OutboundPackage, RouteReceipt
 from hope_core.settings import get_settings
 
-from hope_pillar.api.auth import Principal, get_principal
+from hope_pillar.api.header_auth import Principal, get_principal
 from hope_pillar.outbox import Cursor
 from hope_pillar.pillar import KafkaPostgresPillar
 from hope_pillar.router import PillarRouter, RouteRejected

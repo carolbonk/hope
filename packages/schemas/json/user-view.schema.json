@@ -1,0 +1,27 @@
+{
+  "$id": "https://schemas.hope.dev/user-view/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
+    "email": {
+      "title": "Email",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "email",
+    "display_name"
+  ],
+  "title": "UserView",
+  "type": "object"
+}

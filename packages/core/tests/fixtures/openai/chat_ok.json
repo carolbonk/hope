@@ -1,0 +1,23 @@
+{
+  "status": 200,
+  "body": {
+    "id": "chatcmpl-fixture",
+    "object": "chat.completion",
+    "model": "gpt-4o-mini",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "stop",
+        "message": {
+          "role": "assistant",
+          "content": "{\"codes\": [\"E32\", \"F30\"], \"rationale\": \"Community clinic with behavioral health programs.\"}"
+        }
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 120,
+      "completion_tokens": 30,
+      "total_tokens": 150
+    }
+  }
+}

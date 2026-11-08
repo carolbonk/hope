@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "DiscoveryProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "candidates_found": {
+          "default": 0,
+          "title": "Candidates Found",
+          "type": "integer"
+        },
+        "current_step": {
+          "default": "",
+          "title": "Current Step",
+          "type": "string"
+        },
+        "pages_read": {
+          "default": 0,
+          "title": "Pages Read",
+          "type": "integer"
+        },
+        "queries_done": {
+          "default": 0,
+          "title": "Queries Done",
+          "type": "integer"
+        },
+        "queries_total": {
+          "default": 0,
+          "title": "Queries Total",
+          "type": "integer"
+        }
+      },
+      "title": "DiscoveryProgress",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.hope.dev/discovery-job/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error"
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Finished At"
+    },
+    "job_id": {
+      "format": "uuid",
+      "title": "Job Id",
+      "type": "string"
+    },
+    "progress": {
+      "$ref": "#/$defs/DiscoveryProgress"
+    },
+    "queries": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Queries",
+      "type": "array"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "running",
+        "done",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "job_id",
+    "status",
+    "progress",
+    "started_at"
+  ],
+  "title": "DiscoveryJob",
+  "type": "object"
+}

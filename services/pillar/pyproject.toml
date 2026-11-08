@@ -5,6 +5,8 @@ description = "Grant Operations Pillar: router, Kafka/Postgres PillarPort, outbo
 requires-python = ">=3.12"
 dependencies = [
     "hope-core",
+    "hope-profile",
+    "hope-discovery",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
     "confluent-kafka>=2.6",
@@ -16,9 +18,12 @@ dependencies = [
 [project.scripts]
 hope-pillar-relay = "hope_pillar.workers:relay"
 hope-pillar-projector = "hope_pillar.workers:projector"
+hope-demo-seed = "hope_pillar.demo:main"
 
 [tool.uv.sources]
 hope-core = { workspace = true }
+hope-profile = { workspace = true }
+hope-discovery = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -1,0 +1,70 @@
+{
+  "components": {
+    "schemas": {
+      "MeView": {
+        "additionalProperties": false,
+        "properties": {
+          "agency_id": {
+            "format": "uuid",
+            "title": "Agency Id",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "onboarding_complete": {
+            "title": "Onboarding Complete",
+            "type": "boolean"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "email",
+          "display_name",
+          "agency_id",
+          "onboarding_complete"
+        ],
+        "title": "MeView",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Hope API: me",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/me": {
+      "get": {
+        "operationId": "me_v1_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Me",
+        "tags": [
+          "me"
+        ]
+      }
+    }
+  }
+}

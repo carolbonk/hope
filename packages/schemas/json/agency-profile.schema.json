@@ -583,6 +583,30 @@
           "default": null,
           "title": "Fiscal Sponsor Id"
         },
+        "hq_city": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hq City"
+        },
+        "hq_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hq State"
+        },
         "legal_name": {
           "title": "Legal Name",
           "type": "string"
@@ -647,6 +671,18 @@
           ],
           "default": null,
           "title": "Uei"
+        },
+        "website": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Website"
         }
       },
       "required": [
@@ -692,6 +728,14 @@
           ],
           "default": null,
           "title": "Theory Of Change"
+        },
+        "values": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Values",
+          "type": "array"
         },
         "vision_statement": {
           "anyOf": [
@@ -1031,6 +1075,15 @@
         "$ref": "#/$defs/Program"
       },
       "title": "Programs",
+      "type": "array"
+    },
+    "service_area": {
+      "default": [],
+      "description": "state or county names",
+      "items": {
+        "type": "string"
+      },
+      "title": "Service Area",
       "type": "array"
     },
     "tenant_id": {

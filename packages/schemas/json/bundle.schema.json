@@ -124,6 +124,15 @@
           "title": "Programs",
           "type": "array"
         },
+        "service_area": {
+          "default": [],
+          "description": "state or county names",
+          "items": {
+            "type": "string"
+          },
+          "title": "Service Area",
+          "type": "array"
+        },
         "tenant_id": {
           "format": "uuid",
           "title": "Tenant Id",
@@ -453,6 +462,87 @@
       "title": "Capacity",
       "type": "object"
     },
+    "Citation": {
+      "additionalProperties": false,
+      "properties": {
+        "citation_id": {
+          "description": "\"c1\", \"c2\"... unique within its parent",
+          "title": "Citation Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "web",
+            "profile"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "profile_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. \"mission.mission_statement\"",
+          "title": "Profile Path"
+        },
+        "quote": {
+          "description": "exact supporting text",
+          "maxLength": 500,
+          "title": "Quote",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retrieved At"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        }
+      },
+      "required": [
+        "citation_id",
+        "kind",
+        "quote"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
     "ComplianceItem": {
       "additionalProperties": false,
       "properties": {
@@ -739,6 +829,107 @@
         "deadline_feasibility"
       ],
       "title": "DimensionScores",
+      "type": "object"
+    },
+    "DiscoveryJob": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finished At"
+        },
+        "job_id": {
+          "format": "uuid",
+          "title": "Job Id",
+          "type": "string"
+        },
+        "progress": {
+          "$ref": "#/$defs/DiscoveryProgress"
+        },
+        "queries": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Queries",
+          "type": "array"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "done",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "job_id",
+        "status",
+        "progress",
+        "started_at"
+      ],
+      "title": "DiscoveryJob",
+      "type": "object"
+    },
+    "DiscoveryProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "candidates_found": {
+          "default": 0,
+          "title": "Candidates Found",
+          "type": "integer"
+        },
+        "current_step": {
+          "default": "",
+          "title": "Current Step",
+          "type": "string"
+        },
+        "pages_read": {
+          "default": 0,
+          "title": "Pages Read",
+          "type": "integer"
+        },
+        "queries_done": {
+          "default": 0,
+          "title": "Queries Done",
+          "type": "integer"
+        },
+        "queries_total": {
+          "default": 0,
+          "title": "Queries Total",
+          "type": "integer"
+        }
+      },
+      "title": "DiscoveryProgress",
       "type": "object"
     },
     "Eligibility": {
@@ -1390,6 +1581,166 @@
       "title": "Goal",
       "type": "object"
     },
+    "GrantCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "amount_max": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "parsed by code, integer minor units"
+        },
+        "amount_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "quoted, e.g. \"up to $50,000\"",
+          "title": "Amount Text"
+        },
+        "citations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Citation"
+          },
+          "title": "Citations",
+          "type": "array"
+        },
+        "concerns": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Concerns",
+          "type": "array"
+        },
+        "deadline": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "parsed by code; None for rolling or unknown",
+          "title": "Deadline"
+        },
+        "deadline_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deadline Text"
+        },
+        "discovered_at": {
+          "format": "date-time",
+          "title": "Discovered At",
+          "type": "string"
+        },
+        "eligibility_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Eligibility Summary"
+        },
+        "fit_reasons": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Fit Reasons",
+          "type": "array"
+        },
+        "fit_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Fit Score",
+          "type": "integer"
+        },
+        "found_by_job_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Found By Job Id"
+        },
+        "funder": {
+          "title": "Funder",
+          "type": "string"
+        },
+        "grant_id": {
+          "format": "uuid",
+          "title": "Grant Id",
+          "type": "string"
+        },
+        "status": {
+          "default": "new",
+          "enum": [
+            "new",
+            "saved",
+            "passed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "summary": {
+          "description": "1-3 plain-English sentences; may contain [cN] markers",
+          "title": "Summary",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "description": "canonical grant page",
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "grant_id",
+        "title",
+        "funder",
+        "url",
+        "summary",
+        "fit_score",
+        "discovered_at"
+      ],
+      "title": "GrantCandidate",
+      "type": "object"
+    },
     "GrantHistoryItem": {
       "additionalProperties": false,
       "properties": {
@@ -1943,6 +2294,30 @@
           "default": null,
           "title": "Fiscal Sponsor Id"
         },
+        "hq_city": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hq City"
+        },
+        "hq_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hq State"
+        },
         "legal_name": {
           "title": "Legal Name",
           "type": "string"
@@ -2007,6 +2382,18 @@
           ],
           "default": null,
           "title": "Uei"
+        },
+        "website": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Website"
         }
       },
       "required": [
@@ -2321,6 +2708,42 @@
       "title": "MatrixRow",
       "type": "object"
     },
+    "MeView": {
+      "additionalProperties": false,
+      "properties": {
+        "agency_id": {
+          "format": "uuid",
+          "title": "Agency Id",
+          "type": "string"
+        },
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "email": {
+          "title": "Email",
+          "type": "string"
+        },
+        "onboarding_complete": {
+          "title": "Onboarding Complete",
+          "type": "boolean"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "email",
+        "display_name",
+        "agency_id",
+        "onboarding_complete"
+      ],
+      "title": "MeView",
+      "type": "object"
+    },
     "Mission": {
       "additionalProperties": false,
       "properties": {
@@ -2356,6 +2779,14 @@
           ],
           "default": null,
           "title": "Theory Of Change"
+        },
+        "values": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Values",
+          "type": "array"
         },
         "vision_statement": {
           "anyOf": [
@@ -3341,6 +3772,31 @@
         }
       },
       "title": "Trace",
+      "type": "object"
+    },
+    "UserView": {
+      "additionalProperties": false,
+      "properties": {
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "email": {
+          "title": "Email",
+          "type": "string"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "email",
+        "display_name"
+      ],
+      "title": "UserView",
       "type": "object"
     }
   },

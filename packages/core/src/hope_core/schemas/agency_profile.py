@@ -45,6 +45,9 @@ class Legal(Contract):
     tax_status: TaxStatus
     fiscal_sponsor_id: str | None = None
     state_of_incorporation: str | None = None
+    hq_city: str | None = None
+    hq_state: str | None = None
+    website: str | None = None
     provenance: Provenance | None = None
 
 
@@ -54,6 +57,7 @@ class Mission(Contract):
     theory_of_change: str | None = None
     focus_areas: list[str] = []
     ntee_codes: list[str] = []
+    values: list[str] = []
 
 
 class IndirectRate(Contract):
@@ -160,6 +164,7 @@ class AgencyProfile(Contract):
     tenant_id: UUID
     version: int = Field(ge=1)
     valid_from: datetime | None = None
+    service_area: list[str] = Field(default=[], description="state or county names")
     legal: Legal
     mission: Mission
     financials: Financials

@@ -46,7 +46,7 @@ def client(migrated_db: str) -> Iterator[TestClient]:
         get_settings().database_url,
         presigner_factory=lambda: lambda key, ctype, exp: f"https://s3.test/{key}?exp={exp}",
     )
-    with TestClient(create_app(services)) as c:
+    with TestClient(create_app(services, legacy=True)) as c:
         yield c
 
 
