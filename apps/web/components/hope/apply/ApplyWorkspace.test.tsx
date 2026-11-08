@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { I18nProvider } from "@/components/I18nProvider";
 import { measure, type ApplicationView } from "@/lib/hope/sync/applications";
-import { ApplyWorkspace } from "./ApplyWorkspace";
+import { ApplyWorkspace, ServerNotice } from "./ApplyWorkspace";
+import { useServerApplication } from "./useServerApplication";
 
 const GRANT = "3f6b1c2e-9d0a-4e57-8a21-6c5d4b3a2f10";
 const APP = "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d";
@@ -18,6 +19,10 @@ function view(): ApplicationView {
     stage: "drafting",
     questions_status: "found",
     version: 3,
+    updated_at: "2026-11-07T12:00:00Z",
+    approvals: {},
+    evidence: {},
+    events: [],
     requirements: { questions: [need], attachments: [{ name: "Logic model", quote: "Attachments: Logic model", url: PAGE }], budget: {}, submission: {}, eligibility: [], pages: [{ url: PAGE, status: "read" }, { url: "https://funder.example/rfp", status: "failed", reason: "403" }] },
     requirements_job: null,
     answers_job: null,
@@ -55,10 +60,21 @@ function serve(v: ApplicationView) {
 
 afterEach(() => vi.unstubAllGlobals());
 
+function Harness() {
+  const server = useServerApplication(GRANT);
+  if (!server.view) return null;
+  return (
+    <>
+      <ServerNotice notice={server.notice} onDismiss={server.clearNotice} />
+      <ApplyWorkspace view={server.view} run={server.run} />
+    </>
+  );
+}
+
 const renderIt = () =>
   render(
     <I18nProvider locale="en">
-      <ApplyWorkspace grantId={GRANT} />
+      <Harness />
     </I18nProvider>,
   );
 

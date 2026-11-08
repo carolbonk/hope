@@ -105,9 +105,11 @@ director, so the right person fills them.
 
 - `PATCH /v1/applications/{id}/answers/{question_key}` `{text}` sets `origin = human`.
 - `POST /v1/applications/{id}/approvals` `{step: program | director, decision: approve | send_back, comment}`: the
-  H4 rules, recorded with the signed-in user. Without roles the UI keeps the "simulated" label (H4 "Later").
-- `POST /v1/applications/{id}/ready` needs: both approvals, no `missing` or `over_limit` question, no
-  `upload_needed` required attachment (overridable with a written reason).
+  H4 rules, recorded with the signed-in user and time. Roles aren't assigned yet, so any signed-in user may approve;
+  the UI says so and shows who approved (H4).
+- `POST /v1/applications/{id}/stage` `{to: "ready", override_reason?}` needs both approvals and a complete checklist
+  (no `missing`, `over_limit`, `to_confirm`, `upload_needed` or `passed` item). Otherwise 409 `stage_blocked`, unless
+  `override_reason` (10-500 chars) is given; the reason is saved on the stage event. The web asks for it in `ReadyGate`.
 - `GET /v1/applications/{id}/export.md`: every question with its limit and answer, the attachment list and the
   budget, ready to paste into the funder's portal.
 

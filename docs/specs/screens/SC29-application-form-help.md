@@ -7,7 +7,7 @@
 | Backend | H6 ([`H6-application-help.md`](../features/H6-application-help.md)), `/v1/applications/*` |
 | Primary users | The grants lead or executive director of a small nonprofit, often a volunteer, plus the person who owns finance |
 | Can act | Signed-in members of the nonprofit |
-| Status | Spec for the team to review. Backend built; UI not built |
+| Status | Built. Loaded once per page by `useServerApplication`, shared with the SC27 panels |
 
 ## 1. Purpose and user goals
 
@@ -74,7 +74,7 @@ latest version."
 | Edit | `PATCH …/answers/{key}` `{ text }` | Debounced 1 s; `origin` becomes `human` |
 | To do | `checklist.inputs_needed[]` grouped by `owner`; checklist items `kind: "prep"`, `"attachment"` | |
 | Answer once | `POST …/facts` `{ need, answer }`; empty answer removes it | After saving, the row shows "Saved. Redraft the answers that need it." with a "Redraft" link per `question_key` |
-| Ready | `checklist.complete`, `POST …/stage` `{ to: "ready", override_reason? }` | Not complete → dialog asking for a reason (≥ 10 chars), saved in Activity |
+| Ready | `checklist.complete`, `POST …/stage` `{ to: "ready", override_reason? }` | The "Mark ready for human submission" button in Next action. Any blocking checklist item (`missing`, `over_limit`, `to_confirm`, `upload_needed`, `passed`) → `ReadyGate` dialog "The checklist isn't complete" listing each gap (label · status) and asking "Why is it ready anyway?" (≥ 10 chars, else "Write at least 10 characters."). Only a reason sends the move; Cancel sends nothing. The reason is saved in Activity |
 | Export | `GET …/export.md` | |
 
 ## 4. A term row (`TermRow`)
