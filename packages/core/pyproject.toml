@@ -1,5 +1,7 @@
 [project]
 name = "hope-core"
+license = { text = "Proprietary" }
+classifiers = ["Private :: Do Not Upload"]
 version = "0.1.0"
 description = "Shared schemas, money type, pillar port, model gateway and DB helpers for Hope"
 requires-python = ">=3.12"

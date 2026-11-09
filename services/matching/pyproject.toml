@@ -1,5 +1,7 @@
 [project]
 name = "hope-matching"
+license = { text = "Proprietary" }
+classifiers = ["Private :: Do Not Upload"]
 version = "0.1.0"
 description = "Eligibility, mission alignment and recommendation agents (A4, A5, A6)"
 requires-python = ">=3.12"

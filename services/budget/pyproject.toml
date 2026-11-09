@@ -1,5 +1,7 @@
 [project]
 name = "hope-budget"
+license = { text = "Proprietary" }
+classifiers = ["Private :: Do Not Upload"]
 version = "0.1.0"
 description = "Budget Engine and Budget and Scope Framework Generator (A7) plus numeric reconciler"
 requires-python = ">=3.12"

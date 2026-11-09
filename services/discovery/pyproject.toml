@@ -1,5 +1,7 @@
 [project]
 name = "hope-discovery"
+license = { text = "Proprietary" }
+classifiers = ["Private :: Do Not Upload"]
 version = "0.1.0"
 description = "Grant discovery (H2): plans searches, reads grant pages and stores cited GrantCandidates"
 requires-python = ">=3.12"

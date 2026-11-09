@@ -1,5 +1,7 @@
 [project]
 name = "hope-profile"
+license = { text = "Proprietary" }
+classifiers = ["Private :: Do Not Upload"]
 version = "0.1.0"
 description = "Agency Profile and Context Steward (A3): bitemporal profile versions and HITL-0 protected-field approvals"
 requires-python = ">=3.12"
