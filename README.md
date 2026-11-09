@@ -25,3 +25,7 @@ Python 3.12 (Pydantic, FastAPI, Temporal, LangGraph-style agents behind `ModelGa
 Postgres 16 with RLS and pgvector, Kafka API (Redpanda locally), Redis, S3 (MinIO locally),
 Next.js for the web app. Pydantic models in `hope_core.schemas` are the single source of truth
 for contracts; JSON Schema and TypeScript types are generated from them.
+
+## License
+
+Proprietary. Copyright (c) 2026 Carolaine Bonk. All rights reserved. See [LICENSE](LICENSE).
