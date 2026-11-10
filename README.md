@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/hope-banner.png" alt="hope — Your AI grant team. From discovery to submission, built for nonprofits." width="100%">
+</p>
+
 # Hope
 
 Multi-agent grant automation platform for non-profits. Specialist agents discover and parse
