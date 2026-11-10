@@ -153,6 +153,13 @@ def test_list_sorts_counts_hidden_past(api: TestClient, seeded: dict[str, GrantC
 
 
 @pytest.mark.db
+def test_list_cards_carry_eligibility(api: TestClient, seeded: dict[str, GrantCandidate]) -> None:
+    items = {i["grant_id"]: i["eligibility_summary"] for i in api.get("/v1/grants").json()["items"]}
+    assert items[str(seeded["A"].grant_id)] == seeded["A"].eligibility_summary
+    assert items[str(seeded["C"].grant_id)] is None
+
+
+@pytest.mark.db
 @pytest.mark.parametrize(
     ("params", "expected", "total", "hidden_past"),
     [

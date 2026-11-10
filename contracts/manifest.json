@@ -434,7 +434,7 @@
           "id": "grants.list",
           "method": "GET",
           "path": "/v1/grants",
-          "purpose": "Grant cards (?status=new|saved|passed&sort=fit&q=&limit=20&offset=0).",
+          "purpose": "Grant cards, each with its eligibility_summary (?status=new|saved|passed&sort=fit&q=&limit=20&offset=0).",
           "screens": [
             "SC25",
             "SC00",

@@ -77,7 +77,7 @@ describe("toOpportunity", () => {
 
   it("requirements never meet by default", async () => {
     const { toOpportunity } = await load(false);
-    expect(toOpportunity(card())!.requirements).toEqual([
+    expect(toOpportunity(card({ eligibility_summary: null }))!.requirements).toEqual([
       { id: "funder_eligibility", label: "Funder's eligibility rules (check the source page)" },
     ]);
     const c3 = "Nonprofits with 501(c)(3) status serving rural Washington counties.";
