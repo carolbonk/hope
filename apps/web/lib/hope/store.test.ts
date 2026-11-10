@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { demoOpportunities } from "./demo";
-import { applicationId, DEMO_PROFILE, HOPE_KEY, ORG_ID, STAGES, useHope } from "./store";
+import { applicationId, DEMO_PROFILE, geographyFits, HOPE_KEY, ORG_ID, STAGES, useHope } from "./store";
 import { mirrorDecision } from "./sync/decisions";
 import { saveRemoteProfile } from "./sync/profile";
 
@@ -14,6 +14,15 @@ beforeEach(() => {
   vi.mocked(mirrorDecision).mockReset();
   vi.mocked(saveRemoteProfile).mockReset();
   window.localStorage.clear();
+});
+
+it("geographyFits matches each area of a ';'-separated service area", () => {
+  const opp = (geography: string[]) => ({ ...demoOpportunities(new Date())[0]!, geography });
+  const profile = { ...DEMO_PROFILE, serviceArea: "Little Haiti; Miami-Dade ;" };
+  expect(geographyFits(opp(["Little Haiti"]), profile)).toBe("yes");
+  expect(geographyFits(opp(["South Florida"]), profile)).toBe("yes");
+  expect(geographyFits(opp(["Orlando"]), profile)).toBe("no");
+  expect(geographyFits(opp(["Orlando"]), { ...DEMO_PROFILE, serviceArea: " ; " })).toBe("unknown");
 });
 
 it("submitted is the last stage", () => {

@@ -211,7 +211,7 @@ const en = {
     fact: { legalName: "Legal name", publicName: "Public name", country: "Country", jurisdiction: "Jurisdiction", website: "Website", contactName: "Contact person", contactEmail: "Contact email", responsibleName: "Responsible person", responsibleRole: "Responsible person's role", legalStatus: "Legal / tax status", has501c3: "501(c)(3) determination", usTaxStatus: "US federal tax status", mission: "Mission", vision: "Vision", targetPopulation: "Population served", servesMinors: "Serves minors", serviceArea: "Territory", focusAreas: "Impact areas", programs: "Programs", annualBudget: "Annual budget", fiscalYear: "Fiscal year", staffCount: "Paid staff", volunteerCount: "Volunteers", foundedYear: "Year founded", experience: "Experience", fundingNeed: "Funding needs", intendedUse: "Intended use" } as Record<string, string>,
   },
   legal: { "501c3": "501(c)(3) public charity", other_nonprofit: "Other nonprofit", fiscal_sponsor: "Fiscally sponsored project", unknown: "Not sure yet" },
-  focus: { mentoring: "Mentoring", youth: "Youth", family: "Family support", mental_health: "Mental health", safety: "Safety", school_based: "School-based", capacity: "Capacity building", arts: "Arts" } as Record<string, string>,
+  focus: { mentoring: "Mentoring", youth: "Youth", family: "Family support", mental_health: "Mental health", safety: "Safety", school_based: "School-based", capacity: "Capacity building", arts: "Arts", health: "Health" } as Record<string, string>,
   purpose: { general_operating: "General operating", program: "Program", capacity: "Capacity", capital: "Capital" } as Record<string, string>,
   type: { grant: "Grant", contract: "Contract", sponsorship: "Sponsorship", in_kind: "In-kind" } as Record<string, string>,
   discover: {
@@ -695,7 +695,7 @@ const es: HopeDict = {
     fact: { legalName: "Nombre legal", publicName: "Nombre público", country: "País", jurisdiction: "Jurisdicción", website: "Sitio web", contactName: "Persona de contacto", contactEmail: "Correo de contacto", responsibleName: "Responsable", responsibleRole: "Cargo del responsable", legalStatus: "Estatus legal / fiscal", has501c3: "Determinación 501(c)(3)", usTaxStatus: "Estatus fiscal federal en EE. UU.", mission: "Misión", vision: "Visión", targetPopulation: "Población atendida", servesMinors: "Atiende a menores", serviceArea: "Territorio", focusAreas: "Áreas de impacto", programs: "Programas", annualBudget: "Presupuesto anual", fiscalYear: "Año fiscal", staffCount: "Personal remunerado", volunteerCount: "Voluntarios", foundedYear: "Año de fundación", experience: "Experiencia", fundingNeed: "Necesidades de financiación", intendedUse: "Uso previsto" } as Record<string, string>,
   },
   legal: { "501c3": "Organización benéfica 501(c)(3)", other_nonprofit: "Otra sin fines de lucro", fiscal_sponsor: "Proyecto con patrocinador fiscal", unknown: "Aún no estoy seguro" },
-  focus: { mentoring: "Mentoría", youth: "Juventud", family: "Apoyo familiar", mental_health: "Salud mental", safety: "Seguridad", school_based: "En escuelas", capacity: "Fortalecimiento", arts: "Artes" },
+  focus: { mentoring: "Mentoría", youth: "Juventud", family: "Apoyo familiar", mental_health: "Salud mental", safety: "Seguridad", school_based: "En escuelas", capacity: "Fortalecimiento", arts: "Artes", health: "Salud" },
   purpose: { general_operating: "Operación general", program: "Programa", capacity: "Fortalecimiento", capital: "Capital" },
   type: { grant: "Subvención", contract: "Contrato", sponsorship: "Patrocinio", in_kind: "En especie" },
   discover: {

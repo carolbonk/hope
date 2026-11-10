@@ -171,8 +171,9 @@ const REGION: Record<string, string[]> = {
 };
 
 export function geographyFits(opp: Opportunity, p: OrgProfile): TriState {
-  if (!p.serviceArea) return "unknown";
-  const areas = REGION[p.serviceArea] ?? [p.serviceArea, "United States"];
+  const listed = (p.serviceArea ?? "").split(";").map((a) => a.trim()).filter(Boolean);
+  if (!listed.length) return "unknown";
+  const areas = listed.flatMap((a) => REGION[a] ?? [a, "United States"]);
   return opp.geography.some((g) => areas.includes(g)) ? "yes" : "no";
 }
 
