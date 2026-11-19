@@ -1,13 +1,31 @@
 import type { Opportunity, OrgProfile, SectionId } from "./types";
 
-export type HopeDraftRequest = { locale: "en" | "es"; profile: OrgProfile; opportunity: Opportunity; ask: number | null; mode: "agent" | "template" };
-export type HopeDraftResult = { source: "agent" | "template"; model?: string; sections: Record<SectionId, string>; reviewerNotes: string[] };
-export type HopeDraftError = "missing_openai_key" | "agent_failed" | "invalid_request";
+export type HopeDraftRequest = {
+  locale: "en" | "es";
+  profile: OrgProfile;
+  opportunity: Opportunity;
+  ask: number | null;
+  mode: "agent" | "template";
+};
+export type HopeDraftResult = {
+  source: "agent" | "template";
+  model?: string;
+  sections: Record<SectionId, string>;
+  reviewerNotes: string[];
+};
+export type HopeDraftError =
+  "missing_openai_key" | "agent_failed" | "invalid_request";
 
-const fmt = (n: number | null, c: string) => (n == null ? "[TO CONFIRM]" : `${c} ${Math.round(n).toLocaleString("en-US")}`);
+const fmt = (n: number | null, c: string) =>
+  n == null ? "[TO CONFIRM]" : `${c} ${Math.round(n).toLocaleString("en-US")}`;
 
 /** Deterministic template built only from the profile and opportunity. Used only when the user asks for it. */
-export function hopeTemplate({ locale, profile: p, opportunity: o, ask }: HopeDraftRequest): HopeDraftResult {
+export function hopeTemplate({
+  locale,
+  profile: p,
+  opportunity: o,
+  ask,
+}: HopeDraftRequest): HopeDraftResult {
   const es = locale === "es";
   const c = o.currency;
   const tc = es ? "[POR CONFIRMAR]" : "[TO CONFIRM]";
@@ -17,7 +35,17 @@ export function hopeTemplate({ locale, profile: p, opportunity: o, ask }: HopeDr
     [es ? "Evaluación y datos" : "Evaluation and data", 0.1],
     [es ? "Costos indirectos" : "Indirect costs", 0.15],
   ] as const;
-  const budget = lines.map(([l, s]) => `• ${l}: ${fmt(ask === null ? null : ask * s, c)}`).join("\n") + `\n${es ? "Total" : "Total"}: ${fmt(ask, c)}`;
+  const total = ask === null ? null : Math.round(ask);
+  const amounts = lines.map(([, s]) =>
+    total === null ? null : Math.round(total * s),
+  );
+  // The last line takes the rounding remainder so the lines sum exactly to the ask.
+  if (total !== null)
+    amounts[amounts.length - 1] =
+      total - amounts.slice(0, -1).reduce((t, a) => t! + a!, 0)!;
+  const budget =
+    lines.map(([l], i) => `• ${l}: ${fmt(amounts[i]!, c)}`).join("\n") +
+    `\nTotal: ${fmt(total, c)}`;
   return {
     source: "template",
     sections: {
@@ -38,6 +66,10 @@ export function hopeTemplate({ locale, profile: p, opportunity: o, ask }: HopeDr
         ? `Se solicitan ${fmt(ask, c)} de un presupuesto anual de ${fmt(p.annualBudget, p.currency)}. ${tc}`
         : `We request ${fmt(ask, c)} against an annual budget of ${fmt(p.annualBudget, p.currency)}. ${tc}`,
     },
-    reviewerNotes: [es ? "Plantilla: completa cada [POR CONFIRMAR]." : "Template: fill in every [TO CONFIRM]."],
+    reviewerNotes: [
+      es
+        ? "Plantilla: completa cada [POR CONFIRMAR]."
+        : "Template: fill in every [TO CONFIRM].",
+    ],
   };
 }
