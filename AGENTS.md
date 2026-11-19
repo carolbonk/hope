@@ -94,6 +94,7 @@ uv run ruff format . && uv run ruff check .  # lint
 uv run mypy packages/core/src services       # types (strict)
 uv run pytest -q                             # tests
 pre-commit install                           # git hooks (ruff + schema freshness)
+pnpm ci:local                                # CI's jobs locally when GitHub Actions can't run
 ```
 
 ## PRs

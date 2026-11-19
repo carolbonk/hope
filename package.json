@@ -7,6 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "mock": "pnpm --filter @hope/contracts run mock"
+    "mock": "pnpm --filter @hope/contracts run mock",
+    "ci:local": "bash scripts/ci-local.sh"
   }
 }
