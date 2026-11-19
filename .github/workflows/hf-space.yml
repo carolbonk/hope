@@ -6,10 +6,8 @@ on:
     paths:
       - 'apps/web/**'
       - 'packages/schemas/ts/**'
-      - 'contracts/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
       - 'infra/hf-space/**'
       - '.github/workflows/hf-space.yml'
   workflow_dispatch:
@@ -34,22 +32,13 @@ jobs:
         run: echo "::notice::Set the HF_TOKEN secret and HF_SPACE variable (e.g. user/hope) to deploy the Space."
       - uses: actions/checkout@v4
         if: env.HF_TOKEN != '' && env.HF_SPACE != ''
-      - uses: actions/setup-python@v5
+      - uses: pnpm/action-setup@v4
+        if: env.HF_TOKEN != '' && env.HF_SPACE != ''
+      - uses: actions/setup-node@v4
         if: env.HF_TOKEN != '' && env.HF_SPACE != ''
         with:
-          python-version: '3.12'
-      - name: Upload to the Space
+          node-version: 22
+          cache: pnpm
+      - name: Build and upload
         if: env.HF_TOKEN != '' && env.HF_SPACE != ''
-        run: |
-          bash infra/hf-space/assemble.sh "$RUNNER_TEMP/space"
-          pip install --quiet 'huggingface_hub>=0.30,<1'
-          python - <<'PY'
-          import os
-          from huggingface_hub import HfApi
-          api, space = HfApi(token=os.environ["HF_TOKEN"]), os.environ["HF_SPACE"]
-          api.create_repo(space, repo_type="space", space_sdk="docker", exist_ok=True)
-          api.upload_folder(
-              repo_id=space, repo_type="space", folder_path=os.environ["RUNNER_TEMP"] + "/space",
-              delete_patterns="*", commit_message=f"Deploy {os.environ['GITHUB_SHA'][:7]}",
-          )
-          PY
+        run: bash infra/hf-space/deploy.sh
