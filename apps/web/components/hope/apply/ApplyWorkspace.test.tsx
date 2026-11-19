@@ -97,6 +97,22 @@ test("counts the way the funder does", () => {
   expect(measure("a b", { unit: "characters", max: 5 })).toBe(3);
 });
 
+test.each([true, false, null, undefined])("counts emoji code points with includes_spaces=%s", (includes_spaces) => {
+  const limit = { unit: "characters" as const, max: 8, includes_spaces };
+  const text = "😀 🇺🇸 👩‍💻";
+  expect(measure(text, limit)).toBe(includes_spaces === false ? 6 : 8);
+  expect(measure("", limit)).toBe(0);
+  expect(measure(" \t\n", limit)).toBe(includes_spaces === false ? 0 : 3);
+  expect(measure(text, limit) > limit.max).toBe(false);
+  expect(measure(`${text}abc`, limit) > limit.max).toBe(true);
+});
+
+test("excludes Python whitespace but keeps the non-whitespace byte order mark", () => {
+  expect(measure("😀\u001c\u001d\u001e\u001f\u0085\u00a0\u2003\ufeff", {
+    unit: "characters", max: 2, includes_spaces: false,
+  })).toBe(2);
+});
+
 test("shows the funder's own question, the translated terms with sources, and the to-do list", async () => {
   serve(view());
   renderIt();

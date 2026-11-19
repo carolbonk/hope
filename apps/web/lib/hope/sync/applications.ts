@@ -87,7 +87,10 @@ export function measure(text: string, limit: Limit): number {
   const words = text.split(/\s+/).filter(Boolean).length;
   if (limit.unit === "words") return words;
   if (limit.unit === "pages") return Math.ceil(words / WORDS_PER_PAGE);
-  return limit.includes_spaces === false ? text.replace(/\s+/g, "").length : text.length;
+  const characters = Array.from(text);
+  if (limit.includes_spaces !== false) return characters.length;
+  // Python str.split() also treats U+001C–U+001F as whitespace, but not U+FEFF.
+  return characters.filter((char) => !/\p{White_Space}/u.test(char) && !"\u001c\u001d\u001e\u001f".includes(char)).length;
 }
 
 export async function findApplication(grantId: string): Promise<ApplicationView | null> {

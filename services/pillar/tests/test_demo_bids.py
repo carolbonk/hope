@@ -9,11 +9,12 @@ from hope_core import store
 from hope_core.db import connect, tenant_tx
 from hope_core.settings import get_settings
 from hope_discovery import demo_grants
-from hope_discovery.demo_grants import MENTORING, TITLE_X, YOUTH_TREATMENT, grant_id
+from hope_discovery.demo_grants import NCW_YOUTH, TITLE_X, YOUTH_TREATMENT, grant_id
 from hope_pillar import demo_bids
 from hope_pillar.api import applications, bids
 from hope_pillar.api.bids import _load
 from hope_pillar.demo import seed_user
+from hope_pillar.demo_bids import FUNDER_APPLY, GRANTS_GOV_APPLY
 
 pytestmark = pytest.mark.db
 
@@ -38,7 +39,7 @@ def test_demo_bids_seed_once_at_three_points(
 
     with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
         views = {}
-        for url in (TITLE_X, MENTORING, YOUTH_TREATMENT):
+        for url in (TITLE_X, NCW_YOUTH, YOUTH_TREATMENT):
             gid = grant_id(tx, url)
             tx.execute("SELECT application_id FROM applications WHERE grant_id = %s", (gid,))
             row = tx.fetchone()
@@ -53,20 +54,35 @@ def test_demo_bids_seed_once_at_three_points(
     assert statuses == {"missing", "working", "ready"}
     assert {i.owner is None for i in prep.items} == {True, False}
     assert 0 < prep.ready < prep.total and prep.blocker_list
+    assert prep.deadline == date(2027, 1, 11)
+    assert "deadline_passed" not in {b.code for b in prep.blocker_list}
 
-    final, final_app, _ = views[MENTORING]
+    final, final_app, _ = views[NCW_YOUTH]
     assert final.phase == "final_reviewed" and final_app.stage == "ready"
     assert final.ready == final.total and not final.blocker_list
-    assert final.deadline == date(2026, 11, 16)
+    assert all(
+        i.status == "ready" and i.review is not None and not i.review.stale for i in final.items
+    )
+
+    methods = {}
+    for url, (_, app, _) in views.items():
+        assert app.requirements is not None and app.requirements.submission.method is not None
+        methods[url] = app.requirements.submission.method.text
+    assert methods == {
+        TITLE_X: GRANTS_GOV_APPLY,
+        NCW_YOUTH: FUNDER_APPLY,
+        YOUTH_TREATMENT: GRANTS_GOV_APPLY,
+    }
 
     sent, sent_app, _ = views[YOUTH_TREATMENT]
     assert sent.phase == "submitted" and sent_app.stage == "submitted"
     assert sent.submission is not None and "demo" in sent.submission.receipt
     assert all(i.review is not None and not i.review.stale for i in sent.items)
 
-    clock.now.return_value = demo_grants.RECORDED + timedelta(days=9)
+    clock.now.return_value = demo_grants.RECORDED + timedelta(days=400)
     with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
-        expired, _, _ = _load(tx, final.application_id)
-    assert expired.deadline == final.deadline
-    assert expired.ready == expired.total
-    assert {b.code for b in expired.blocker_list} == {"checklist_incomplete", "deadline_passed"}
+        expired, _, _ = _load(tx, prep.application_id)
+    assert expired.deadline == prep.deadline
+    assert {b.code for b in expired.blocker_list} - {b.code for b in prep.blocker_list} == {
+        "deadline_passed"
+    }

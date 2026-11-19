@@ -8,6 +8,7 @@ done, and one submitted with a demo receipt. Hope never submits; the receipt is 
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from urllib.parse import urlsplit
 from uuid import UUID
 
 from hope_core import store
@@ -18,7 +19,7 @@ from hope_core.store import Tx
 from hope_discovery.answers import ChecklistItem, standard_questions
 from hope_discovery.demo_grants import (
     GRANTS,
-    MENTORING,
+    NCW_YOUTH,
     TITLE_X,
     YOUTH_TREATMENT,
     candidate,
@@ -37,7 +38,10 @@ from hope_pillar.api.applications import add_event, ensure_application, save_req
 from hope_pillar.api.bids import _load, item_hash
 from hope_pillar.demo import DEMO_EMAIL
 
-HOW_TO_APPLY = "How to apply: read the full notice and apply through the Grants.gov application."
+GRANTS_GOV_APPLY = (
+    "How to apply: read the full notice and apply through the Grants.gov application."
+)
+FUNDER_APPLY = "How to apply: read the full notice and apply on the funder's website."
 DEMO_RECEIPT = "DEMO-RECEIPT-0001 (demo record, not a real submission)"
 
 # Riverbend's own draft answers to Hope's standard sections, in question order.
@@ -59,9 +63,13 @@ ANSWERS = (
 # grant URL → (ask in dollars, application stage, phase, answers written)
 BIDS: dict[str, tuple[int, str, str, int]] = {
     TITLE_X: (350_000, "drafting", "preparing", 3),
-    MENTORING: (500_000, "ready", "final_reviewed", 6),
+    NCW_YOUTH: (1_000, "ready", "final_reviewed", 6),
     YOUTH_TREATMENT: (450_000, "submitted", "submitted", 6),
 }
+
+
+def _how_to_apply(url: str) -> str:
+    return GRANTS_GOV_APPLY if urlsplit(url).hostname == "www.grants.gov" else FUNDER_APPLY
 
 
 def _requirements(url: str) -> Requirements:
@@ -73,7 +81,7 @@ def _requirements(url: str) -> Requirements:
             max_request_amount=c.amount_max,
         ),
         submission=Submission(
-            method=Sourced(text=HOW_TO_APPLY, url=url),
+            method=Sourced(text=_how_to_apply(url), url=url),
             deadline=Sourced(text=spec["deadline_text"], url=url),
             deadline_date=c.deadline,
         ),
