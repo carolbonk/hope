@@ -79,24 +79,57 @@ function NavLinks() {
     ro?.observe(nav);
     return () => ro?.disconnect();
   }, [path, savedCount, h]);
+  // On narrow screens the links swipe sideways; arrows show only where more links are hidden.
+  const [more, setMore] = useState({ prev: false, next: false });
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const active = nav.querySelector<HTMLElement>('[aria-current="page"]');
+    if (active && nav.scrollWidth > nav.clientWidth) nav.scrollTo?.({ left: active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2 });
+    const update = () => setMore({ prev: nav.scrollLeft > 1, next: nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 1 });
+    update();
+    nav.addEventListener("scroll", update, { passive: true });
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    ro?.observe(nav);
+    return () => {
+      nav.removeEventListener("scroll", update);
+      ro?.disconnect();
+    };
+  }, [path, savedCount, h]);
+  const slide = (dir: 1 | -1) => navRef.current?.scrollBy?.({ left: dir * navRef.current.clientWidth * 0.6, behavior: "smooth" });
+  const fade = `linear-gradient(to right, transparent, #000 ${more.prev ? "2.5rem" : "0rem"}, #000 calc(100% - ${more.next ? "2.5rem" : "0rem"}), transparent)`;
+  const arrow = `absolute top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full glass-control text-navy transition-opacity duration-200 ${focusRing}`;
   return (
-    <nav ref={navRef} aria-label={h.brand} className="group relative order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
-      <span ref={pillRef} aria-hidden className="pointer-events-none absolute inset-y-0 left-0 rounded-full bg-navy opacity-0 transition-[transform,width,opacity] duration-300 ease-out" />
-      {NAV.map((n) => {
-        const active = path.startsWith(n.href) || (n.key === "saved" && path.startsWith("/hope/applications"));
-        return (
-          <Link
-            key={n.key}
-            href={n.href}
-            aria-current={active ? "page" : undefined}
-            className={`relative whitespace-nowrap rounded-full px-3 py-2.5 text-sm transition-colors duration-300 sm:px-4 ${focusRing} ${active ? "bg-navy text-white group-data-ready:bg-transparent" : "text-muted hover:text-navy"}`}
-          >
-            {n.key === "matrix" || n.key === "bids" ? bidsNav[n.key] : h.nav[n.key]}
-            {n.key === "saved" && savedCount > 0 && <span className="ml-1 tabular-nums">({savedCount})</span>}
-          </Link>
-        );
-      })}
-    </nav>
+    <div className="relative order-3 w-full sm:order-none sm:w-auto">
+      <button type="button" aria-label={h.look.tabsPrev} hidden={!more.prev} onClick={() => slide(-1)} className={`${arrow} left-0`}>
+        <Icon name="chevron" className="size-4 rotate-180" aria-hidden />
+      </button>
+      <nav
+        ref={navRef}
+        aria-label={h.brand}
+        style={more.prev || more.next ? { WebkitMaskImage: fade, maskImage: fade } : undefined}
+        className="scroll-tabs group relative flex w-full snap-x snap-proximity gap-1 overflow-x-auto scroll-smooth sm:w-auto"
+      >
+        <span ref={pillRef} aria-hidden className="pointer-events-none absolute inset-y-0 left-0 rounded-full bg-navy opacity-0 transition-[transform,width,opacity] duration-300 ease-out" />
+        {NAV.map((n) => {
+          const active = path.startsWith(n.href) || (n.key === "saved" && path.startsWith("/hope/applications"));
+          return (
+            <Link
+              key={n.key}
+              href={n.href}
+              aria-current={active ? "page" : undefined}
+              className={`relative snap-center whitespace-nowrap rounded-full px-3 py-2.5 text-sm transition-colors duration-300 sm:px-4 ${focusRing} ${active ? "bg-navy text-white group-data-ready:bg-transparent" : "text-muted hover:text-navy"}`}
+            >
+              {n.key === "matrix" || n.key === "bids" ? bidsNav[n.key] : h.nav[n.key]}
+              {n.key === "saved" && savedCount > 0 && <span className="ml-1 tabular-nums">({savedCount})</span>}
+            </Link>
+          );
+        })}
+      </nav>
+      <button type="button" aria-label={h.look.tabsNext} hidden={!more.next} onClick={() => slide(1)} className={`${arrow} right-0`}>
+        <Icon name="chevron" className="size-4" aria-hidden />
+      </button>
+    </div>
   );
 }
 

@@ -120,3 +120,21 @@ it.each([
   render(<HopeFooter />);
   expect(screen.queryByText(/Saved in this browser only/) !== null).toBe(shown);
 });
+
+it("the nav shows an arrow only toward hidden links, and the arrow slides the strip", async () => {
+  const size = (v: number) => ({ configurable: true, get: () => v });
+  Object.defineProperty(HTMLElement.prototype, "scrollWidth", size(600));
+  Object.defineProperty(HTMLElement.prototype, "clientWidth", size(300));
+  const scrollBy = vi.fn();
+  HTMLElement.prototype.scrollBy = scrollBy;
+  try {
+    await renderNav(false);
+    expect(screen.queryByRole("button", { name: "Previous tabs" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "More tabs" }));
+    expect(scrollBy).toHaveBeenCalledWith({ left: 180, behavior: "smooth" });
+  } finally {
+    delete (HTMLElement.prototype as Partial<HTMLElement>).scrollBy;
+    Object.defineProperty(HTMLElement.prototype, "scrollWidth", size(0));
+    Object.defineProperty(HTMLElement.prototype, "clientWidth", size(0));
+  }
+});

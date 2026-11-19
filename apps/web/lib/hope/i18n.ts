@@ -38,6 +38,8 @@ const en = {
     endTitle: "A little space to reflect.",
     footerL: "Fictional demo data · Saved in this browser only",
     footerR: "Built for people who make a difference.",
+    tabsPrev: "Previous tabs",
+    tabsNext: "More tabs",
   },
 
   loading: "Loading your workspace…",
@@ -522,6 +524,8 @@ const es: HopeDict = {
     endTitle: "Un espacio para pensar.",
     footerL: "Datos ficticios · Guardados solo en este navegador",
     footerR: "Para quienes hacen la diferencia.",
+    tabsPrev: "Pestañas anteriores",
+    tabsNext: "Más pestañas",
   },
 
   loading: "Cargando tu espacio…",
