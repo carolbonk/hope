@@ -240,7 +240,17 @@ export function HopeFooter() {
           {h.demo} · {h.storageNote}
         </span>
       )}
-      <span>{h.look.footerR}</span>
+      <span>
+        {h.look.footerR}
+        {process.env.NEXT_PUBLIC_HOPE_STATIC === "1" && (
+          <>
+            {" · "}
+            <a href="https://www.youtube.com/watch?v=O9q-CR2DaNc" target="_blank" rel="noreferrer" className={`font-semibold text-accent underline ${focusRing}`}>
+              {h.look.watch}
+            </a>
+          </>
+        )}
+      </span>
     </div>
   );
 }

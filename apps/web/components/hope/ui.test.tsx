@@ -138,3 +138,12 @@ it("the nav shows an arrow only toward hidden links, and the arrow slides the st
     Object.defineProperty(HTMLElement.prototype, "clientWidth", size(0));
   }
 });
+
+it("the static demo footer links the YouTube walkthrough", async () => {
+  vi.resetModules();
+  vi.stubEnv("NEXT_PUBLIC_HOPE_STATIC", "1");
+  const { HopeFooter } = await import("./ui");
+  render(<HopeFooter />);
+  expect(screen.getByRole("link", { name: "Watch the walkthrough ↗" })).toHaveAttribute("href", "https://www.youtube.com/watch?v=O9q-CR2DaNc");
+  vi.unstubAllEnvs();
+});

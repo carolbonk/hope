@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Panel, btnPrimary, btnSecondary, input } from "@/components/hope/ui";
-import type { HopeDraftResult } from "@/lib/hope/draft";
+import { hopeTemplate, type HopeDraftResult } from "@/lib/hope/draft";
 import { useHopeT } from "@/lib/hope/i18n";
 import { SECTION_IDS, useHope } from "@/lib/hope/store";
 import type { Application, Opportunity, SectionId } from "@/lib/hope/types";
@@ -19,6 +19,8 @@ export function DraftPanel({ opp, app, up }: { opp: Opportunity; app: Applicatio
   const [notes, setNotes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
   const unlocked = app.stage === "drafting" || app.stage === "ready" || app.stage === "submitted";
+  // The static demo (Hugging Face Space) has no server, so it drafts from the template in the browser.
+  const inBrowser = process.env.NEXT_PUBLIC_HOPE_STATIC === "1";
 
   async function generate(mode: "agent" | "template") {
     const edited = SECTION_IDS.some((s) => app.sections[s].origin === "human" && app.sections[s].text.trim());
@@ -26,14 +28,15 @@ export function DraftPanel({ opp, app, up }: { opp: Opportunity; app: Applicatio
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/hope/draft", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ locale, mode, ask: opp.amountMax, profile: state.profile, opportunity: opp }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) return setError(data.error === "missing_openai_key" ? a.missingKey : a.agentFailed);
-      const r = data as HopeDraftResult;
+      const body = { locale, mode, ask: opp.amountMax, profile: state.profile, opportunity: opp };
+      let r: HopeDraftResult;
+      if (inBrowser) r = hopeTemplate(body);
+      else {
+        const res = await fetch("/api/hope/draft", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return setError(data.error === "missing_openai_key" ? a.missingKey : a.agentFailed);
+        r = data as HopeDraftResult;
+      }
       const at = new Date().toISOString();
       up((x) => ({ ...x, sections: Object.fromEntries(SECTION_IDS.map((s) => [s, { text: r.sections[s] ?? "", origin: r.source, updatedAt: at }])) as Application["sections"] }), `draft:${r.source}`);
       setNotes(r.reviewerNotes);
@@ -54,8 +57,8 @@ export function DraftPanel({ opp, app, up }: { opp: Opportunity; app: Applicatio
       ) : (
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <button className={btnPrimary} disabled={busy} onClick={() => generate("agent")}>
-              {busy ? a.drafting : a.draftAi}
+            <button className={btnPrimary} disabled={busy} onClick={() => generate(inBrowser ? "template" : "agent")}>
+              {busy ? a.drafting : inBrowser ? a.draftTemplate : a.draftAi}
             </button>
             {error && (
               <button className={btnSecondary} disabled={busy} onClick={() => generate("template")}>
