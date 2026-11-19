@@ -18,7 +18,7 @@ from hope_core.store import Tx
 from hope_discovery.answers import ChecklistItem, standard_questions
 from hope_discovery.demo_grants import (
     GRANTS,
-    MENTORING,
+    NCW_YOUTH,
     TITLE_X,
     YOUTH_TREATMENT,
     candidate,
@@ -59,7 +59,7 @@ ANSWERS = (
 # grant URL → (ask in dollars, application stage, phase, answers written)
 BIDS: dict[str, tuple[int, str, str, int]] = {
     TITLE_X: (350_000, "drafting", "preparing", 3),
-    MENTORING: (500_000, "ready", "final_reviewed", 6),
+    NCW_YOUTH: (1_000, "ready", "final_reviewed", 6),
     YOUTH_TREATMENT: (450_000, "submitted", "submitted", 6),
 }
 
