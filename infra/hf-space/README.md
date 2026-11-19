@@ -3,8 +3,7 @@ title: Hope
 emoji: ✳️
 colorFrom: indigo
 colorTo: pink
-sdk: docker
-app_port: 7860
+sdk: static
 pinned: false
 license: other
 short_description: Your AI grant team. Demo with sample data.

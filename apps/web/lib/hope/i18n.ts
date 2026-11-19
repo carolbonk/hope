@@ -38,6 +38,7 @@ const en = {
     endTitle: "A little space to reflect.",
     footerL: "Fictional demo data · Saved in this browser only",
     footerR: "Built for people who make a difference.",
+    watch: "Watch the walkthrough ↗",
   },
 
   loading: "Loading your workspace…",
@@ -296,6 +297,7 @@ const en = {
     section: { program: "Program description", alignment: "Alignment with mission & outcomes", logicModel: "Logic model", objectives: "Measurable objectives & outcomes", budget: "Budget", budgetNarrative: "Budget narrative" } as Record<string, string>,
     origin: { empty: "Empty", ai: "AI draft", template: "Template", human: "Human edit" } as Record<string, string>,
     draftAi: "Draft with AI",
+    draftTemplate: "Draft from the template (AI is off in this demo)",
     drafting: "Drafting…",
     useTemplate: "Use the built-in template instead",
     overwrite: "This will overwrite sections you edited. Continue?",
@@ -522,6 +524,7 @@ const es: HopeDict = {
     endTitle: "Un espacio para pensar.",
     footerL: "Datos ficticios · Guardados solo en este navegador",
     footerR: "Para quienes hacen la diferencia.",
+    watch: "Ver el recorrido ↗",
   },
 
   loading: "Cargando tu espacio…",
@@ -780,6 +783,7 @@ const es: HopeDict = {
     section: { program: "Descripción del programa", alignment: "Alineación con la misión y resultados", logicModel: "Modelo lógico", objectives: "Objetivos y resultados medibles", budget: "Presupuesto", budgetNarrative: "Narrativa del presupuesto" },
     origin: { empty: "Vacío", ai: "Borrador IA", template: "Plantilla", human: "Edición humana" },
     draftAi: "Redactar con IA",
+    draftTemplate: "Redactar con la plantilla (la IA está desactivada en esta demo)",
     drafting: "Redactando…",
     useTemplate: "Usar la plantilla incorporada",
     overwrite: "Esto sobrescribirá secciones que editaste. ¿Continuar?",
