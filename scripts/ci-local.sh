@@ -40,6 +40,7 @@ step() {
   else
     echo "FAIL (log: $logs/$name.log)"; results+=("FAIL  $name"); failed=1
     tail -n 20 "$logs/$name.log" | sed 's/^/    /'
+    return 1
   fi
 }
 skip() { printf '%-22s skipped (%s)\n' "$1" "$2"; results+=("skip  $1"); }
