@@ -47,7 +47,8 @@ skip() { printf '%-22s skipped (%s)\n' "$1" "$2"; results+=("skip  $1"); }
 
 containers=()
 cleanup() { [ ${#containers[@]} -gt 0 ] && docker rm -f "${containers[@]}" >/dev/null 2>&1; }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT TERM
 suffix=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
 
 # Throwaway pgvector Postgres on :5432, as in CI (some tests hard-code that port).
