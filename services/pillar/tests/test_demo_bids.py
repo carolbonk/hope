@@ -12,6 +12,7 @@ from hope_discovery.demo_grants import NCW_YOUTH, TITLE_X, YOUTH_TREATMENT, gran
 from hope_pillar import demo_bids
 from hope_pillar.api.bids import _load
 from hope_pillar.demo import seed_user
+from hope_pillar.demo_bids import FUNDER_APPLY, GRANTS_GOV_APPLY
 
 pytestmark = pytest.mark.db
 
@@ -51,6 +52,16 @@ def test_demo_bids_seed_once_at_three_points(migrated_db: str) -> None:
     assert all(
         i.status == "ready" and i.review is not None and not i.review.stale for i in final.items
     )
+
+    methods = {}
+    for url, (_, app, _) in views.items():
+        assert app.requirements is not None and app.requirements.submission.method is not None
+        methods[url] = app.requirements.submission.method.text
+    assert methods == {
+        TITLE_X: GRANTS_GOV_APPLY,
+        NCW_YOUTH: FUNDER_APPLY,
+        YOUTH_TREATMENT: GRANTS_GOV_APPLY,
+    }
 
     sent, sent_app, _ = views[YOUTH_TREATMENT]
     assert sent.phase == "submitted" and sent_app.stage == "submitted"
