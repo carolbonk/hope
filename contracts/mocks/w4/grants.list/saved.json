@@ -10,6 +10,7 @@
         "url": "https://cascadehealth.example.org/grants/rural-oral-health",
         "domain": "cascadehealth.example.org",
         "summary": "Two-year grants for nonprofits that bring preventive dental care to rural Washington communities.",
+        "eligibility_summary": "Nonprofits with 501(c)(3) status serving rural Washington counties.",
         "amount_text": "up to $75,000 per year",
         "amount_max": {
           "amount_minor": 7500000,

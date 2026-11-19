@@ -47,6 +47,7 @@ class GrantCard(BaseModel):
     url: str
     domain: str
     summary: str
+    eligibility_summary: str | None
     amount_text: str | None
     amount_max: Money | None
     deadline_text: str | None
@@ -63,7 +64,6 @@ class GrantCard(BaseModel):
 
 
 class GrantDetail(GrantCard):
-    eligibility_summary: str | None
     summary_citation_ids: list[str]
     amount_citation_id: str | None
     deadline_citation_id: str | None
@@ -179,6 +179,7 @@ def _card_fields(g: GrantCandidate, today: date, items: int | None) -> dict[str,
         "url": g.url,
         "domain": domain(g.url),
         "summary": summary,
+        "eligibility_summary": g.eligibility_summary,
         "amount_text": g.amount_text,
         "amount_max": g.amount_max,
         "deadline_text": g.deadline_text,
@@ -208,7 +209,6 @@ def to_card(g: GrantCandidate, today: date) -> GrantCard:
 def to_detail(g: GrantCandidate, today: date) -> GrantDetail:
     return GrantDetail(
         **_card_fields(g, today, None),
-        eligibility_summary=g.eligibility_summary,
         amount_citation_id=_quoting(g.citations, g.amount_text),
         deadline_citation_id=_quoting(g.citations, g.deadline_text),
         found_by_job_id=g.found_by_job_id,

@@ -207,6 +207,17 @@
             "title": "Domain",
             "type": "string"
           },
+          "eligibility_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eligibility Summary"
+          },
           "fit_band": {
             "enum": [
               "strong",
@@ -277,6 +288,7 @@
           "url",
           "domain",
           "summary",
+          "eligibility_summary",
           "amount_text",
           "amount_max",
           "deadline_text",
@@ -500,6 +512,7 @@
           "url",
           "domain",
           "summary",
+          "eligibility_summary",
           "amount_text",
           "amount_max",
           "deadline_text",
@@ -513,7 +526,6 @@
           "citations",
           "status",
           "discovered_at",
-          "eligibility_summary",
           "summary_citation_ids",
           "amount_citation_id",
           "deadline_citation_id",
