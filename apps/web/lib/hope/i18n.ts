@@ -38,6 +38,7 @@ const en = {
     endTitle: "A little space to reflect.",
     footerL: "Fictional demo data · Saved in this browser only",
     footerR: "Built for people who make a difference.",
+    watch: "Watch the walkthrough ↗",
   },
 
   loading: "Loading your workspace…",
@@ -523,6 +524,7 @@ const es: HopeDict = {
     endTitle: "Un espacio para pensar.",
     footerL: "Datos ficticios · Guardados solo en este navegador",
     footerR: "Para quienes hacen la diferencia.",
+    watch: "Ver el recorrido ↗",
   },
 
   loading: "Cargando tu espacio…",
