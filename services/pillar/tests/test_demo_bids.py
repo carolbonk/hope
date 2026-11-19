@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from unittest.mock import Mock
 from uuid import UUID
 
 import pytest
@@ -10,18 +11,26 @@ from hope_core.settings import get_settings
 from hope_discovery import demo_grants
 from hope_discovery.demo_grants import MENTORING, TITLE_X, YOUTH_TREATMENT, grant_id
 from hope_pillar import demo_bids
+from hope_pillar.api import applications, bids
 from hope_pillar.api.bids import _load
 from hope_pillar.demo import seed_user
 
 pytestmark = pytest.mark.db
 
 
-def test_demo_bids_seed_once_at_three_points(migrated_db: str) -> None:
+def test_demo_bids_seed_once_at_three_points(
+    migrated_db: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clock = Mock(wraps=datetime)
+    clock.now.return_value = demo_grants.RECORDED
+    monkeypatch.setattr(demo_bids, "datetime", clock)
+    monkeypatch.setattr(applications, "datetime", clock)
+    monkeypatch.setattr(bids, "_today", lambda: clock.now().date())
     settings = get_settings()
     store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)
     seed_user()
     with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
-        demo_grants.seed_grants(tx, datetime.now().astimezone().date())
+        demo_grants.seed_grants(tx, clock.now().date())
         ids = [grant_id(tx, u) for u in demo_bids.BIDS]
         tx.execute("DELETE FROM applications WHERE grant_id = ANY(%s)", (ids,))
     assert demo_bids.seed() is True
@@ -48,8 +57,16 @@ def test_demo_bids_seed_once_at_three_points(migrated_db: str) -> None:
     final, final_app, _ = views[MENTORING]
     assert final.phase == "final_reviewed" and final_app.stage == "ready"
     assert final.ready == final.total and not final.blocker_list
+    assert final.deadline == date(2026, 11, 16)
 
     sent, sent_app, _ = views[YOUTH_TREATMENT]
     assert sent.phase == "submitted" and sent_app.stage == "submitted"
     assert sent.submission is not None and "demo" in sent.submission.receipt
     assert all(i.review is not None and not i.review.stale for i in sent.items)
+
+    clock.now.return_value = demo_grants.RECORDED + timedelta(days=9)
+    with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
+        expired, _, _ = _load(tx, final.application_id)
+    assert expired.deadline == final.deadline
+    assert expired.ready == expired.total
+    assert {b.code for b in expired.blocker_list} == {"checklist_incomplete", "deadline_passed"}
