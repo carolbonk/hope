@@ -47,7 +47,9 @@ function fetchMe(): Promise<void> {
   return inflight;
 }
 
-const onFocus = () => void fetchMe();
+const onFocus = () => {
+  if (online) void fetchMe();
+};
 const onUnauthorized = () => set({ status: "signed_out" });
 
 function subscribe(listener: () => void) {
