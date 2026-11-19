@@ -9,6 +9,7 @@ grant opportunities, score them against an agency's mission and capacity, build 
 budgets, and draft applications. Humans approve every commitment through explicit
 approval gates.
 
+- Youtube video: https://www.youtube.com/watch?v=O9q-CR2DaNc
 - Architecture: [`docs/architecture/blueprint.md`](docs/architecture/blueprint.md)
 - Working rules and folder ownership: [`AGENTS.md`](AGENTS.md)
 
