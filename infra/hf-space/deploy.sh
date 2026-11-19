@@ -7,6 +7,11 @@ cd "$(git rev-parse --show-toplevel)"
 pnpm install --frozen-lockfile
 rm -rf apps/web/out
 HOPE_STATIC_EXPORT=1 NEXT_PUBLIC_HOPE_STATIC=1 NEXT_PUBLIC_HOPE_API_URL= pnpm --filter @hope/web build
+# HF serves /x as x.html only when there is no x/ folder, so drop the folders that hold nothing but Next's
+# segment-prefetch files (__next.*.txt). Those prefetches then 404 and links load the page itself.
+find apps/web/out -mindepth 1 -type d ! -path 'apps/web/out/_next*' | sort -r | while read -r d; do
+  if [ -f "$d.html" ] && [ -z "$(find "$d" -mindepth 1 ! -name '__next.*.txt' -print -quit)" ]; then rm -rf "$d"; fi
+done
 cp infra/hf-space/README.md apps/web/out/README.md
 python3 -m venv /tmp/hf-venv
 /tmp/hf-venv/bin/pip install --quiet 'huggingface_hub>=0.30,<1'
