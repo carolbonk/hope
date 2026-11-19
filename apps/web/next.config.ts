@@ -13,9 +13,7 @@ const config: NextConfig = {
     ? { output: "export", trailingSlash: true, images: { unoptimized: true } }
     : {
         async rewrites() {
-          return apiOrigin
-            ? [{ source: "/v1/:path*", destination: `${apiOrigin}/v1/:path*` }]
-            : [];
+          return apiOrigin ? [{ source: "/v1/:path*", destination: `${apiOrigin}/v1/:path*` }] : [];
         },
       }),
 };

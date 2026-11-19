@@ -133,15 +133,10 @@ it("after an error, the template fills all six sections as template", async () =
 it("the static demo drafts from the template in the browser, without a request", async () => {
   vi.stubEnv("NEXT_PUBLIC_HOPE_STATIC", "1");
   const up = show(app("drafting"));
-  fireEvent.click(
-    screen.getByRole("button", {
-      name: "Draft from the template (AI is off in this demo)",
-    }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "Draft from the template (AI is off in this demo)" }));
   await waitFor(() => expect(up).toHaveBeenCalledTimes(1));
   expect(fetchMock).not.toHaveBeenCalled();
   const next = up.mock.calls[0]![0](app("drafting")) as Application;
-  for (const s of SECTION_IDS)
-    expect(next.sections[s]).toMatchObject({ origin: "template" });
+  for (const s of SECTION_IDS) expect(next.sections[s]).toMatchObject({ origin: "template" });
   vi.unstubAllEnvs();
 });
