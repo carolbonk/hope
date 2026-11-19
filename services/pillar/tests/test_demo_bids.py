@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from unittest.mock import Mock
 from uuid import UUID
 
 import pytest
@@ -10,6 +11,7 @@ from hope_core.settings import get_settings
 from hope_discovery import demo_grants
 from hope_discovery.demo_grants import NCW_YOUTH, TITLE_X, YOUTH_TREATMENT, grant_id
 from hope_pillar import demo_bids
+from hope_pillar.api import applications, bids
 from hope_pillar.api.bids import _load
 from hope_pillar.demo import seed_user
 from hope_pillar.demo_bids import FUNDER_APPLY, GRANTS_GOV_APPLY
@@ -17,12 +19,19 @@ from hope_pillar.demo_bids import FUNDER_APPLY, GRANTS_GOV_APPLY
 pytestmark = pytest.mark.db
 
 
-def test_demo_bids_seed_once_at_three_points(migrated_db: str) -> None:
+def test_demo_bids_seed_once_at_three_points(
+    migrated_db: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clock = Mock(wraps=datetime)
+    clock.now.return_value = demo_grants.RECORDED
+    monkeypatch.setattr(demo_bids, "datetime", clock)
+    monkeypatch.setattr(applications, "datetime", clock)
+    monkeypatch.setattr(bids, "_today", lambda: clock.now().date())
     settings = get_settings()
     store.ensure_tenant(migrated_db, settings.tenant_id, settings.agency_id)
     seed_user()
     with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
-        demo_grants.seed_grants(tx, datetime.now().astimezone().date())
+        demo_grants.seed_grants(tx, clock.now().date())
         ids = [grant_id(tx, u) for u in demo_bids.BIDS]
         tx.execute("DELETE FROM applications WHERE grant_id = ANY(%s)", (ids,))
     assert demo_bids.seed() is True
@@ -45,6 +54,8 @@ def test_demo_bids_seed_once_at_three_points(migrated_db: str) -> None:
     assert statuses == {"missing", "working", "ready"}
     assert {i.owner is None for i in prep.items} == {True, False}
     assert 0 < prep.ready < prep.total and prep.blocker_list
+    assert prep.deadline == date(2027, 1, 11)
+    assert "deadline_passed" not in {b.code for b in prep.blocker_list}
 
     final, final_app, _ = views[NCW_YOUTH]
     assert final.phase == "final_reviewed" and final_app.stage == "ready"
@@ -67,3 +78,11 @@ def test_demo_bids_seed_once_at_three_points(migrated_db: str) -> None:
     assert sent.phase == "submitted" and sent_app.stage == "submitted"
     assert sent.submission is not None and "demo" in sent.submission.receipt
     assert all(i.review is not None and not i.review.stale for i in sent.items)
+
+    clock.now.return_value = demo_grants.RECORDED + timedelta(days=400)
+    with connect() as conn, tenant_tx(conn, settings.tenant_id) as tx:
+        expired, _, _ = _load(tx, prep.application_id)
+    assert expired.deadline == prep.deadline
+    assert {b.code for b in expired.blocker_list} - {b.code for b in prep.blocker_list} == {
+        "deadline_passed"
+    }
