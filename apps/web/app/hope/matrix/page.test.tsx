@@ -29,10 +29,15 @@ const row = (name: string) => within(table()).getByText(name).closest("tr") as H
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-07T12:00:00"));
   window.localStorage.clear();
   api.listBids.mockResolvedValue([{ grant_id: OTHER }]);
 });
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllEnvs();
+});
 
 it("ranks every opportunity by the sample score and filters by recommendation", async () => {
   await renderPage(true);
