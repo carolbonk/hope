@@ -154,7 +154,9 @@ def parse_deadline(quote: str | None, today: date) -> DeadlineParse:
     if rolling and not dates:
         return DeadlineParse(None, rolling=True)
     future = sorted(d for d in dates if d >= today)
-    yearless = not dates and bool(DATE_YEARLESS.search(quote))
+    yearless = not dates and (
+        bool(_month_days(quote)) or (not _dates(quote) and bool(DATE_YEARLESS.search(quote)))
+    )
     return DeadlineParse(future[0] if future else None, rolling, dates, yearless)
 
 
