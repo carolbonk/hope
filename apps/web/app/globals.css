@@ -84,6 +84,13 @@
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
+/* Swipeable tab strip: no scrollbar (the nav shows arrows instead). */
+@utility scroll-tabs {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 @utility glass-focus {
   &:focus-visible {
     outline: 3px solid var(--color-focus);
