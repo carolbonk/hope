@@ -105,8 +105,25 @@ def parse_amount(quote: str | None) -> AmountParse | None:
     return AmountParse(min=None, max=found[0][0])
 
 
-def _dates(text: str) -> list[date]:
-    out: list[tuple[int, date]] = []
+OPEN_BEFORE_DATE = re.compile(r"\bopen(?:s|ing|ed)?\s+(?:(?:on|from)\s+)?$", re.I)
+CLOSING_CUE = re.compile(r"\b(?:clos(?:e|es|ing)|due|deadline|until|through|thru|by)\b", re.I)
+OPEN_AFTER_DATE = re.compile(
+    r"\s*:\s*(?:(?:applications?|portal|submissions?)\s+)?(?:are\s+)?open(?:s|ing|ed)?\b"
+    r"(?!\s+(?:until|through|thru)\b)",
+    re.I,
+)
+
+
+def _opening_date(text: str, start: int, end: int) -> bool:
+    label = re.split(r"[.!?;\n]", text[end:], maxsplit=1)[0]
+    return bool(
+        OPEN_BEFORE_DATE.search(text[:start])
+        or (OPEN_AFTER_DATE.match(text, end) and not CLOSING_CUE.search(label))
+    )
+
+
+def _dates(text: str, *, deadlines_only: bool = False) -> list[date]:
+    out: list[tuple[int, int, date]] = []
     taken: list[tuple[int, int]] = []
     for rx in (DATE_NAMED, DATE_DAY_FIRST, DATE_US, DATE_ISO):
         for m in rx.finditer(text):
@@ -117,23 +134,34 @@ def _dates(text: str) -> list[date]:
             year = int(m.group("year"))
             year += 2000 if year < 100 else 0  # "3/3/27"
             try:
-                out.append((m.start(), date(year, month_no, int(m.group("day")))))
+                out.append((m.start(), m.end(), date(year, month_no, int(m.group("day")))))
             except ValueError:
                 continue
             taken.append((m.start(), m.end()))
-    return [d for _, d in sorted(out, key=lambda x: x[0])]
+    ordered = sorted(out)
+    return [
+        d
+        for i, (start, end, d) in enumerate(ordered)
+        if not deadlines_only
+        or (
+            not _opening_date(text, start, end)
+            and not (i + 1 < len(ordered) and WINDOW_TO.fullmatch(text[end : ordered[i + 1][0]]))
+        )
+    ]
 
 
 def parse_deadline(quote: str | None, today: date) -> DeadlineParse:
-    """`deadline` is the earliest date on or after `today`. Year-less dates are not parsed."""
+    """The earliest non-opening date on or after `today`. Year-less dates are not parsed."""
     if not quote:
         return DeadlineParse(None)
-    dates = _dates(quote)
+    dates = _dates(quote, deadlines_only=True)
     rolling = bool(ROLLING.search(quote))
     if rolling and not dates:
         return DeadlineParse(None, rolling=True)
     future = sorted(d for d in dates if d >= today)
-    yearless = not dates and bool(DATE_YEARLESS.search(quote))
+    yearless = not dates and (
+        bool(_month_days(quote)) or (not _dates(quote) and bool(DATE_YEARLESS.search(quote)))
+    )
     return DeadlineParse(future[0] if future else None, rolling, dates, yearless)
 
 
@@ -150,14 +178,30 @@ CYCLE_YEAR = re.compile(
 )
 
 
-def _month_days(quote: str) -> list[tuple[int, int]]:
+def _month_days(quote: str, *, require_closing: bool = False) -> list[tuple[int, int, int]]:
     """Year-less `March 1` dates, minus a window's opening date (`March 1 through June 1`)."""
     found = list(MONTH_DAY.finditer(quote))
+    date_ends = [
+        m.end()
+        for rx in (MONTH_DAY, DATE_NAMED, DATE_DAY_FIRST, DATE_US, DATE_ISO)
+        for m in rx.finditer(quote)
+    ]
     out = []
     for i, m in enumerate(found):
+        if require_closing:
+            before = re.split(r"[.!?;\n]", quote[: m.start()])[-1]
+            after = re.split(r"[.!?;\n]", quote[m.end() :], maxsplit=1)[0]
+            label = after if after.lstrip().startswith(":") else ""
+            range_end = any(
+                end < m.start() and WINDOW_TO.fullmatch(quote[end : m.start()]) for end in date_ends
+            )
+            if not range_end and not CLOSING_CUE.search(before + label):
+                continue
+        if _opening_date(quote, m.start(), m.end()):
+            continue
         if i + 1 < len(found) and WINDOW_TO.fullmatch(quote[m.end() : found[i + 1].start()]):
             continue
-        out.append((MONTHS[m.group("month").lower().rstrip(".")], int(m.group("day"))))
+        out.append((m.start(), MONTHS[m.group("month").lower().rstrip(".")], int(m.group("day"))))
     return out
 
 
@@ -170,19 +214,27 @@ def cycle_year(pages: list[str]) -> int | None:
 def infer_deadline(quote: str, pages: list[str], today: date) -> DeadlineParse | None:
     """A year-less deadline gets its year only from the page: the next date when the quote says it
     repeats (`each year`, `annually`), or the page's one cycle year. Never a guess: no year on the
-    page, or a past result, gives None (the deadline stays unknown)."""
-    days = _month_days(quote) if not _dates(quote) else []
+    page, or a result before today or its preceding dated opening, gives None (the deadline stays
+    unknown)."""
+    opening_dates = _dates(quote)
+    days = (
+        _month_days(quote, require_closing=bool(opening_dates))
+        if not _dates(quote, deadlines_only=True)
+        else []
+    )
     year = None if ANNUAL.search(quote) else cycle_year(pages)
     if not days or (year is None and not ANNUAL.search(quote)):
         return None
     out = []
-    for month, day in days:
+    for start, month, day in days:
+        preceding_openings = _dates(quote[:start])
+        earliest_closing = max(today, preceding_openings[-1]) if preceding_openings else today
         for y in (year,) if year else (today.year, today.year + 1):
             try:
                 d = date(y, month, day)
             except ValueError:
                 continue
-            if d >= today:
+            if d >= earliest_closing:
                 out.append(d)
                 break
     if not out:
@@ -328,7 +380,7 @@ def find_deadline(pages: list[str], today: date) -> tuple[Found, DeadlineParse] 
                 continue
             if PAST_WORDS.search(clause):
                 continue
-            future = [d for d in _dates(clause) if d >= today]
+            future = [d for d in _dates(clause, deadlines_only=True) if d >= today]
             if future and DEADLINE_WORDS.search(clause):
                 if dated is None or min(future) < dated[0]:
                     dated = (min(future), Found(_clip(clause, 0, len(clause)), page_no))

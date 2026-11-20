@@ -17,6 +17,90 @@ from hope_discovery.parse import (
 TODAY = date(2026, 11, 8)
 
 
+@pytest.mark.parametrize("page_fallback", [False, True])
+def test_loi_before_dated_application_opening_is_kept(page_fallback: bool) -> None:
+    quote = "Letter of intent due February 1. Full applications open March 1, 2027 and close May 1."
+    pages = ["2027 grant cycle. " + quote]
+    if page_fallback:
+        found = find_deadline(pages, TODAY)
+        assert found is not None and found[1].date == date(2027, 2, 1)
+    else:
+        inferred = infer_deadline(quote, pages, TODAY)
+        assert inferred is not None and inferred.date == date(2027, 2, 1)
+
+
+@pytest.mark.parametrize("today", [date(2026, 1, 1), TODAY])
+@pytest.mark.parametrize("page_fallback", [False, True])
+def test_inferred_closing_cannot_precede_dated_opening(today: date, page_fallback: bool) -> None:
+    quote = "Applications open November 1, 2026 and close January 15."
+    pages = ["2026 grant cycle. " + quote]
+    if page_fallback:
+        assert find_deadline(pages, today) is None
+    else:
+        assert infer_deadline(quote, pages, today) is None
+    next_cycle = ["2027 grant cycle. " + quote]
+    inferred = infer_deadline(quote, next_cycle, today)
+    assert inferred is not None and inferred.date == date(2027, 1, 15)
+
+
+@pytest.mark.parametrize("separator", ["to", "\u2013", "-", "through"])
+@pytest.mark.parametrize("page_fallback", [False, True])
+def test_mixed_year_window_range_end_is_inferred(separator: str, page_fallback: bool) -> None:
+    quote = f"Applications open January 1, 2027 {separator} March 1."
+    pages = ["2027 grant cycle. " + quote]
+    if page_fallback:
+        found = find_deadline(pages, TODAY)
+        assert found is not None and found[1].date == date(2027, 3, 1)
+    else:
+        parsed = infer_deadline(quote, pages, TODAY)
+        assert parsed is not None and parsed.date == date(2027, 3, 1)
+
+
+@pytest.mark.parametrize("label", ["Open call closes", "Open call due", "Open call deadline"])
+def test_open_call_closing_label_is_a_deadline(label: str) -> None:
+    quote = f"March 1, 2027: {label}"
+    assert parse_deadline(quote, TODAY).date == date(2027, 3, 1)
+    found = find_deadline([quote], TODAY)
+    assert found is not None and found[1].date == date(2027, 3, 1)
+
+
+@pytest.mark.parametrize("page_fallback", [False, True])
+@pytest.mark.parametrize("separator", [". Informational", " and informational"])
+def test_dated_opening_does_not_turn_webinar_into_deadline(
+    page_fallback: bool, separator: str
+) -> None:
+    quote = f"Applications open January 1, 2027{separator} webinar March 3."
+    pages = ["2027 grant cycle. " + quote]
+    if page_fallback:
+        assert find_deadline(pages, TODAY) is None
+    else:
+        assert infer_deadline(quote, pages, TODAY) is None
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "Applications open until March 1, 2027",
+        "Applications open through March 1, 2027",
+        "January 1, 2027: applications open. March 1, 2027: applications close.",
+    ],
+)
+def test_opening_cues_preserve_closing_dates(quote: str) -> None:
+    assert parse_deadline(quote, TODAY).date == date(2027, 3, 1)
+    found = find_deadline([quote], TODAY)
+    assert found is not None and found[1].date == date(2027, 3, 1)
+
+
+def test_dated_opening_does_not_block_yearless_closing_inference() -> None:
+    quote = "Applications open January 1, 2027 and close March 1."
+    pages = ["2027 grant cycle. " + quote]
+    parsed = infer_deadline(quote, pages, TODAY)
+    assert parsed is not None and parsed.date == date(2027, 3, 1)
+    found = find_deadline(pages, TODAY)
+    assert found is not None and found[1].date == date(2027, 3, 1)
+    assert infer_deadline(quote, [quote], TODAY) is None
+
+
 @pytest.mark.parametrize(
     ("quote", "low", "high"),
     [
@@ -61,17 +145,45 @@ def test_amount_formats(quote: str, low: int | str | None, high: int | str) -> N
         ("Applications due March 3", None, False, True),
         ("Rolling, applications accepted year-round", None, True, False),
         ("Applications were due March 1, 2025", None, False, False),
+        (None, None, False, False),
+        ("Applications open January 1, 2027", None, False, False),
+        (
+            "Applications open February 30, 2027 and close March 1, 2027",
+            date(2027, 3, 1),
+            False,
+            False,
+        ),
     ],
 )
 def test_deadline_formats_yearless_and_rolling(
-    quote: str, expected: date | None, rolling: bool, yearless: bool
+    quote: str | None, expected: date | None, rolling: bool, yearless: bool
 ) -> None:
     parsed = parse_deadline(quote, TODAY)
     assert parsed.date == expected
     assert parsed.rolling is rolling
     assert parsed.yearless is yearless
-    if "2025" in quote:
+    if quote and "2025" in quote:
         assert parsed.all_dates == [date(2025, 3, 1)]
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "Applications open January 1, 2027 and close March 1, 2027.",
+        "Applications open Jan 1, 2027 \u2013 close Mar 1, 2027.",
+        "Applications open January 1, 2027 and are due March 1, 2027.",
+        "Application window: January 1, 2027 through March 1, 2027.",
+        "Applications open January 1 and close March 1.",
+    ],
+)
+def test_application_window_uses_closing_deadline(quote: str) -> None:
+    pages = ["2027 grant cycle. " + quote]
+    parsed = (
+        parse_deadline(quote, TODAY) if "2027" in quote else infer_deadline(quote, pages, TODAY)
+    )
+    assert parsed is not None and parsed.date == date(2027, 3, 1)
+    found = find_deadline(pages, TODAY)
+    assert found is not None and found[1].date == date(2027, 3, 1)
 
 
 @pytest.mark.parametrize(
