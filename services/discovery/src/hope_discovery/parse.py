@@ -149,11 +149,11 @@ def parse_deadline(quote: str | None, today: date) -> DeadlineParse:
     """The earliest non-opening date on or after `today`. Year-less dates are not parsed."""
     if not quote:
         return DeadlineParse(None)
-    dates = _dates(quote)
+    dates = _dates(quote, deadlines_only=True)
     rolling = bool(ROLLING.search(quote))
     if rolling and not dates:
         return DeadlineParse(None, rolling=True)
-    future = sorted(d for d in _dates(quote, deadlines_only=True) if d >= today)
+    future = sorted(d for d in dates if d >= today)
     yearless = not dates and bool(DATE_YEARLESS.search(quote))
     return DeadlineParse(future[0] if future else None, rolling, dates, yearless)
 

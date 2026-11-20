@@ -212,6 +212,18 @@ def test_yearless_deadline_dated_from_the_page(run_agent: Any, sentence: str) ->
         assert YEARLESS_CONCERN not in grant.concerns
 
 
+def test_rolling_grant_with_dated_opening_is_not_expired(run_agent: Any) -> None:
+    sentence = "Rolling applications; portal opens January 1, 2027"
+
+    def quoted(messages: Any, schema: Any) -> dict[str, Any]:
+        return extract_responder(messages, schema) | {"deadline": {"text": sentence, "page": 1}}
+
+    repo, result = run_agent(web=_YearlessWeb(sentence), overrides={PageExtraction: quoted})
+    assert result["counts"]["skipped_expired"] == 0
+    (grant,) = repo.candidates.values()
+    assert grant.deadline is None
+
+
 def test_program_total_quote_replaced_by_award_on_page(run_agent: Any) -> None:
     def total(messages: Any, schema: Any) -> dict[str, Any]:
         out = extract_responder(messages, schema)
