@@ -10,7 +10,8 @@ vi.mock("@/components/hope/bids/api", () => api);
 vi.mock("next/navigation", () => ({ useRouter: () => nav }));
 vi.mock("@/lib/hope/opportunities", async () => {
   const { demoOpportunities } = await import("@/lib/hope/demo");
-  const all = demoOpportunities(new Date("2026-11-07T12:00:00"));
+  // The page scores deadlines against the real today, so the demo deadlines must count from it too.
+  const all = demoOpportunities(new Date());
   const ids: Record<string, string> = { "opp-sunrise-ops": GRANT, "opp-bayfront-youth": OTHER };
   return { useOpportunities: (): Opportunity[] => all.map((o) => (ids[o.id] ? { ...o, id: ids[o.id]! } : o)) };
 });
