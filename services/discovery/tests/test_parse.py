@@ -17,6 +17,14 @@ from hope_discovery.parse import (
 TODAY = date(2026, 11, 8)
 
 
+@pytest.mark.parametrize("label", ["Open call closes", "Open call due", "Open call deadline"])
+def test_open_call_closing_label_is_a_deadline(label: str) -> None:
+    quote = f"March 1, 2027: {label}"
+    assert parse_deadline(quote, TODAY).date == date(2027, 3, 1)
+    found = find_deadline([quote], TODAY)
+    assert found is not None and found[1].date == date(2027, 3, 1)
+
+
 @pytest.mark.parametrize(
     "quote",
     [

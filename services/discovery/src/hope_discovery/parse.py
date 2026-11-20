@@ -106,6 +106,7 @@ def parse_amount(quote: str | None) -> AmountParse | None:
 
 
 OPEN_BEFORE_DATE = re.compile(r"\bopen(?:s|ing|ed)?\s+(?:(?:on|from)\s+)?$", re.I)
+CLOSING_CUE = re.compile(r"\b(?:clos(?:e|es|ing)|due|deadline|until|through|thru|by)\b", re.I)
 OPEN_AFTER_DATE = re.compile(
     r"\s*:\s*(?:(?:applications?|portal|submissions?)\s+)?(?:are\s+)?open(?:s|ing|ed)?\b"
     r"(?!\s+(?:until|through|thru)\b)",
@@ -114,7 +115,11 @@ OPEN_AFTER_DATE = re.compile(
 
 
 def _opening_date(text: str, start: int, end: int) -> bool:
-    return bool(OPEN_BEFORE_DATE.search(text[:start]) or OPEN_AFTER_DATE.match(text, end))
+    label = re.split(r"[.!?;\n]", text[end:], maxsplit=1)[0]
+    return bool(
+        OPEN_BEFORE_DATE.search(text[:start])
+        or (OPEN_AFTER_DATE.match(text, end) and not CLOSING_CUE.search(label))
+    )
 
 
 def _dates(text: str, *, deadlines_only: bool = False) -> list[date]:
