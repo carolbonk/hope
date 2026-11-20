@@ -25,6 +25,19 @@ def test_open_call_closing_label_is_a_deadline(label: str) -> None:
     assert found is not None and found[1].date == date(2027, 3, 1)
 
 
+@pytest.mark.parametrize("page_fallback", [False, True])
+@pytest.mark.parametrize("separator", [". Informational", " and informational"])
+def test_dated_opening_does_not_turn_webinar_into_deadline(
+    page_fallback: bool, separator: str
+) -> None:
+    quote = f"Applications open January 1, 2027{separator} webinar March 3."
+    pages = ["2027 grant cycle. " + quote]
+    if page_fallback:
+        assert find_deadline(pages, TODAY) is None
+    else:
+        assert infer_deadline(quote, pages, TODAY) is None
+
+
 @pytest.mark.parametrize(
     "quote",
     [

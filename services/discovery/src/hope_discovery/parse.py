@@ -178,11 +178,17 @@ CYCLE_YEAR = re.compile(
 )
 
 
-def _month_days(quote: str) -> list[tuple[int, int]]:
+def _month_days(quote: str, *, require_closing: bool = False) -> list[tuple[int, int]]:
     """Year-less `March 1` dates, minus a window's opening date (`March 1 through June 1`)."""
     found = list(MONTH_DAY.finditer(quote))
     out = []
     for i, m in enumerate(found):
+        if require_closing:
+            before = re.split(r"[.!?;\n]", quote[: m.start()])[-1]
+            after = re.split(r"[.!?;\n]", quote[m.end() :], maxsplit=1)[0]
+            label = after if after.lstrip().startswith(":") else ""
+            if not CLOSING_CUE.search(before + label):
+                continue
         if _opening_date(quote, m.start(), m.end()):
             continue
         if i + 1 < len(found) and WINDOW_TO.fullmatch(quote[m.end() : found[i + 1].start()]):
@@ -201,7 +207,11 @@ def infer_deadline(quote: str, pages: list[str], today: date) -> DeadlineParse |
     """A year-less deadline gets its year only from the page: the next date when the quote says it
     repeats (`each year`, `annually`), or the page's one cycle year. Never a guess: no year on the
     page, or a past result, gives None (the deadline stays unknown)."""
-    days = _month_days(quote) if not _dates(quote, deadlines_only=True) else []
+    days = (
+        _month_days(quote, require_closing=bool(_dates(quote)))
+        if not _dates(quote, deadlines_only=True)
+        else []
+    )
     year = None if ANNUAL.search(quote) else cycle_year(pages)
     if not days or (year is None and not ANNUAL.search(quote)):
         return None
