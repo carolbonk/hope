@@ -181,13 +181,21 @@ CYCLE_YEAR = re.compile(
 def _month_days(quote: str, *, require_closing: bool = False) -> list[tuple[int, int]]:
     """Year-less `March 1` dates, minus a window's opening date (`March 1 through June 1`)."""
     found = list(MONTH_DAY.finditer(quote))
+    date_ends = [
+        m.end()
+        for rx in (MONTH_DAY, DATE_NAMED, DATE_DAY_FIRST, DATE_US, DATE_ISO)
+        for m in rx.finditer(quote)
+    ]
     out = []
     for i, m in enumerate(found):
         if require_closing:
             before = re.split(r"[.!?;\n]", quote[: m.start()])[-1]
             after = re.split(r"[.!?;\n]", quote[m.end() :], maxsplit=1)[0]
             label = after if after.lstrip().startswith(":") else ""
-            if not CLOSING_CUE.search(before + label):
+            range_end = any(
+                end < m.start() and WINDOW_TO.fullmatch(quote[end : m.start()]) for end in date_ends
+            )
+            if not range_end and not CLOSING_CUE.search(before + label):
                 continue
         if _opening_date(quote, m.start(), m.end()):
             continue

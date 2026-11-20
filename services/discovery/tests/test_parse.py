@@ -17,6 +17,19 @@ from hope_discovery.parse import (
 TODAY = date(2026, 11, 8)
 
 
+@pytest.mark.parametrize("separator", ["to", "\u2013", "-", "through"])
+@pytest.mark.parametrize("page_fallback", [False, True])
+def test_mixed_year_window_range_end_is_inferred(separator: str, page_fallback: bool) -> None:
+    quote = f"Applications open January 1, 2027 {separator} March 1."
+    pages = ["2027 grant cycle. " + quote]
+    if page_fallback:
+        found = find_deadline(pages, TODAY)
+        assert found is not None and found[1].date == date(2027, 3, 1)
+    else:
+        parsed = infer_deadline(quote, pages, TODAY)
+        assert parsed is not None and parsed.date == date(2027, 3, 1)
+
+
 @pytest.mark.parametrize("label", ["Open call closes", "Open call due", "Open call deadline"])
 def test_open_call_closing_label_is_a_deadline(label: str) -> None:
     quote = f"March 1, 2027: {label}"
