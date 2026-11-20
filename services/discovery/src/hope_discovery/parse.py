@@ -105,8 +105,16 @@ def parse_amount(quote: str | None) -> AmountParse | None:
     return AmountParse(min=None, max=found[0][0])
 
 
-def _dates(text: str) -> list[date]:
-    out: list[tuple[int, date]] = []
+DATE_CUE = re.compile(r"\b(open(?:s|ing|ed)?|clos(?:e|es|ing)|due|deadline)\b", re.I)
+
+
+def _opening_date(text: str, start: int, previous_end: int) -> bool:
+    cues = list(DATE_CUE.finditer(text, previous_end, start))
+    return bool(cues and cues[-1].group().lower().startswith("open"))
+
+
+def _dates(text: str, *, deadlines_only: bool = False) -> list[date]:
+    out: list[tuple[int, int, date]] = []
     taken: list[tuple[int, int]] = []
     for rx in (DATE_NAMED, DATE_DAY_FIRST, DATE_US, DATE_ISO):
         for m in rx.finditer(text):
@@ -117,22 +125,31 @@ def _dates(text: str) -> list[date]:
             year = int(m.group("year"))
             year += 2000 if year < 100 else 0  # "3/3/27"
             try:
-                out.append((m.start(), date(year, month_no, int(m.group("day")))))
+                out.append((m.start(), m.end(), date(year, month_no, int(m.group("day")))))
             except ValueError:
                 continue
             taken.append((m.start(), m.end()))
-    return [d for _, d in sorted(out, key=lambda x: x[0])]
+    ordered = sorted(out)
+    return [
+        d
+        for i, (start, end, d) in enumerate(ordered)
+        if not deadlines_only
+        or (
+            not _opening_date(text, start, ordered[i - 1][1] if i else 0)
+            and not (i + 1 < len(ordered) and WINDOW_TO.fullmatch(text[end : ordered[i + 1][0]]))
+        )
+    ]
 
 
 def parse_deadline(quote: str | None, today: date) -> DeadlineParse:
-    """`deadline` is the earliest date on or after `today`. Year-less dates are not parsed."""
+    """The earliest non-opening date on or after `today`. Year-less dates are not parsed."""
     if not quote:
         return DeadlineParse(None)
     dates = _dates(quote)
     rolling = bool(ROLLING.search(quote))
     if rolling and not dates:
         return DeadlineParse(None, rolling=True)
-    future = sorted(d for d in dates if d >= today)
+    future = sorted(d for d in _dates(quote, deadlines_only=True) if d >= today)
     yearless = not dates and bool(DATE_YEARLESS.search(quote))
     return DeadlineParse(future[0] if future else None, rolling, dates, yearless)
 
@@ -155,6 +172,8 @@ def _month_days(quote: str) -> list[tuple[int, int]]:
     found = list(MONTH_DAY.finditer(quote))
     out = []
     for i, m in enumerate(found):
+        if _opening_date(quote, m.start(), found[i - 1].end() if i else 0):
+            continue
         if i + 1 < len(found) and WINDOW_TO.fullmatch(quote[m.end() : found[i + 1].start()]):
             continue
         out.append((MONTHS[m.group("month").lower().rstrip(".")], int(m.group("day"))))
@@ -328,7 +347,7 @@ def find_deadline(pages: list[str], today: date) -> tuple[Found, DeadlineParse] 
                 continue
             if PAST_WORDS.search(clause):
                 continue
-            future = [d for d in _dates(clause) if d >= today]
+            future = [d for d in _dates(clause, deadlines_only=True) if d >= today]
             if future and DEADLINE_WORDS.search(clause):
                 if dated is None or min(future) < dated[0]:
                     dated = (min(future), Found(_clip(clause, 0, len(clause)), page_no))
