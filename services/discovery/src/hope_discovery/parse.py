@@ -178,7 +178,7 @@ CYCLE_YEAR = re.compile(
 )
 
 
-def _month_days(quote: str, *, require_closing: bool = False) -> list[tuple[int, int]]:
+def _month_days(quote: str, *, require_closing: bool = False) -> list[tuple[int, int, int]]:
     """Year-less `March 1` dates, minus a window's opening date (`March 1 through June 1`)."""
     found = list(MONTH_DAY.finditer(quote))
     date_ends = [
@@ -201,7 +201,7 @@ def _month_days(quote: str, *, require_closing: bool = False) -> list[tuple[int,
             continue
         if i + 1 < len(found) and WINDOW_TO.fullmatch(quote[m.end() : found[i + 1].start()]):
             continue
-        out.append((MONTHS[m.group("month").lower().rstrip(".")], int(m.group("day"))))
+        out.append((m.start(), MONTHS[m.group("month").lower().rstrip(".")], int(m.group("day"))))
     return out
 
 
@@ -214,7 +214,8 @@ def cycle_year(pages: list[str]) -> int | None:
 def infer_deadline(quote: str, pages: list[str], today: date) -> DeadlineParse | None:
     """A year-less deadline gets its year only from the page: the next date when the quote says it
     repeats (`each year`, `annually`), or the page's one cycle year. Never a guess: no year on the
-    page, or a result before today or a dated opening, gives None (the deadline stays unknown)."""
+    page, or a result before today or its preceding dated opening, gives None (the deadline stays
+    unknown)."""
     opening_dates = _dates(quote)
     days = (
         _month_days(quote, require_closing=bool(opening_dates))
@@ -224,9 +225,10 @@ def infer_deadline(quote: str, pages: list[str], today: date) -> DeadlineParse |
     year = None if ANNUAL.search(quote) else cycle_year(pages)
     if not days or (year is None and not ANNUAL.search(quote)):
         return None
-    earliest_closing = max([today, *opening_dates])
     out = []
-    for month, day in days:
+    for start, month, day in days:
+        preceding_openings = _dates(quote[:start])
+        earliest_closing = max(today, preceding_openings[-1]) if preceding_openings else today
         for y in (year,) if year else (today.year, today.year + 1):
             try:
                 d = date(y, month, day)

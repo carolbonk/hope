@@ -17,6 +17,18 @@ from hope_discovery.parse import (
 TODAY = date(2026, 11, 8)
 
 
+@pytest.mark.parametrize("page_fallback", [False, True])
+def test_loi_before_dated_application_opening_is_kept(page_fallback: bool) -> None:
+    quote = "Letter of intent due February 1. Full applications open March 1, 2027 and close May 1."
+    pages = ["2027 grant cycle. " + quote]
+    if page_fallback:
+        found = find_deadline(pages, TODAY)
+        assert found is not None and found[1].date == date(2027, 2, 1)
+    else:
+        inferred = infer_deadline(quote, pages, TODAY)
+        assert inferred is not None and inferred.date == date(2027, 2, 1)
+
+
 @pytest.mark.parametrize("today", [date(2026, 1, 1), TODAY])
 @pytest.mark.parametrize("page_fallback", [False, True])
 def test_inferred_closing_cannot_precede_dated_opening(today: date, page_fallback: bool) -> None:

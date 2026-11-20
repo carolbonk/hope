@@ -212,6 +212,19 @@ def test_yearless_deadline_dated_from_the_page(run_agent: Any, sentence: str) ->
         assert YEARLESS_CONCERN not in grant.concerns
 
 
+def test_loi_before_dated_application_opening_is_kept(run_agent: Any) -> None:
+    sentence = (
+        "Letter of intent due February 1. Full applications open March 1, 2027 and close May 1."
+    )
+
+    def quoted(messages: Any, schema: Any) -> dict[str, Any]:
+        return extract_responder(messages, schema) | {"deadline": {"text": sentence, "page": 1}}
+
+    repo, _ = run_agent(web=_YearlessWeb(sentence), overrides={PageExtraction: quoted})
+    (grant,) = repo.candidates.values()
+    assert grant.deadline == date(2027, 2, 1)
+
+
 def test_rolling_grant_with_dated_opening_is_not_expired(run_agent: Any) -> None:
     sentence = "Rolling applications; portal opens January 1, 2027"
 
