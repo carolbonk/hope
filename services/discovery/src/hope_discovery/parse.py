@@ -194,7 +194,7 @@ def infer_deadline(quote: str, pages: list[str], today: date) -> DeadlineParse |
     """A year-less deadline gets its year only from the page: the next date when the quote says it
     repeats (`each year`, `annually`), or the page's one cycle year. Never a guess: no year on the
     page, or a past result, gives None (the deadline stays unknown)."""
-    days = _month_days(quote) if not _dates(quote) else []
+    days = _month_days(quote) if not _dates(quote, deadlines_only=True) else []
     year = None if ANNUAL.search(quote) else cycle_year(pages)
     if not days or (year is None and not ANNUAL.search(quote)):
         return None

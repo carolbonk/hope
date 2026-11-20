@@ -31,6 +31,16 @@ def test_opening_cues_preserve_closing_dates(quote: str) -> None:
     assert found is not None and found[1].date == date(2027, 3, 1)
 
 
+def test_dated_opening_does_not_block_yearless_closing_inference() -> None:
+    quote = "Applications open January 1, 2027 and close March 1."
+    pages = ["2027 grant cycle. " + quote]
+    parsed = infer_deadline(quote, pages, TODAY)
+    assert parsed is not None and parsed.date == date(2027, 3, 1)
+    found = find_deadline(pages, TODAY)
+    assert found is not None and found[1].date == date(2027, 3, 1)
+    assert infer_deadline(quote, [quote], TODAY) is None
+
+
 @pytest.mark.parametrize(
     ("quote", "low", "high"),
     [
