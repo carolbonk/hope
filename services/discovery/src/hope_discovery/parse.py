@@ -214,15 +214,17 @@ def cycle_year(pages: list[str]) -> int | None:
 def infer_deadline(quote: str, pages: list[str], today: date) -> DeadlineParse | None:
     """A year-less deadline gets its year only from the page: the next date when the quote says it
     repeats (`each year`, `annually`), or the page's one cycle year. Never a guess: no year on the
-    page, or a past result, gives None (the deadline stays unknown)."""
+    page, or a result before today or a dated opening, gives None (the deadline stays unknown)."""
+    opening_dates = _dates(quote)
     days = (
-        _month_days(quote, require_closing=bool(_dates(quote)))
+        _month_days(quote, require_closing=bool(opening_dates))
         if not _dates(quote, deadlines_only=True)
         else []
     )
     year = None if ANNUAL.search(quote) else cycle_year(pages)
     if not days or (year is None and not ANNUAL.search(quote)):
         return None
+    earliest_closing = max([today, *opening_dates])
     out = []
     for month, day in days:
         for y in (year,) if year else (today.year, today.year + 1):
@@ -230,7 +232,7 @@ def infer_deadline(quote: str, pages: list[str], today: date) -> DeadlineParse |
                 d = date(y, month, day)
             except ValueError:
                 continue
-            if d >= today:
+            if d >= earliest_closing:
                 out.append(d)
                 break
     if not out:
