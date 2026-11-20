@@ -105,12 +105,16 @@ def parse_amount(quote: str | None) -> AmountParse | None:
     return AmountParse(min=None, max=found[0][0])
 
 
-DATE_CUE = re.compile(r"\b(open(?:s|ing|ed)?|clos(?:e|es|ing)|due|deadline)\b", re.I)
+OPEN_BEFORE_DATE = re.compile(r"\bopen(?:s|ing|ed)?\s+(?:(?:on|from)\s+)?$", re.I)
+OPEN_AFTER_DATE = re.compile(
+    r"\s*:\s*(?:(?:applications?|portal|submissions?)\s+)?(?:are\s+)?open(?:s|ing|ed)?\b"
+    r"(?!\s+(?:until|through|thru)\b)",
+    re.I,
+)
 
 
-def _opening_date(text: str, start: int, previous_end: int) -> bool:
-    cues = list(DATE_CUE.finditer(text, previous_end, start))
-    return bool(cues and cues[-1].group().lower().startswith("open"))
+def _opening_date(text: str, start: int, end: int) -> bool:
+    return bool(OPEN_BEFORE_DATE.search(text[:start]) or OPEN_AFTER_DATE.match(text, end))
 
 
 def _dates(text: str, *, deadlines_only: bool = False) -> list[date]:
@@ -135,7 +139,7 @@ def _dates(text: str, *, deadlines_only: bool = False) -> list[date]:
         for i, (start, end, d) in enumerate(ordered)
         if not deadlines_only
         or (
-            not _opening_date(text, start, ordered[i - 1][1] if i else 0)
+            not _opening_date(text, start, end)
             and not (i + 1 < len(ordered) and WINDOW_TO.fullmatch(text[end : ordered[i + 1][0]]))
         )
     ]
@@ -172,7 +176,7 @@ def _month_days(quote: str) -> list[tuple[int, int]]:
     found = list(MONTH_DAY.finditer(quote))
     out = []
     for i, m in enumerate(found):
-        if _opening_date(quote, m.start(), found[i - 1].end() if i else 0):
+        if _opening_date(quote, m.start(), m.end()):
             continue
         if i + 1 < len(found) and WINDOW_TO.fullmatch(quote[m.end() : found[i + 1].start()]):
             continue

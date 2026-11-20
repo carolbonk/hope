@@ -18,6 +18,20 @@ TODAY = date(2026, 11, 8)
 
 
 @pytest.mark.parametrize(
+    "quote",
+    [
+        "Applications open until March 1, 2027",
+        "Applications open through March 1, 2027",
+        "January 1, 2027: applications open. March 1, 2027: applications close.",
+    ],
+)
+def test_opening_cues_preserve_closing_dates(quote: str) -> None:
+    assert parse_deadline(quote, TODAY).date == date(2027, 3, 1)
+    found = find_deadline([quote], TODAY)
+    assert found is not None and found[1].date == date(2027, 3, 1)
+
+
+@pytest.mark.parametrize(
     ("quote", "low", "high"),
     [
         ("$50,000", None, 5_000_000),
