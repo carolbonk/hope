@@ -12,6 +12,9 @@ HOPE_STATIC_EXPORT=1 NEXT_PUBLIC_HOPE_STATIC=1 NEXT_PUBLIC_HOPE_API_URL= pnpm --
 find apps/web/out -mindepth 1 -type d ! -path 'apps/web/out/_next*' | sort -r | while read -r d; do
   if [ -f "$d.html" ] && [ -z "$(find "$d" -mindepth 1 ! -name '__next.*.txt' -print -quit)" ]; then rm -rf "$d"; fi
 done
+# Bid workspaces need the Hope server and nothing in the demo links to one, so drop their folder too:
+# with it gone, /hope/bids loads bids.html directly instead of "Entry not found".
+rm -rf apps/web/out/hope/bids
 cp infra/hf-space/README.md apps/web/out/README.md
 python3 -m venv /tmp/hf-venv
 /tmp/hf-venv/bin/pip install --quiet 'huggingface_hub>=0.30,<1'
